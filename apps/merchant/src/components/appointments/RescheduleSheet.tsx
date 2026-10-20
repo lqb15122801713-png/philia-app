@@ -235,7 +235,7 @@ export function RescheduleSheet({
                           : 'u1-ring bg-card text-ink'
                     }`}
                   >
-                    <span className="block text-[11px]">
+                    <span className="block text-[12px]">
                       {d.getTime() === checkinDays[0]?.getTime() ? '今天' : weekCN(d)}
                     </span>
                     <span className="u1-num block text-[12px]">{fmtMD(d)}</span>
@@ -266,7 +266,7 @@ export function RescheduleSheet({
                               : 'u1-ring bg-card text-ink'
                         }`}
                       >
-                        <span className="block text-[11px]">{weekCN(d)}</span>
+                        <span className="block text-[12px]">{weekCN(d)}</span>
                         <span className="u1-num block text-[12px]">{fmtMD(d)}</span>
                       </button>
                     );

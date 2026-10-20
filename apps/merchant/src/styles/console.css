@@ -43,7 +43,7 @@
 /* ---- wtop 页头条（serif 题 20/800 + mono 注 + 右槽动作区） ---- */
 .wsk-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .wsk-top .tt { font-family: var(--wsk-serif); font-size: 20px; font-weight: 800; line-height: 28px; }
-.wsk-top .no { font-family: var(--wsk-mono); font-size: 9px; letter-spacing: .18em; color: var(--wsk-muted); text-transform: uppercase; margin-top: 4px; }
+.wsk-top .no { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .18em; color: var(--wsk-muted); text-transform: uppercase; margin-top: 4px; }
 .wsk-top .acts { display: flex; align-items: center; gap: 10px; flex: none; }
 
 /* ---- M2 异常前置卡 walert（白卡 14 左 3px 赭红；永远第一屏第一位） ---- */
@@ -65,24 +65,24 @@
   display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
 }
 .wsk-total .big { font-family: var(--wsk-mono); font-size: 30px; font-weight: 700; line-height: 1.1; }
-.wsk-total .cap { font-family: var(--wsk-mono); font-size: 9px; letter-spacing: .16em; color: hsl(var(--background) / .62); text-transform: uppercase; margin-bottom: 4px; }
+.wsk-total .cap { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .16em; color: hsl(var(--background) / .62); text-transform: uppercase; margin-bottom: 4px; }
 .wsk-total .sep { width: 1px; align-self: stretch; background: hsl(var(--background) / .16); }
 .wsk-total .cells { display: flex; gap: 18px; flex-wrap: wrap; }
-.wsk-total .cell .k { font-family: var(--wsk-mono); font-size: 8.5px; letter-spacing: .12em; color: hsl(var(--background) / .62); }
+.wsk-total .cell .k { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .12em; color: hsl(var(--background) / .62); }
 .wsk-total .cell .v { font-family: var(--wsk-mono); font-size: 15px; font-weight: 700; margin-top: 3px; }
 .wsk-total .spark { margin-left: auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
-.wsk-total .spark .lb { font-family: var(--wsk-mono); font-size: 8.5px; letter-spacing: .12em; color: hsl(var(--background) / .62); }
+.wsk-total .spark .lb { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .12em; color: hsl(var(--background) / .62); }
 
 /* ---- M6 晨报卡 wpostcard（mono eyebrow+serif 题+双细规则线+mono 27/700 大数字+cr 行+serif 引言+下划线链） ---- */
 .wsk-postcard { background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); padding: 16px 18px; }
-.wsk-postcard .eb { font-family: var(--wsk-mono); font-size: 8.5px; letter-spacing: .22em; color: var(--wsk-muted); text-transform: uppercase; }
+.wsk-postcard .eb { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .22em; color: var(--wsk-muted); text-transform: uppercase; }
 .wsk-postcard .tt { font-family: var(--wsk-serif); font-size: 20px; font-weight: 900; margin-top: 4px; }
 .wsk-postcard .rules { margin: 10px 0 12px; border-top: 1px solid var(--wsk-hairline); border-bottom: 1px solid var(--wsk-hairline); height: 5px; }
 .wsk-postcard .fig { font-family: var(--wsk-mono); font-size: 27px; font-weight: 700; line-height: 1.15; }
-.wsk-postcard .figcap { font-family: var(--wsk-mono); font-size: 9px; color: var(--wsk-muted); margin-top: 2px; }
+.wsk-postcard .figcap { font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); margin-top: 2px; }
 .wsk-postcard .cr { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 12.5px; }
 .wsk-postcard .cr + .cr { box-shadow: inset 0 1px 0 var(--wsk-hairline-soft); }
-.wsk-postcard .cr .v { margin-left: auto; font-family: var(--wsk-mono); font-size: 11.5px; font-weight: 700; }
+.wsk-postcard .cr .v { margin-left: auto; font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; }
 .wsk-postcard .cr .v.red { color: var(--wsk-danger); }
 .wsk-postcard .quote { font-family: var(--wsk-serif); font-size: 13px; color: var(--wsk-muted); margin-top: 10px; }
 .wsk-postcard .more { margin-top: 10px; }
@@ -102,12 +102,12 @@
 .wsk-list .it { display: flex; align-items: center; gap: 10px; padding: 11px 0; font-size: 12.5px; color: var(--wsk-ink); text-decoration: none; width: 100%; background: none; border: 0; cursor: pointer; font-family: inherit; text-align: left; }
 .wsk-list .it + .it { box-shadow: inset 0 1px 0 var(--wsk-hairline-soft); }
 .wsk-list .it .t { font-weight: 700; }
-.wsk-list .it .s { font-family: var(--wsk-mono); font-size: 9.5px; color: var(--wsk-muted); margin-top: 2px; }
+.wsk-list .it .s { font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); margin-top: 2px; }
 .wsk-list .it .caret { margin-left: auto; color: var(--wsk-muted); flex: none; }
 .wsk-list .it .dotr { width: 7px; height: 7px; border-radius: 50%; background: var(--wsk-danger); flex: none; }
 
 /* ---- pill2 状态胶囊（mono 9：hot 深棕底淡金字 / gold 淡黄底 / red 赭红边 / plain 描边） ---- */
-.wsk-pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--wsk-mono); font-size: 9px; font-weight: 700; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.wsk-pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
 .wsk-pill.hot { background: var(--wsk-ink-deep); color: var(--wsk-gold-pale); }
 .wsk-pill.gold { background: var(--wsk-gold-pale); color: var(--wsk-ink); }
 .wsk-pill.red { background: transparent; box-shadow: inset 0 0 0 1px var(--wsk-danger); color: var(--wsk-danger); }
@@ -117,31 +117,31 @@
 .wsk-capcal { background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); padding: 14px 16px; }
 .wsk-capcal .hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
 .wsk-capcal .hd .m { font-size: 13px; font-weight: 800; }
-.wsk-capcal .hd .lg { font-family: var(--wsk-mono); font-size: 8.5px; color: var(--wsk-muted); }
+.wsk-capcal .hd .lg { font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); }
 .wsk-capcal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.wsk-capcal .d { position: relative; min-height: 40px; border-radius: 10px; background: var(--wsk-paper); padding: 5px 6px; font-family: var(--wsk-mono); font-size: 10px; color: var(--wsk-ink); }
+.wsk-capcal .d { position: relative; min-height: 40px; border-radius: 10px; background: var(--wsk-paper); padding: 5px 6px; font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-ink); }
 .wsk-capcal .d.off { background: transparent; color: var(--wsk-muted); opacity: .55; }
 .wsk-capcal .d .pt { position: absolute; right: 6px; bottom: 6px; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--wsk-gold); }
 .wsk-capcal .d.tight .pt { background: var(--wsk-gold-pale); border-color: var(--wsk-gold-pale); }
 .wsk-capcal .d.full .pt { background: var(--wsk-danger); border-color: var(--wsk-danger); }
-.wsk-capcal .d .ful { position: absolute; right: 16px; bottom: 4px; font-family: var(--wsk-mono); font-size: 8px; font-weight: 700; color: var(--wsk-danger); }
+.wsk-capcal .d .ful { position: absolute; right: 16px; bottom: 4px; font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; color: var(--wsk-danger); }
 
 /* ---- 红线明面带 wredline（钉在收款面板下：赭红系暖底+mono 四句） ---- */
 .wsk-redline { background: var(--wsk-danger-light); border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.wsk-redline .tt { font-size: 11px; font-weight: 800; color: var(--wsk-danger-deep); }
-.wsk-redline .it { font-family: var(--wsk-mono); font-size: 9px; color: var(--wsk-danger-deep); display: inline-flex; align-items: center; gap: 5px; }
+.wsk-redline .tt { font-size: 12px; font-weight: 800; color: var(--wsk-danger-deep); }
+.wsk-redline .it { font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-danger-deep); display: inline-flex; align-items: center; gap: 5px; }
 .wsk-redline .it::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--wsk-danger); }
 
 /* ---- 权限矩阵 wmatrix（角色×权限 四态格 ✓/—/只读/锁死） ---- */
 .wsk-matrix { background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); overflow: hidden; }
 .wsk-matrix table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.wsk-matrix th { font-family: var(--wsk-mono); font-size: 9px; letter-spacing: .1em; color: var(--wsk-muted); font-weight: 500; text-align: left; padding: 10px 14px; background: var(--wsk-paper); }
+.wsk-matrix th { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .1em; color: var(--wsk-muted); font-weight: 500; text-align: left; padding: 10px 14px; background: var(--wsk-paper); }
 .wsk-matrix td { padding: 10px 14px; border-top: 1px solid var(--wsk-hairline-soft); vertical-align: middle; }
-.wsk-matrix .mx { font-family: var(--wsk-mono); font-size: 10px; font-weight: 700; }
+.wsk-matrix .mx { font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; }
 .wsk-matrix .mx.ok { color: var(--wsk-ink); }
 .wsk-matrix .mx.no { color: var(--wsk-muted); font-weight: 500; }
 .wsk-matrix .mx.readonly { color: var(--wsk-khaki); }
-.wsk-matrix .mx.locked { display: inline-flex; border-radius: 999px; padding: 2px 8px; box-shadow: inset 0 0 0 1px var(--wsk-danger); color: var(--wsk-danger); font-size: 9px; }
+.wsk-matrix .mx.locked { display: inline-flex; border-radius: 999px; padding: 2px 8px; box-shadow: inset 0 0 0 1px var(--wsk-danger); color: var(--wsk-danger); font-size: 12px; }
 
 /* ---- W-14 手机分区卡列（PD46 U7 · `213:412`：可滚动分区卡列，非桌面缩略糊图；
      每角色一卡，卡内逐权限行+四态格；<lg 由 skeleton WMatrix 切换渲染，桌面表不动） ---- */
@@ -153,28 +153,28 @@
 
 /* ---- M8 wc-ports 左端口目录（252 宽；域章 22 方+mono 行；激活=金左条） ---- */
 .wsk-cports { width: 252px; flex: none; background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); padding: 8px; }
-.wsk-cports .gp { font-family: var(--wsk-mono); font-size: 8.5px; letter-spacing: .18em; color: var(--wsk-muted); text-transform: uppercase; padding: 10px 10px 6px; }
+.wsk-cports .gp { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .18em; color: var(--wsk-muted); text-transform: uppercase; padding: 10px 10px 6px; }
 .wsk-cports .it { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; background: none; border-radius: 12px; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--wsk-ink); text-decoration: none; cursor: pointer; text-align: left; }
-.wsk-cports .it .seal { width: 22px; height: 22px; border-radius: 7px; flex: none; display: grid; place-items: center; font-family: var(--wsk-mono); font-size: 9px; font-weight: 700; color: var(--wsk-khaki); box-shadow: inset 0 0 0 1px var(--wsk-hairline); }
-.wsk-cports .it .no { margin-left: auto; font-family: var(--wsk-mono); font-size: 8.5px; color: var(--wsk-muted); }
+.wsk-cports .it .seal { width: 22px; height: 22px; border-radius: 7px; flex: none; display: grid; place-items: center; font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; color: var(--wsk-khaki); box-shadow: inset 0 0 0 1px var(--wsk-hairline); }
+.wsk-cports .it .no { margin-left: auto; font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); }
 .wsk-cports .it.on { background: var(--wsk-gold-light); }
 .wsk-cports .it.on::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--wsk-gold); }
 .wsk-cports .it.on .seal { color: var(--wsk-ink); box-shadow: inset 0 0 0 1px var(--wsk-gold); }
 
 /* ---- M8 wc-pub 发布流（胶囊 草稿→预览→发布推三端；当前=淡黄填，已过=深棕填；回滚虚线条） ---- */
 .wsk-cpub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.wsk-cpub .st { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border-radius: 999px; font-family: var(--wsk-mono); font-size: 9.5px; font-weight: 700; box-shadow: inset 0 0 0 1px var(--wsk-hairline); color: var(--wsk-muted); }
+.wsk-cpub .st { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border-radius: 999px; font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; box-shadow: inset 0 0 0 1px var(--wsk-hairline); color: var(--wsk-muted); }
 .wsk-cpub .st.done { background: var(--wsk-ink-deep); color: var(--wsk-gold-pale); box-shadow: none; }
 .wsk-cpub .st.now { background: var(--wsk-gold-pale); color: var(--wsk-ink-deep); box-shadow: none; }
-.wsk-cpub .ar { color: var(--wsk-muted); font-family: var(--wsk-mono); font-size: 10px; }
-.wsk-cpub .rb { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--wsk-hairline); background: none; color: var(--wsk-muted); font-family: var(--wsk-mono); font-size: 9.5px; font-weight: 700; cursor: pointer; }
+.wsk-cpub .ar { color: var(--wsk-muted); font-family: var(--wsk-mono); font-size: 12px; }
+.wsk-cpub .rb { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border-radius: 999px; border: 1px dashed var(--wsk-hairline); background: none; color: var(--wsk-muted); font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; cursor: pointer; }
 .wsk-cpub .rb:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ---- M8 wc-log 留痕行 ---- */
 .wsk-clog { background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); padding: 4px 16px; }
 .wsk-clog .row { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; font-size: 12px; }
 .wsk-clog .row + .row { box-shadow: inset 0 1px 0 var(--wsk-hairline-soft); }
-.wsk-clog .row .meta { margin-left: auto; font-family: var(--wsk-mono); font-size: 9px; color: var(--wsk-muted); flex: none; }
+.wsk-clog .row .meta { margin-left: auto; font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); flex: none; }
 .wsk-clog .empty { padding: 12px 0; font-size: 12px; color: var(--wsk-muted); }
 
 /* ---- M8 危险区 wdanger（暖底+赭红题带） ---- */
@@ -198,17 +198,17 @@
 .wsk-fdot .nd.done .dt { background: var(--wsk-ink-deep); box-shadow: none; }
 .wsk-fdot .nd.now .dt { background: var(--wsk-gold-pale); box-shadow: none; }
 .wsk-fdot .tx b { display: block; font-size: 12.5px; font-weight: 700; }
-.wsk-fdot .tx small { display: block; margin-top: 1px; font-family: var(--wsk-mono); font-size: 9.5px; color: var(--wsk-muted); }
+.wsk-fdot .tx small { display: block; margin-top: 1px; font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); }
 
 /* ---- wsk 区块题头 / 通用卡（段 1 · 页内 M 件组合的容器层） ---- */
 .wsk-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 2px 8px; }
 .wsk-hd .t { font-size: 13px; font-weight: 800; }
-.wsk-hd .a { font-family: var(--wsk-mono); font-size: 9px; color: var(--wsk-muted); letter-spacing: .06em; }
+.wsk-hd .a { font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); letter-spacing: .06em; }
 .wsk-card { background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); padding: 14px 16px; }
 
 /* ---- 空态/注记 ---- */
 .wsk-empty { padding: 24px 16px; text-align: center; color: var(--wsk-muted); font-size: 12.5px; line-height: 2; }
-.wsk-note { font-family: var(--wsk-mono); font-size: 9px; color: var(--wsk-muted); letter-spacing: .04em; line-height: 1.8; }
+.wsk-note { font-family: var(--wsk-mono); font-size: 12px; color: var(--wsk-muted); letter-spacing: .04em; line-height: 1.8; }
 
 /* ============================================================================
  * M1 深棕导航轨 wrail（十五口冻结；236px；激活=cream 3px 左条+浅金底；bd=赭红角标；
@@ -221,7 +221,7 @@
 }
 @media (max-width: 1279.5px) { .wrail { display: none; } }
 .wrail .wm { padding: 2px 10px 16px; font-family: var(--wsk-serif); font-size: 17px; font-weight: 700; letter-spacing: .05em; color: hsl(var(--background)); }
-.wrail .gp { padding: 14px 10px 6px; font-family: var(--wsk-mono); font-size: 8.5px; letter-spacing: .18em; color: hsl(var(--background) / .35); }
+.wrail .gp { padding: 14px 10px 6px; font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .18em; color: hsl(var(--background) / .35); }
 .wrail .gp .nt { display: block; letter-spacing: .04em; margin-top: 3px; color: hsl(var(--background) / .28); text-transform: none; }
 .wrail a.it, .wrail .it {
   position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px;
@@ -230,16 +230,16 @@
 }
 .wrail a.it:active { transform: scale(.96); }
 .wrail a.it svg { width: 18px; height: 18px; flex: none; }
-.wrail a.it .sub { display: block; font-family: var(--wsk-mono); font-size: 8px; color: hsl(var(--background) / .4); margin-top: 1px; }
+.wrail a.it .sub { display: block; font-family: var(--wsk-mono); font-size: 12px; color: hsl(var(--background) / .4); margin-top: 1px; }
 .wrail a.it.on { background: hsl(var(--primary) / .14); color: var(--wsk-gold-pale); font-weight: 600; }
 .wrail a.it.on::before { content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--wsk-gold-pale); }
 .wrail a.it .bd {
   margin-left: auto; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px;
   background: var(--wsk-danger); color: hsl(var(--destructive-foreground));
-  font-family: var(--wsk-mono); font-size: 9px; font-weight: 700; line-height: 17px; text-align: center;
+  font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; line-height: 17px; text-align: center;
 }
 .wrail .ft { margin-top: auto; padding-top: 14px; }
-.wrail .ft .card { padding: 10px; font-size: 11px; line-height: 1.7; color: hsl(var(--background) / .4); }
+.wrail .ft .card { padding: 10px; font-size: 12px; line-height: 1.7; color: hsl(var(--background) / .4); }
 .wrail .ft .gp { padding-top: 6px; }
 
 /* ============================================================================
@@ -255,7 +255,7 @@
 .wdock .row { display: grid; grid-template-columns: repeat(5, 1fr); height: 58px; }
 .wdock a {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  color: var(--wsk-muted); font-size: 10.5px; font-weight: 500; text-decoration: none;
+  color: var(--wsk-muted); font-size: 12px; font-weight: 500; text-decoration: none;
   transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
 .wdock a:active { transform: scale(.92); }

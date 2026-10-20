@@ -261,7 +261,7 @@ export default function BoardingPage() {
               { key: 'overdue', label: bc('board.m3Overdue'), value: overdueCount, red: overdueCount > 0 },
             ].map((q) => (
               <div className="wsk-card" key={q.key} data-testid={`board-m3-${q.key}`}>
-                <div className="text-[11px] font-semibold text-ink-placeholder">{q.label}</div>
+                <div className="text-[12px] font-semibold text-ink-placeholder">{q.label}</div>
                 <div
                   className={`mt-1.5 font-number text-[26px] font-bold leading-8 tabular-nums${
                     q.red ? ' text-[#B4502E]' : ''

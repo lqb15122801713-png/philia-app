@@ -2,7 +2,7 @@
  * 寄养详情面板（U3 任务 G · BoardingPage 右侧栏 / 窄屏选中展开）
  *
  * 内容：宠物与客户、入住信息（房间/称重/物品清单/日期）、最近打卡、结算区。
- * 工艺：纸面 #FFFDF6 + ring+近零影 + 圆角 20，字段行走 u3-field，状态走
+ * 工艺：纸面 bg-card（U6 收敛 #FFFDF6→bg-card）+ ring+近零影 + 圆角 20，字段行走 u3-field，状态走
  * u3-st 五态胶囊；不再引用 staff-admin/ui 的 Btn/Badge（Btn 含 text-white
  * 违规，本批只允许 red 胶囊与墨轨用浅色字——故退房钮改自绘禁用态）。
  *
@@ -40,9 +40,9 @@ export default function BoardingStayDetail({
 }) {
   const { stay, appointment, pet, customer } = row;
   return (
-    <div className="flex h-full flex-col rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(59,46,36,.09),0_1px_2px_rgba(61,50,41,.04)]">
+    <div className="flex h-full flex-col rounded-panel bg-card shadow-[0_0_0_1px_rgba(44,40,34,.09),0_1px_2px_rgba(61,50,41,.04)]">
       {/* 宠物与客户 */}
-      <div className="flex items-center gap-3 border-b border-[rgba(59,46,36,.06)] px-[17px] py-4">
+      <div className="flex items-center gap-3 border-b border-[rgba(44,40,34,.06)] px-[17px] py-4">
         <PetAvatar url={pet.avatarUrl} name={pet.name} size={48} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export default function BoardingStayDetail({
               <span className="u3-st live">在店</span>
             )}
           </div>
-          <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
             {SPECIES_LABEL[pet.species] ?? pet.species}
             {pet.breed ? ` · ${pet.breed}` : ''}
             {pet.weightKg != null ? (
@@ -63,7 +63,7 @@ export default function BoardingStayDetail({
               </>
             ) : null}
           </div>
-          <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
             客户：{customer.nickname ?? '—'}
             {customer.phone ? (
               <>
@@ -77,7 +77,7 @@ export default function BoardingStayDetail({
 
       <div className="flex-1 overflow-y-auto px-[17px] py-3">
         {/* 入住信息 */}
-        <div className="mb-1 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+        <div className="mb-1 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
           <DoorOpen size={14} strokeWidth={1.5} />
           入住信息
         </div>
@@ -91,7 +91,7 @@ export default function BoardingStayDetail({
         />
 
         {/* 物品清单 */}
-        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
           <Luggage size={14} strokeWidth={1.5} />
           随身物品
         </div>
@@ -100,27 +100,27 @@ export default function BoardingStayDetail({
             {stay.belongings.map((b, i) => (
               <li key={i} className="flex items-baseline justify-between text-caption">
                 <span className="font-semibold text-ink">{b.name}</span>
-                {b.note ? <span className="text-[rgba(59,46,36,.42)]">{b.note}</span> : null}
+                {b.note ? <span className="text-[rgba(44,40,34,.42)]">{b.note}</span> : null}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">无登记物品</p>
+          <p className="py-1 text-caption-xs text-[rgba(44,40,34,.42)]">无登记物品</p>
         )}
 
         {/* 每日打卡（明细为服务端缺口，见文件头注释） */}
-        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
           <ClipboardList size={14} strokeWidth={1.5} />
           每日打卡
         </div>
         <InfoRow label="最近打卡" value={fmtIsoDate(row.lastLogDate)} />
-        <p className="mt-1 rounded-control bg-canvas px-3 py-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+        <p className="mt-1 rounded-control bg-canvas px-3 py-2 text-caption-xs text-[rgba(44,40,34,.42)]">
           {bc('board.stayLogsGap')}
         </p>
 
         {/* 称重记录（入住称重之上无更多历史，保持简洁） */}
         {stay.checkinWeightKg != null ? (
-          <p className="mt-2 flex items-center gap-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="mt-2 flex items-center gap-1 text-caption-xs text-[rgba(44,40,34,.42)]">
             <Scale size={12} strokeWidth={1.5} />
             入住称重为登记时一次性记录
           </p>
@@ -128,9 +128,9 @@ export default function BoardingStayDetail({
       </div>
 
       {/* 结算区（商家端不办退房，钮恒禁用；收款仍由财务页 markPaid 完成） */}
-      <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+      <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
         <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+          <span className="text-caption-xs text-[rgba(44,40,34,.62)]">
             应收金额 · {PAYMENT_MODE_LABEL[appointment.paymentMode ?? ''] ?? '未记录'}
           </span>
           <span className="font-number text-title font-bold tabular-nums text-ink" style={numStyle}>
@@ -141,11 +141,11 @@ export default function BoardingStayDetail({
           type="button"
           disabled
           title="退房核销由员工办理"
-          className="w-full cursor-not-allowed rounded-control bg-[rgba(59,46,36,.06)] px-4 py-2.5 text-caption font-semibold text-[rgba(59,46,36,.42)]"
+          className="w-full cursor-not-allowed rounded-control bg-[rgba(44,40,34,.06)] px-4 py-2.5 text-caption font-semibold text-[rgba(44,40,34,.42)]"
         >
           退房结算
         </button>
-        <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+        <p className="mt-1.5 text-caption-xs text-[rgba(44,40,34,.42)]">
           {bc('board.stayCheckoutLead')}
           {appointment.paymentMode === 'pay_at_store' ? bc('board.stayCheckoutPayStore') : bc('board.stayCheckoutOther')}
         </p>

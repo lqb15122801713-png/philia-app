@@ -152,8 +152,8 @@ export default function DevLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
-      <div className="w-full max-w-[400px]">
-        {/* 400px 登录卡（bg-card 白卡 / rounded-20 / 1px line.ring / 34·32 内边距） */}
+      <div className="w-full max-w-[420px]">
+        {/* 420px 登录卡（UX-02 W-00 居中卡 420；bg-card 白卡 / rounded-20 / 1px line.ring / 34·32 内边距） */}
         <div
           data-testid="login-gate"
           className="rounded-[20px] bg-card px-8 pb-8 pt-[34px] text-center shadow-[0_0_0_1px_rgba(44,40,34,0.09)]"
@@ -179,7 +179,7 @@ export default function DevLoginPage() {
                   <span className="block truncate text-[14px] font-semibold">
                     {user.nickname ?? user.id}
                   </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-ink-placeholder">
+                  <span className="mt-0.5 block truncate font-number text-[12px] text-ink-placeholder">
                     {user.roles.join(' / ')}
                   </span>
                 </span>
@@ -206,7 +206,7 @@ export default function DevLoginPage() {
             <div className="mt-6">
               {/* 种子账号列表 = 试样「手机号」字段位（内测登录真链路） */}
               <div ref={accountsRef} className="scroll-mt-6 text-left">
-                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-ink-placeholder">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-placeholder">
                   <Store size={12} strokeWidth={1.8} />
                   店主账号
                 </p>
@@ -234,7 +234,7 @@ export default function DevLoginPage() {
                             <span className="block truncate text-[14px] font-semibold">
                               {u.nickname}
                             </span>
-                            <span className="mt-0.5 block truncate text-[11px] text-ink-placeholder">
+                            <span className="mt-0.5 block truncate font-number text-[12px] text-ink-placeholder">
                               {roleLabel(u.roles)}
                             </span>
                           </span>
@@ -246,7 +246,7 @@ export default function DevLoginPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="rounded-control bg-danger-light px-4 py-3 text-[11px] text-danger-deep">
+                  <p className="rounded-control bg-danger-light px-4 py-3 text-[12px] text-danger-deep">
                     {seedsError
                       ? `种子用户拉取失败（${seedsError}），请确认 server 已启动，或手动输入 userId`
                       : au('auth.seedEmpty')}
@@ -256,7 +256,7 @@ export default function DevLoginPage() {
 
               {/* 内测口令字段（批次 6 B2 真实链路；Enter 提交加载账号） */}
               <div className="mt-3 text-left">
-                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-ink-placeholder">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-placeholder">
                   <KeyRound size={12} strokeWidth={1.8} />
                   内测口令{gateRequired ? '（必填）' : '（如服务端已开启口令门）'}
                 </p>
@@ -271,7 +271,7 @@ export default function DevLoginPage() {
                   className="h-[46px] rounded-control border-0 bg-canvas px-4 text-body-sm shadow-[inset_0_0_0_1px_rgba(44,40,34,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(44,40,34,0.3)] focus-visible:ring-offset-0"
                 />
                 {gateError ? (
-                  <p className="mt-1.5 text-[11px] text-danger-deep">{gateError}</p>
+                  <p className="mt-1.5 text-[12px] text-danger-deep">{gateError}</p>
                 ) : null}
               </div>
 
@@ -318,7 +318,7 @@ export default function DevLoginPage() {
                 {error}
               </p>
             ) : null}
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-ink-placeholder">
+            <p className="mt-4 text-center text-[12px] leading-relaxed text-ink-placeholder">
               {au('auth.devNote')}
             </p>
           </div>

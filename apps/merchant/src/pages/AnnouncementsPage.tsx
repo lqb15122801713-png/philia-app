@@ -73,7 +73,7 @@ function ReceiptsPanel({ announcementId }: { announcementId: string }) {
   if (readsQ.isError || !readsQ.data) {
     return (
       <div className="px-[17px] py-3">
-        <p className="text-caption text-[rgba(59,46,36,.62)]">{an('ann.common.loadFail')}</p>
+        <p className="text-caption text-[rgba(44,40,34,.62)]">{an('ann.common.loadFail')}</p>
         <Btn variant="subtle" size="sm" className="mt-2" onClick={() => void readsQ.refetch()}>
           {an('ann.common.retry')}
         </Btn>
@@ -82,27 +82,27 @@ function ReceiptsPanel({ announcementId }: { announcementId: string }) {
   }
   const { read, unread } = readsQ.data;
   if (read.length === 0 && unread.length === 0) {
-    return <p className="px-[17px] py-3 text-caption text-[rgba(59,46,36,.42)]">{an('ann.reads.empty')}</p>;
+    return <p className="px-[17px] py-3 text-caption text-[rgba(44,40,34,.42)]">{an('ann.reads.empty')}</p>;
   }
   return (
     <div className="grid gap-3 px-[17px] py-3 sm:grid-cols-2" data-testid={`ann-reads-${announcementId}`}>
       <div>
-        <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+        <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
           {an('ann.reads.readCol', { n: read.length })}
         </p>
         {read.map((r) => (
           <div key={r.staffId} className="flex items-center justify-between py-1 text-caption text-ink">
             <span>{r.name}</span>
-            <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">{fmtAt(r.readAt)}</span>
+            <span className="u1-num text-caption-xs text-[rgba(44,40,34,.42)]">{fmtAt(r.readAt)}</span>
           </div>
         ))}
       </div>
       <div>
-        <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+        <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
           {an('ann.reads.unreadCol', { n: unread.length })}
         </p>
         {unread.map((r) => (
-          <div key={r.staffId} className="py-1 text-caption text-[rgba(59,46,36,.62)]">
+          <div key={r.staffId} className="py-1 text-caption text-[rgba(44,40,34,.62)]">
             {r.name}
           </div>
         ))}
@@ -299,7 +299,7 @@ export default function AnnouncementsPage() {
       <div
         key={a.id}
         data-testid={`ann-row-${a.id}`}
-        className={`border-t border-[rgba(59,46,36,.06)] ${archived ? 'opacity-55' : ''}`}
+        className={`border-t border-[rgba(44,40,34,.06)] ${archived ? 'opacity-55' : ''}`}
       >
         <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
           <div className="min-w-0 flex-1">
@@ -310,8 +310,8 @@ export default function AnnouncementsPage() {
               {winBadge ? <Badge tone={winBadge.tone}>{winBadge.label}</Badge> : null}
               <Badge tone="muted">{targetLabel(a.targetRole)}</Badge>
             </div>
-            <div className="mt-0.5 line-clamp-2 text-caption-xs text-[rgba(59,46,36,.62)]">{a.body}</div>
-            <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <div className="mt-0.5 line-clamp-2 text-caption-xs text-[rgba(44,40,34,.62)]">{a.body}</div>
+            <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
               {fmtAt(a.publishedAt)}
               {win ? ` · ${win}` : ''}
               {' · '}
@@ -341,7 +341,7 @@ export default function AnnouncementsPage() {
           ) : null}
         </div>
         {receiptsFor === a.id ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] bg-canvas">
+          <div className="border-t border-[rgba(44,40,34,.06)] bg-canvas">
             <ReceiptsPanel announcementId={a.id} />
           </div>
         ) : null}
@@ -363,7 +363,7 @@ export default function AnnouncementsPage() {
           <h3>{an('ann.pub.title')}</h3>
           <span className="aside">{an('ann.pub.aside')}</span>
         </div>
-        <div className="space-y-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="space-y-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <Field label={an('ann.pub.titleLabel')}>
             <input
               value={title}
@@ -405,7 +405,7 @@ export default function AnnouncementsPage() {
             </span>
             <span className="ml-auto flex items-center gap-2">
               {editingDraftId ? (
-                <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{an('ann.draft.editingHint')}</span>
+                <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{an('ann.draft.editingHint')}</span>
               ) : null}
               {/* 片 2 两步流：存草稿（带 editingDraftId=更新既有草稿；新建=draft 落库） */}
               <Btn variant="subtle" size="sm" disabled={draftBusy} onClick={() => void saveDraft()} data-testid="ann-draft-new">
@@ -427,7 +427,7 @@ export default function AnnouncementsPage() {
             <span className="aside u1-num">{drafts.length}</span>
           </div>
           {drafts.map((a) => (
-            <div key={a.id} data-testid={`ann-row-${a.id}`} className="border-t border-[rgba(59,46,36,.06)]">
+            <div key={a.id} data-testid={`ann-row-${a.id}`} className="border-t border-[rgba(44,40,34,.06)]">
               <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -436,7 +436,7 @@ export default function AnnouncementsPage() {
                     <Badge tone="warn">{an('ann.draft.badge')}</Badge>
                     <Badge tone="muted">{targetLabel(a.targetRole)}</Badge>
                   </div>
-                  <div className="mt-0.5 line-clamp-2 text-caption-xs text-[rgba(59,46,36,.62)]">{a.body}</div>
+                  <div className="mt-0.5 line-clamp-2 text-caption-xs text-[rgba(44,40,34,.62)]">{a.body}</div>
                 </div>
                 <Btn variant="subtle" size="sm" onClick={() => editDraft(a)} data-testid={`ann-draft-edit-${a.id}`}>
                   {an('ann.draft.editCta')}
@@ -472,8 +472,8 @@ export default function AnnouncementsPage() {
             ))}
           </div>
         ) : listQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{an('ann.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{an('ann.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void listQ.refetch()}>
                 {an('ann.common.retry')}
@@ -481,21 +481,21 @@ export default function AnnouncementsPage() {
             </div>
           </div>
         ) : published.length === 0 && archived.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(44,40,34,.62)]">
             {an('ann.list.empty')}
           </p>
         ) : (
           <>
             {/* 已发布区（起止小字+懒算窗口章） */}
             {published.length > 0 ? (
-              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+              <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
                 {an('ann.list.publishedSection')}
               </div>
             ) : null}
             {published.map((a) => renderRow(a, false))}
             {/* 已撤下区（灰态留痕） */}
             {archived.length > 0 ? (
-              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+              <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
                 {an('ann.list.archivedSection')}
               </div>
             ) : null}
@@ -554,7 +554,7 @@ export default function AnnouncementsPage() {
             </div>
             {/* 预览子区（公告卡片样式：标题/正文/定向/置顶/起止文字化） */}
             <div>
-              <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+              <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
                 {an('ann.pubd.previewTitle')}
               </div>
               <div className="rounded-panel bg-canvas px-3.5 py-3" data-testid="ann-preview">
@@ -563,8 +563,8 @@ export default function AnnouncementsPage() {
                   {publishFor.pinned ? <Badge tone="brand">{an('ann.list.pinnedBadge')}</Badge> : null}
                   <Badge tone="muted">{targetLabel(publishFor.targetRole)}</Badge>
                 </div>
-                <div className="mt-1 whitespace-pre-wrap text-caption text-[rgba(59,46,36,.62)]">{publishFor.body}</div>
-                <div className="u1-num mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="mt-1 whitespace-pre-wrap text-caption text-[rgba(44,40,34,.62)]">{publishFor.body}</div>
+                <div className="u1-num mt-1 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {windowText({
                     startsAt: startsAtInput.trim() !== '' ? new Date(startsAtInput).toISOString() : null,
                     endsAt: endsAtInput.trim() !== '' ? new Date(endsAtInput).toISOString() : null,

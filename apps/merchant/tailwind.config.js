@@ -61,6 +61,12 @@ module.exports = {
       boxShadow: {
         xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
       },
+      fontSize: {
+        /* PD45 U6 商家桌面（Ready §1.C 硬尺：副文 ≥12px）：
+           商家端内把 preset caption-xs 11px 抬为 12px——仅本端构建生效，
+           packages preset 与客/员两端不动（他片令围不串）。 */
+        'caption-xs': ['12px', { lineHeight: '16px' }],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

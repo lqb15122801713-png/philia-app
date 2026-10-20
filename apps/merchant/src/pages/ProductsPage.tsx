@@ -398,13 +398,16 @@ export default function ProductsPage() {
                 {pd('prod.csvPreviewCta')}
               </QuietButton>
               {canExecute ? (
-                <LemonButton
-                  testid="csv-execute"
+                /* PD45 U6：cream 预算收敛——本屏唯一 cream=＋新增商品；CSV 确认导入降深棕 CTA */
+                <button
+                  type="button"
+                  data-testid="csv-execute"
                   disabled={executeM.isPending}
                   onClick={() => executeM.mutate()}
+                  className="rounded-control bg-brand-cta px-4 py-3.5 text-caption font-bold text-brand-cta-on shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
                 >
                   {pd('prod.csvExecuteCta')}
-                </LemonButton>
+                </button>
               ) : null}
             </div>
             {/* 大批片 4 导入说明：可选尾列 进价(元)/库存下限/库存上限（server 已扩列兼容） */}
@@ -556,9 +559,16 @@ export default function ProductsPage() {
                 <QuietButton testid="products-bulk-cancel" onClick={exitBulk} disabled={bulkSaving}>
                   {pd('prod.bulkCancel')}
                 </QuietButton>
-                <LemonButton testid="products-bulk-save" disabled={bulkSaving} onClick={() => void bulkSave()}>
+                {/* PD45 U6：cream 预算收敛——批量保存降深棕 CTA（屏唯一 cream=＋新增商品） */}
+                <button
+                  type="button"
+                  data-testid="products-bulk-save"
+                  disabled={bulkSaving}
+                  onClick={() => void bulkSave()}
+                  className="rounded-control bg-brand-cta px-4 py-3.5 text-caption font-bold text-brand-cta-on shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+                >
                   {pd('prod.bulkSave')}
-                </LemonButton>
+                </button>
               </div>
             </div>
           ) : null}

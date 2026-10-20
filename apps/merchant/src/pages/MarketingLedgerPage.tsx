@@ -102,8 +102,8 @@ function PanelBody({
   }
   if (q.isError) {
     return (
-      <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{mk('mk.common.loadFail')}</p>
+      <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+        <p className="text-body-sm text-[rgba(44,40,34,.62)]">{mk('mk.common.loadFail')}</p>
         <div className="mt-4">
           <Btn variant="subtle" size="sm" onClick={() => void q.refetch()}>
             {mk('mk.common.retry')}
@@ -114,7 +114,7 @@ function PanelBody({
   }
   if (!children) {
     return (
-      <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+      <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
         {empty}
       </p>
     );
@@ -538,15 +538,15 @@ export default function MarketingLedgerPage() {
           <h3>{mk('mk.exp.title')}</h3>
           <span className="aside">{mk('mk.exp.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
-          <label className="flex items-center gap-2 text-caption text-[rgba(59,46,36,.62)]">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
+          <label className="flex items-center gap-2 text-caption text-[rgba(44,40,34,.62)]">
             {mk('mk.exp.monthLabel')}
             <input
               type="month"
               value={expMonth}
               onChange={(e) => setExpMonth(e.target.value)}
               data-testid="ledger-exp-month"
-              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
             />
           </label>
           {expMonth ? (
@@ -560,7 +560,7 @@ export default function MarketingLedgerPage() {
           </Btn>
         </div>
         {summary ? (
-          <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid="ledger-exp-summary">
+          <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid="ledger-exp-summary">
             <span className="u3-st live">
               {mk('mk.exp.summaryTotal')} {fmtMoney(summary.totalFen)}
             </span>
@@ -592,7 +592,7 @@ export default function MarketingLedgerPage() {
                       <td className="font-semibold">{expenseTypeLabel(r.type)}</td>
                       <td className="u1-num text-right font-bold">{fmtMoney(r.amountFen)}</td>
                       <td className="u1-num">{r.bizMonth}</td>
-                      <td className="max-w-48 truncate text-caption-xs text-[rgba(59,46,36,.62)]">{r.note ?? '—'}</td>
+                      <td className="max-w-48 truncate text-caption-xs text-[rgba(44,40,34,.62)]">{r.note ?? '—'}</td>
                       <td className="text-caption-xs">{r.operatorName ?? '—'}</td>
                       <td className="u1-num text-right text-caption-xs">{fmtDateTime(r.createdAt)}</td>
                       {role.isOwner ? (
@@ -616,7 +616,7 @@ export default function MarketingLedgerPage() {
           )}
         </PanelBody>
         {expenseQ.data?.note ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]">
             {expenseQ.data.note}
           </p>
         ) : null}
@@ -628,7 +628,7 @@ export default function MarketingLedgerPage() {
           <h3>{mk('mk.exch.title')}</h3>
           <span className="aside">{mk('mk.exch.aside')}</span>
         </div>
-        <div className="flex items-center justify-end border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+        <div className="flex items-center justify-end border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
           <Btn variant="primary" size="sm" onClick={() => setExchOpen(true)} data-testid="ledger-exch-create">
             {mk('mk.exch.createCta')}
           </Btn>
@@ -655,7 +655,7 @@ export default function MarketingLedgerPage() {
                       <td className="font-semibold">{r.newItemName}</td>
                       <td className="u1-num text-right font-bold">{diffLabel(r.diffFen)}</td>
                       <td>{exchangeStatusBadge(r.status)}</td>
-                      <td className="max-w-40 truncate text-caption-xs text-[rgba(59,46,36,.62)]">{r.note ?? '—'}</td>
+                      <td className="max-w-40 truncate text-caption-xs text-[rgba(44,40,34,.62)]">{r.note ?? '—'}</td>
                       <td className="text-caption-xs">{r.operatorName ?? '—'}</td>
                       <td>
                         <div className="flex gap-1.5">
@@ -698,7 +698,7 @@ export default function MarketingLedgerPage() {
           <h3>{mk('mk.insp.title')}</h3>
           <span className="aside">{mk('mk.insp.aside')}</span>
         </div>
-        <div className="flex items-center justify-end border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+        <div className="flex items-center justify-end border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
           <Btn variant="primary" size="sm" onClick={() => setInspOpen(true)} data-testid="ledger-insp-create">
             {mk('mk.insp.createCta')}
           </Btn>
@@ -724,7 +724,7 @@ export default function MarketingLedgerPage() {
                       <td className="font-semibold">{r.productName}</td>
                       <td className="u1-num text-right">{r.qty}</td>
                       <td>{inspectionStatusBadge(r.status)}</td>
-                      <td className="max-w-48 truncate text-caption-xs text-[rgba(59,46,36,.62)]">{r.qcNote ?? '—'}</td>
+                      <td className="max-w-48 truncate text-caption-xs text-[rgba(44,40,34,.62)]">{r.qcNote ?? '—'}</td>
                       <td className="text-caption-xs">{r.operatorName ?? '—'}</td>
                       <td className="u1-num text-right text-caption-xs">{fmtDateTime(r.createdAt)}</td>
                       <td>
@@ -761,7 +761,7 @@ export default function MarketingLedgerPage() {
           )}
         </PanelBody>
         {inspQ.data?.note ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]">
             {inspQ.data.note}
           </p>
         ) : null}
@@ -773,15 +773,15 @@ export default function MarketingLedgerPage() {
           <h3>{mk('mk.snap.title')}</h3>
           <span className="aside">{mk('mk.snap.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
-          <label className="flex items-center gap-2 text-caption text-[rgba(59,46,36,.62)]">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
+          <label className="flex items-center gap-2 text-caption text-[rgba(44,40,34,.62)]">
             {mk('mk.exp.monthLabel')}
             <input
               type="month"
               value={snapMonth}
               onChange={(e) => setSnapMonth(e.target.value)}
               data-testid="ledger-snap-month"
-              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
             />
           </label>
           {snapMonth ? (
@@ -822,7 +822,7 @@ export default function MarketingLedgerPage() {
           )}
         </PanelBody>
         {snapQ.data?.note ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]">
             {snapQ.data.note}
           </p>
         ) : null}

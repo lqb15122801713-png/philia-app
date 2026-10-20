@@ -1,0 +1,421 @@
+{
+  "at": "2026-10-20T03:48:10.523Z",
+  "failures": 0,
+  "results": [
+    {
+      "ok": true,
+      "name": "造单：A/B 洗护单 confirmed 且指派阿强",
+      "detail": "A=01M5BPJZ911WAHG0RYH9MG2VNS B=01M5BPJZANJKKWZEHSPN373D5J"
+    },
+    {
+      "ok": true,
+      "name": "A 单核销 → in_service",
+      "detail": "status=in_service"
+    },
+    {
+      "ok": true,
+      "name": "寄养单核销 → in_boarding",
+      "detail": "status=in_boarding id=01M5BPJZCGN1BRVX487724SYHF"
+    },
+    {
+      "ok": true,
+      "name": "收银 settle 两单",
+      "detail": "bill1=HD-20261020-001 bill2=HD-20261020-002"
+    },
+    {
+      "ok": true,
+      "name": "退款 execute×2（一待实退一已实退）",
+      "detail": "r1=01M5BPJZEQ83RPDGENDEZKBSA2 r2=01M5BPJZF3ADHDC0YYSJN3DJ0H"
+    },
+    {
+      "ok": true,
+      "name": "C6 日结冻结（实点=账面，差异 0）",
+      "detail": "bookCash=12400 close=01M5BPJZG3A019YGV5C579V0A9"
+    },
+    {
+      "ok": true,
+      "name": "C4 僵尸造态：checked_in_at 回拨 25h（秒级）",
+      "detail": "checked_in_at=1792377893"
+    },
+    {
+      "ok": true,
+      "name": "D-29 冻结后新开单（自动开班）",
+      "detail": "bill3=HD-20261020-003"
+    },
+    {
+      "ok": true,
+      "name": "W-00 登录页渲染",
+      "detail": "login-primary"
+    },
+    {
+      "ok": true,
+      "name": "W-00 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-00 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-00 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店主）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "W-01 驾驶舱渲染（WAlert+M3+rail）",
+      "detail": "{\"rail\":true,\"alert\":true,\"m3\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-01 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-01 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-01 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "W-02 台账渲染（真单≥2 行）",
+      "detail": "{\"rows\":3,\"resched\":true,\"force\":true}"
+    },
+    {
+      "ok": true,
+      "name": "C5 改期入口分列：列表行「改期」可见（pending|confirmed 资格行）",
+      "detail": "resched=true"
+    },
+    {
+      "ok": true,
+      "name": "C4 强制完成入口分列：僵尸行「强制完成」可见（>24h 未翻步）",
+      "detail": "force=true"
+    },
+    {
+      "ok": true,
+      "name": "W-02 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-02 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-02 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "C5 改期弹层自列表行开启（取景后不提交）",
+      "detail": "{\"sheet\":true,\"dialog\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-03 详情渲染（状态流+信息区）",
+      "detail": "{\"flow\":true,\"info\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-03 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-03 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-03 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-04 监控 Hub 僵尸出列（异常待清）",
+      "detail": "{\"zombieText\":true,\"alertForce\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-04 WAlert 行内「强制完成」次动作在场（左赭红仅异常）",
+      "detail": "alertForce=true"
+    },
+    {
+      "ok": true,
+      "name": "W-04 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-04 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-04 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-05 寄养渲染（M3+在店台账）",
+      "detail": "{\"m3\":true,\"stay\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-05 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-05 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-05 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "W-06 收银台渲染",
+      "detail": "{\"page\":true,\"redline\":false}"
+    },
+    {
+      "ok": true,
+      "name": "W-06 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-06 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-06 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "C6 日结冻结 banner 明示",
+      "detail": "banner=true"
+    },
+    {
+      "ok": true,
+      "name": "C6 班次区冻结徽明示",
+      "detail": "badge=true"
+    },
+    {
+      "ok": true,
+      "name": "C6 历史行「已冻结」标签分列",
+      "detail": "rows=true"
+    },
+    {
+      "ok": true,
+      "name": "W-07 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-07 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-07 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "W-08 退款渲染（双态真行≥2）",
+      "detail": "{\"policy\":true,\"rows\":2}"
+    },
+    {
+      "ok": true,
+      "name": "W-08 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-08 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-08 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-09 商城订单渲染（G1+台账真行／空态诚实）",
+      "detail": "{\"chips\":true,\"empty\":true,\"rows\":0}"
+    },
+    {
+      "ok": true,
+      "name": "W-09 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-09 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-09 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-10 商品渲染（CSV+类目+台账）",
+      "detail": "{\"create\":true,\"body\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-10 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-10 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-10 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "W-11 会员·次卡渲染（M3+台账）",
+      "detail": "{\"sell\":true,\"stats\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-11 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-11 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-11 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "W-12 员工渲染（台账真行）",
+      "detail": "{\"invite\":true,\"rows\":4}"
+    },
+    {
+      "ok": true,
+      "name": "W-12 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-12 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-12 · cream 计数（≤2）",
+      "detail": "cream=1"
+    },
+    {
+      "ok": true,
+      "name": "W-13 报表渲染（四格+目录 D1–D9）",
+      "detail": "{\"quad\":true,\"dir\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-13 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-13 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-13 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-14 权限矩阵渲染（四态格+锁死区）",
+      "detail": "{\"matrix\":true,\"locked\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-14 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-14 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-14 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-15 门店设置渲染（档案+开关+端口行）",
+      "detail": "{\"entries\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-15 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-15 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-15 · cream 计数（≤2）",
+      "detail": "cream=0"
+    },
+    {
+      "ok": true,
+      "name": "W-16 运营后台端渲染（展示名无「开发者」滞后）",
+      "detail": "{\"name\":true,\"stale\":true}"
+    },
+    {
+      "ok": true,
+      "name": "W-16 · 字阶闸（可读文字全量 ≥12px）",
+      "detail": "全绿"
+    },
+    {
+      "ok": true,
+      "name": "W-16 · 爪印闸（=0）",
+      "detail": "=0"
+    },
+    {
+      "ok": true,
+      "name": "W-16 · cream 计数（≤2）",
+      "detail": "cream=0"
+    }
+  ]
+}

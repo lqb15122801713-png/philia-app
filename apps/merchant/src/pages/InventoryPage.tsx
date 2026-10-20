@@ -304,7 +304,7 @@ export default function InventoryPage() {
       </p>
 
       {/* 毛利视界注记（页顶：进价/成本=店主/店长视界，server 双层闸） */}
-      <p className="mb-3 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="inventory-margin-note">
+      <p className="mb-3 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="inventory-margin-note">
         {iv('inv.marginNote')}
       </p>
 
@@ -321,8 +321,8 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : alertsQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void alertsQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -330,26 +330,26 @@ export default function InventoryPage() {
             </div>
           </div>
         ) : !alerts || (alerts.low.length === 0 && alerts.high.length === 0) ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('inv.alerts.empty')}
           </p>
         ) : (
           <>
             {alerts.low.map((a) => (
-              <div key={`low-${a.productId}`} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`inventory-alert-low-${a.productId}`}>
+              <div key={`low-${a.productId}`} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`inventory-alert-low-${a.productId}`}>
                 <span className="u3-st red">{iv('inv.alerts.lowBadge')}</span>
                 <span className="min-w-0 flex-1 text-body-sm font-bold text-ink">{a.name}</span>
-                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">
+                <span className="u1-num text-caption-xs text-[rgba(44,40,34,.42)]">
                   {iv('inv.alerts.stockNow', { stock: a.stock, min: a.minStock ?? 0 })}
                 </span>
                 <Badge tone="danger">{iv('inv.alerts.suggestQty', { n: a.suggestQty })}</Badge>
               </div>
             ))}
             {alerts.high.map((a) => (
-              <div key={`high-${a.productId}`} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`inventory-alert-high-${a.productId}`}>
+              <div key={`high-${a.productId}`} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`inventory-alert-high-${a.productId}`}>
                 <span className="u3-st amber">{iv('inv.alerts.highBadge')}</span>
                 <span className="min-w-0 flex-1 text-body-sm font-bold text-ink">{a.name}</span>
-                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">
+                <span className="u1-num text-caption-xs text-[rgba(44,40,34,.42)]">
                   {iv('inv.alerts.stockHigh', { stock: a.stock, max: a.maxStock ?? 0 })}
                 </span>
               </div>
@@ -373,8 +373,8 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : expiryQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void expiryQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -382,16 +382,16 @@ export default function InventoryPage() {
             </div>
           </div>
         ) : expiryItems.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('inv.expiry.empty')}
           </p>
         ) : (
           expiryItems.map((b) => (
-            <div key={b.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`inventory-expiry-row-${b.id}`}>
+            <div key={b.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`inventory-expiry-row-${b.id}`}>
               <span className={gradeCls(b.grade)}>{gradeLabel(b.grade)}</span>
               <div className="min-w-0 flex-1">
                 <div className="text-body-sm font-bold text-ink">{b.productName}</div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {b.batchNo} · {iv('inv.batch.qtyUnit', { n: b.qty })} · {fmtAt(b.expiryDate)}
                   {b.daysLeft !== null
                     ? ` · ${b.daysLeft < 0 ? iv('inv.expiry.expiredDays', { n: -b.daysLeft }) : iv('inv.expiry.daysLeft', { n: b.daysLeft })}`
@@ -429,7 +429,7 @@ export default function InventoryPage() {
           <h3>{iv('inv.batch.title')}</h3>
           <span className="aside">{iv('inv.batch.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <select
             className={inputCls}
             style={{ width: 'auto' }}
@@ -455,8 +455,8 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : batchQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void batchQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -464,12 +464,12 @@ export default function InventoryPage() {
             </div>
           </div>
         ) : batches.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('inv.batch.empty')}
           </p>
         ) : (
           batches.map((b) => (
-            <div key={b.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`inventory-batch-row-${b.id}`}>
+            <div key={b.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`inventory-batch-row-${b.id}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-body-sm font-bold text-ink">{b.productName}</span>
@@ -479,7 +479,7 @@ export default function InventoryPage() {
                     {batchStatusLabel(b.status)}
                   </Badge>
                 </div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {b.batchNo} · {iv('inv.batch.qtyUnit', { n: b.qty })} ·{' '}
                   {b.expiryDate
                     ? `${fmtAt(b.expiryDate)}${b.daysLeft !== null ? ` · ${b.daysLeft < 0 ? iv('inv.expiry.expiredDays', { n: -b.daysLeft }) : iv('inv.expiry.daysLeft', { n: b.daysLeft })}` : ''}`
@@ -497,7 +497,7 @@ export default function InventoryPage() {
           <h3>{iv('inv.writeoff.title')}</h3>
           <span className="aside">{iv('inv.writeoff.aside')}</span>
         </div>
-        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <Btn variant="primary" size="sm" onClick={openWriteoff} data-testid="inventory-writeoff-create">
             {iv('inv.writeoff.createCta')}
           </Btn>
@@ -509,8 +509,8 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : writeoffQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void writeoffQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -518,12 +518,12 @@ export default function InventoryPage() {
             </div>
           </div>
         ) : writeoffs.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('inv.writeoff.empty')}
           </p>
         ) : (
           writeoffs.map((w) => (
-            <div key={w.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`inventory-writeoff-row-${w.id}`}>
+            <div key={w.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`inventory-writeoff-row-${w.id}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-body-sm font-bold text-ink">{w.productName}</span>
@@ -532,7 +532,7 @@ export default function InventoryPage() {
                     {writeoffStatusLabel(w.status)}
                   </Badge>
                 </div>
-                <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {w.reason}
                   {w.operatorName ? ` · ${w.operatorName}` : ''}
                   <span className="u1-num"> · {fmtAt(w.createdAt)}</span>
@@ -556,8 +556,8 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : productsQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void productsQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -565,15 +565,15 @@ export default function InventoryPage() {
             </div>
           </div>
         ) : products.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('inv.soldout.empty')}
           </p>
         ) : (
           products.map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`inventory-soldout-row-${p.id}`}>
+            <div key={p.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`inventory-soldout-row-${p.id}`}>
               <div className="min-w-0 flex-1">
                 <div className="text-body-sm font-bold text-ink">{p.name}</div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {iv('inv.soldout.stockLabel', { n: p.stock })}
                   {role.canManage ? ` · ${iv('inv.soldout.costLabel')} ${fmtMoney(p.costFen)}` : ''}
                 </div>
@@ -626,7 +626,7 @@ export default function InventoryPage() {
           maxLength={200}
           placeholder={iv('inv.expiry.destroyReasonPh')}
           data-testid="inventory-destroy-note"
-          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
         />
       </Modal>
 

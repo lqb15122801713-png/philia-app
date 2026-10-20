@@ -578,7 +578,8 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
               if (amountFen === null) return
               recordM.mutate({ kind, amountFen, reason: reason.trim() })
             }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary px-4 py-2 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            /* PD45 U6：cream 预算收敛——本屏「此刻要做」=日结并冻结唯一 cream；现金登记降深棕 CTA */
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand-cta px-4 py-2 text-caption font-bold text-brand-cta-on shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             <Wallet size={13} strokeWidth={1.8} aria-hidden />
             {recordM.isPending ? '登记中…' : '登记'}
@@ -726,7 +727,8 @@ export function DayCloseList({
                       ) : reversed ? (
                         <span className="u3-st done">已冲正</span>
                       ) : (
-                        <span className="u3-st live">冻结生效</span>
+                        /* PD45 U6 · C6：日结「已冻结」明示标签分列（原「冻结生效」同义明示化） */
+                        <span className="u3-st live">{cc('cashier.closeStatusFrozen')}</span>
                       )}
                     </td>
                     <td className="text-ink-secondary">{r.createdByName ?? '—'}</td>
@@ -947,7 +949,7 @@ export function DayCloseDetailDialog({
           <div className="u3-field"><span className="lb">冲正单</span><span className="vl font-number tabular-nums">{row.reversalId}</span></div>
         ) : null}
         <div className="u3-field"><span className="lb">状态</span><span className="vl">
-          {isReversalRow ? <span className="u3-st done">冲正单</span> : row.status === 'reversed' ? <span className="u3-st done">已冲正</span> : <span className="u3-st live">冻结生效</span>}
+          {isReversalRow ? <span className="u3-st done">冲正单</span> : row.status === 'reversed' ? <span className="u3-st done">已冲正</span> : <span className="u3-st live">{cc('cashier.closeStatusFrozen')}</span>}
         </span></div>
         <div className="u3-field"><span className="lb">账面现金</span><span className="vl font-number tabular-nums">¥{fenToYuan(fz(row.bookCashFen))}</span></div>
         <div className="u3-field"><span className="lb">实点现金</span><span className="vl font-number tabular-nums">¥{fenToYuan(fz(row.actualCashFen))}</span></div>
