@@ -12817,7 +12817,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "dash.m3ChainNote",
   "domain": "merchant:dashboard",
-  "text": "合计+分栏并列（读口=store.chainDashboard 三店真值）",
+  "text": "合计+分栏并列（三店真值）",
   "screen": "商家·经营总览",
   "position": "DashboardPage 页面内文案"
  },

@@ -2,7 +2,7 @@
  * 运营 /ops（员工端骨架整建批 片 3 B5 · 商家端）
  *
  * 一页三竖排分区（u3-panel 竖排工艺照 ScheduleManagePage）：
- * - 区 1 PDCA 问题闭环：pdca.list（状态滤签 全部/待整改/整改中/待复检/已闭环）+
+ * - 区 1 PDCA 问题闭环：pdca.listForOps（PD-47 M1 商家读口；状态滤签 全部/待整改/整改中/待复检/已闭环）+
  *   待复检行出复检动作（recheck pass/fail，note 必填走 Modal 弹层）+ 行内展开
  *   timeline 透出（只增留痕）；
  * - 区 2 自检审核：selfCheck.listPending 列表 → 行内展开自检快照逐项（打点态/
@@ -118,7 +118,7 @@ export default function OpsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const pdcaQ = useQuery({
     queryKey: ['ops', 'pdca', statusFilter],
-    queryFn: () => collab.pdca.list.query(statusFilter === 'all' ? {} : { status: statusFilter }),
+    queryFn: () => collab.pdca.listForOps.query(statusFilter === 'all' ? {} : { status: statusFilter }),
   });
   const [expandIssue, setExpandIssue] = useState<string | null>(null);
 

@@ -9,7 +9,7 @@
  *
  * 返回形状按任务书口径推断（集成期对齐项，页面已做防御渲染）：
  * - taskExec.templates → { templates }；taskExec.listRuns → { runs }（runs 携模板名/完成人名）
- * - pdca.list → { issues }（issue 携 raisedByName/timeline 透出）；pdca.summary → { byStatus, byCategory, closed30d }
+ * - pdca.listForOps → { issues }（PD-47 M1 商家读口；issue 携 raisedByName/timeline 透出）；pdca.summary → { byStatus, byCategory, closed30d }
  * - selfCheck.listPending → { runs }（run 携 items 快照+score+filledByName）
  * - announce.list → { announcements }（manager 视界含 archived+readCount，targetTotal 可选透出作 x/y 分母）
  * - announce.reads → { read: [{staffId,name,readAt}], unread: [{staffId,name}] }
@@ -186,7 +186,7 @@ export interface TaskCollabClient {
     listRuns: { query(input: { from: string; to: string }): Promise<{ runs: TaskRunRow[] }> };
   };
   pdca: {
-    list: { query(input: { status?: string }): Promise<{ issues: PdcaIssueRow[] }> };
+    listForOps: { query(input: { status?: string }): Promise<{ issues: PdcaIssueRow[] }> };
     recheck: { mutate(input: { issueId: string; result: 'pass' | 'fail'; note: string }): Promise<unknown> };
     summary: { query(): Promise<PdcaSummary> };
   };
