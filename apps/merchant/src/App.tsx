@@ -36,6 +36,7 @@ import LedgerPage from './pages/LedgerPage'
 import MarketingPage from './pages/MarketingPage'
 import MarketingLedgerPage from './pages/MarketingLedgerPage'
 import MatrixPage from './pages/MatrixPage'
+import MePage from './pages/MePage'
 import MonitorHubPage from './pages/MonitorHubPage'
 import OpsPage from './pages/OpsPage'
 import OrdersPage from './pages/OrdersPage'
@@ -150,6 +151,8 @@ function ProtectedRoutes() {
         <Route path="/xp-admin" element={<XpAdminPage />} />
         {/* 商家端控制台骨架批 片 5 段 3：权限矩阵（W-14 真页：静态四态矩阵只读；rail 管理组 rail-matrix） */}
         <Route path="/matrix" element={<MatrixPage />} />
+        {/* PD46 U7：W-我的 店主真页 /me（`203:5480` 身份＋经营/账本/系统入口；dock 第五槽落点） */}
+        <Route path="/me" element={<MePage />} />
         {/* 商家端控制台骨架批 片 5 段 3：开发者管理端（W-16 聚合：直嵌 rules/copy/slots 三页内核；
             旧三路由 /settings/rules|copy|slots 保留可直达不重定向，rail foot 子行不动） */}
         <Route path="/console" element={<ConsolePage />} />

@@ -143,6 +143,14 @@
 .wsk-matrix .mx.readonly { color: var(--wsk-khaki); }
 .wsk-matrix .mx.locked { display: inline-flex; border-radius: 999px; padding: 2px 8px; box-shadow: inset 0 0 0 1px var(--wsk-danger); color: var(--wsk-danger); font-size: 12px; }
 
+/* ---- W-14 手机分区卡列（PD46 U7 · `213:412`：可滚动分区卡列，非桌面缩略糊图；
+     每角色一卡，卡内逐权限行+四态格；<lg 由 skeleton WMatrix 切换渲染，桌面表不动） ---- */
+.wsk-matrix .mrole { padding-bottom: 8px; }
+.wsk-matrix .mrole + .mrole { box-shadow: inset 0 1px 0 var(--wsk-hairline-soft); }
+.wsk-matrix .mrole-hd { padding: 12px 16px 4px; font-size: 13px; font-weight: 800; }
+.wsk-matrix .mrow { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 6px 16px; font-size: 12.5px; }
+.wsk-matrix .mrow .mx { margin-left: auto; }
+
 /* ---- M8 wc-ports 左端口目录（252 宽；域章 22 方+mono 行；激活=金左条） ---- */
 .wsk-cports { width: 252px; flex: none; background: var(--wsk-card); border-radius: 18px; box-shadow: 0 0 0 1px var(--wsk-ring); padding: 8px; }
 .wsk-cports .gp { font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .18em; color: var(--wsk-muted); text-transform: uppercase; padding: 10px 10px 6px; }
@@ -256,4 +264,57 @@
 .wdock a.on::before {
   content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 22px; height: 3px; border-radius: 0 0 3px 3px; background: var(--wsk-gold-pale);
+}
+
+/* ============================================================================
+ * PD46 U7 · 商家手机 phone-v57 基样（对照 figma bro B10/B10b 补帧 · 390 单列）
+ * 作用域：dock 形态全档（<xl，与 .wrail/.wdock 互斥断点同线）；≥xl 桌面零改动（U6 另片）。
+ * 硬尺：可读文字全量 ≥12px（含 mono 注/pill/dock 签）；390 单列；触控行 ≥44；
+ *   cream 仅「此刻」；赭红仅异常/锁死/危险区；禁爪印。
+ * ========================================================================== */
+@media (max-width: 1279.5px) {
+  /* ---- 全局副文抬档：text-caption-xs(11) → 12（console.css 后于 utilities 加载，同优先级后者胜） ---- */
+  .text-caption-xs { font-size: 12px; }
+
+  /* ---- wsk 件族小字全量抬 ≥12 ---- */
+  .wsk-top .no { font-size: 12px; letter-spacing: .12em; }
+  .wsk-total .cap, .wsk-total .cell .k, .wsk-total .spark .lb { font-size: 12px; }
+  .wsk-postcard .eb, .wsk-postcard .figcap { font-size: 12px; }
+  .wsk-postcard .cr .v { font-size: 12px; }
+  .wsk-list .it .s { font-size: 12px; }
+  .wsk-pill { font-size: 12px; padding: 4px 10px; }
+  .wsk-capcal .hd .lg { font-size: 12px; }
+  .wsk-capcal .grid > div { font-size: 12px !important; }
+  .wsk-capcal .d .ful { font-size: 12px !important; }
+  .wsk-redline .tt, .wsk-redline .it { font-size: 12px; }
+  .wsk-matrix th { font-size: 12px; }
+  .wsk-matrix .mx { font-size: 12px; }
+  .wsk-matrix .mx.locked { font-size: 12px; }
+  .wsk-cports .gp { font-size: 12px; }
+  .wsk-cports .it .no, .wsk-cports .it .seal { font-size: 12px; }
+  .wsk-cpub .st, .wsk-cpub .rb { font-size: 12px; }
+  .wsk-cpub .ar { font-size: 12px; }
+  .wsk-clog .row .meta { font-size: 12px; }
+  .wsk-fdot .tx small { font-size: 12px; }
+  .wsk-hd .a { font-size: 12px; }
+  .wsk-note { font-size: 12px; }
+
+  /* ---- W-14 权限矩阵/控制台端口目录：手机整宽堆叠（非桌面缩略） ---- */
+  .wsk-cports { width: 100%; }
+
+  /* ---- 手机触控行高：wlist 行 ≥44 ---- */
+  .wsk-list .it { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+
+  /* ---- dock 签 10.5 → 12（五槽冻结：总览/门店/收银/报表/我的） ---- */
+  .wdock a { font-size: 12px; }
+
+  /* ---- u3 件族小字全量抬 ≥12（index.css @layer components，本文件未分层——未分层胜分层） ---- */
+  .u3-panel-head .aside { font-size: 12px; }
+  .u3-tbl th { font-size: 12px; }
+  .u3-st { font-size: 12px; }
+  .u3-stat .cap, .u3-stat .d { font-size: 12px; }
+  .u3-todo .tx small { font-size: 12px; }
+  .u3-kv .cap { font-size: 12px; }
+  .u3-field .lb { font-size: 12px; }
+  .u3-stepv .tx small { font-size: 12px; }
 }

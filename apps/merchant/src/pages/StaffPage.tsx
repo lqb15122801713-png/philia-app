@@ -214,7 +214,9 @@ export default function StaffPage() {
               </div>
             </div>
           ) : (
-            <table className="u3-tbl">
+            /* 390 降级：横滑容器（u3-noscrollx），表本体保底宽 */
+            <div className="u3-noscrollx overflow-x-auto">
+            <table className="u3-tbl min-w-[860px]">
               <thead>
                 <tr>
                   <th>员工</th>
@@ -314,7 +316,7 @@ export default function StaffPage() {
                             type="button"
                             onClick={() => setExitFor(s)}
                             data-testid={`staff-exit-${s.id}`}
-                            className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                            className="min-h-[36px] text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 lg:min-h-0"
                           >
                             {sf('staff.exitCta')}
                           </button>
@@ -323,7 +325,7 @@ export default function StaffPage() {
                               type="button"
                               disabled={enablingId === s.id}
                               onClick={() => void enableStaff(s)}
-                              className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                              className="min-h-[36px] text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50 lg:min-h-0"
                             >
                               {enablingId === s.id ? '启用中…' : '启用 ›'}
                             </button>
@@ -331,7 +333,7 @@ export default function StaffPage() {
                             <button
                               type="button"
                               onClick={() => setEditFor(s)}
-                              className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                              className="min-h-[36px] text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 lg:min-h-0"
                             >
                               编辑 ›
                             </button>
@@ -343,6 +345,7 @@ export default function StaffPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
           {!staffQuery.isPending && !staffQuery.isError && staff.length > 0 ? (
             <p className="wsk-note border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">

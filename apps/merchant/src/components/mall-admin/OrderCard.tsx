@@ -105,7 +105,7 @@ export default function OrderRow({
             type="button"
             onClick={() => onShip(order)}
             data-testid={`ship-${order.id}`}
-            className="rounded-chip px-2 py-1 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring hover:bg-[rgba(44,40,34,.05)] active:scale-92"
+            className="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring hover:bg-[rgba(44,40,34,.05)] active:scale-92 lg:min-h-0"
           >
             发货 ›
           </button>

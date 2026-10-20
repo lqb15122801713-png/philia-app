@@ -373,22 +373,25 @@ export default function AppointmentsPage() {
         {listQuery.isPending ? (
           /* 加载：骨架行（禁转圈） */
           <div className="u3-panel" aria-busy="true" aria-label="加载中">
-            <table className="u3-tbl">
-              {tableHead}
-              <tbody>
-                {[0, 1, 2, 3, 4].map((r) => (
-                  <tr key={r}>
-                    {['w-[64px]', 'w-[120px]', 'w-[88px]', 'w-[52px]', 'w-[52px]', 'w-[76px]', 'w-[44px]'].map(
-                      (w, c) => (
-                        <td key={c}>
-                          <Skeleton className={`h-3 ${w}`} />
-                        </td>
-                      ),
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {/* 390 降级：横滑容器（u3-noscrollx），表本体保底宽（同 refunds 模式） */}
+            <div className="u3-noscrollx overflow-x-auto">
+              <table className="u3-tbl min-w-[860px]">
+                {tableHead}
+                <tbody>
+                  {[0, 1, 2, 3, 4].map((r) => (
+                    <tr key={r}>
+                      {['w-[64px]', 'w-[120px]', 'w-[88px]', 'w-[52px]', 'w-[52px]', 'w-[76px]', 'w-[44px]'].map(
+                        (w, c) => (
+                          <td key={c}>
+                            <Skeleton className={`h-3 ${w}`} />
+                          </td>
+                        ),
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : listQuery.isError ? (
           /* 错误：文案 + 重试 */
@@ -405,100 +408,103 @@ export default function AppointmentsPage() {
         ) : (
           /* 数据 / 空态 */
           <div className="u3-panel">
-            <table className="u3-tbl">
-              {tableHead}
-              <tbody>
-                {visible.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-16 text-center text-ink-placeholder">
-                      {ac('appt.listEmpty')}
-                    </td>
-                  </tr>
-                ) : (
-                  visible.map((item) => {
-                    const cap = statusCapsule(item, stepProgress.get(item.id) ?? null);
-                    const srcLabel = assignSourceLabel(item.assignSource);
-                    const cancelled = item.status === 'cancelled';
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`rowlink ${cancelled ? 'opacity-50' : ''}`}
-                        onClick={() => navigate(`/appointments/${item.id}`)}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') navigate(`/appointments/${item.id}`);
-                        }}
-                      >
-                        {/* 核销码（mono 数据位） */}
-                        <td className="u1-num font-bold tracking-[0.08em]">{item.code}</td>
-                        {/* 宠物 / 服务（副行：客户昵称·尾号） */}
-                        <td>
-                          <span className="font-semibold">{item.petName ?? '宠物'}</span>
-                          <span className="mt-0.5 block text-[12px] text-ink-placeholder">
-                            {item.serviceName ?? '服务'} ·{' '}
-                            {customerLabel(item.customerName, item.customerPhoneTail)}
-                          </span>
-                        </td>
-                        {/* 员工 + 来源小签 */}
-                        <td>
-                          {item.staffName ?? '未指派'}
-                          {srcLabel ? (
-                            <span className="ml-1 text-[12px] text-ink-placeholder">
-                              {srcLabel}
+            {/* 390 降级：横滑容器（u3-noscrollx），表本体保底宽（同 refunds 模式） */}
+            <div className="u3-noscrollx overflow-x-auto">
+              <table className="u3-tbl min-w-[860px]">
+                {tableHead}
+                <tbody>
+                  {visible.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-16 text-center text-ink-placeholder">
+                        {ac('appt.listEmpty')}
+                      </td>
+                    </tr>
+                  ) : (
+                    visible.map((item) => {
+                      const cap = statusCapsule(item, stepProgress.get(item.id) ?? null);
+                      const srcLabel = assignSourceLabel(item.assignSource);
+                      const cancelled = item.status === 'cancelled';
+                      return (
+                        <tr
+                          key={item.id}
+                          className={`rowlink ${cancelled ? 'opacity-50' : ''}`}
+                          onClick={() => navigate(`/appointments/${item.id}`)}
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') navigate(`/appointments/${item.id}`);
+                          }}
+                        >
+                          {/* 核销码（mono 数据位） */}
+                          <td className="u1-num font-bold tracking-[0.08em]">{item.code}</td>
+                          {/* 宠物 / 服务（副行：客户昵称·尾号） */}
+                          <td>
+                            <span className="font-semibold">{item.petName ?? '宠物'}</span>
+                            <span className="mt-0.5 block text-[12px] text-ink-placeholder">
+                              {item.serviceName ?? '服务'} ·{' '}
+                              {customerLabel(item.customerName, item.customerPhoneTail)}
                             </span>
-                          ) : null}
-                        </td>
-                        {/* 时间（今日档=HH:mm；跨日档带日期） */}
-                        <td className="u1-num whitespace-nowrap">
-                          {isToday ? fmtTime(item.scheduledStart) : `${fmtDate(item.scheduledStart)} ${fmtTime(item.scheduledStart)}`}
-                        </td>
-                        {/* 金额（mono 右对齐分组） */}
-                        <td className="u1-num whitespace-nowrap text-right font-bold">
-                          {fmtPrice(item.priceFen)}
-                        </td>
-                        {/* 状态胶囊 */}
-                        <td>
-                          <span className={`u3-st ${cap.cls}`}>{cap.text}</span>
-                        </td>
-                        {/* 操作：C5 改期／C4 强制完成入口分列（资格行才露）＋详情链；行点击不串 */}
-                        <td className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <span className="inline-flex items-center gap-2.5">
-                            {canReschedule(item) ? (
+                          </td>
+                          {/* 员工 + 来源小签 */}
+                          <td>
+                            {item.staffName ?? '未指派'}
+                            {srcLabel ? (
+                              <span className="ml-1 text-[12px] text-ink-placeholder">
+                                {srcLabel}
+                              </span>
+                            ) : null}
+                          </td>
+                          {/* 时间（今日档=HH:mm；跨日档带日期） */}
+                          <td className="u1-num whitespace-nowrap">
+                            {isToday ? fmtTime(item.scheduledStart) : `${fmtDate(item.scheduledStart)} ${fmtTime(item.scheduledStart)}`}
+                          </td>
+                          {/* 金额（mono 右对齐分组） */}
+                          <td className="u1-num whitespace-nowrap text-right font-bold">
+                            {fmtPrice(item.priceFen)}
+                          </td>
+                          {/* 状态胶囊 */}
+                          <td>
+                            <span className={`u3-st ${cap.cls}`}>{cap.text}</span>
+                          </td>
+                          {/* 操作：C5 改期／C4 强制完成入口分列（资格行才露）＋详情链；行点击不串 */}
+                          <td className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <span className="inline-flex items-center gap-2.5">
+                              {canReschedule(item) ? (
+                                <button
+                                  type="button"
+                                  data-testid={`row-reschedule-${item.id}`}
+                                  onClick={() => openReschedule(item)}
+                                  className="text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92]"
+                                >
+                                  {ac('appt.rowReschedule')}
+                                </button>
+                              ) : null}
+                              {isZombie24h(item) ? (
+                                <button
+                                  type="button"
+                                  data-testid={`row-force-complete-${item.id}`}
+                                  disabled={forcingId === item.id}
+                                  onClick={() => onForceCompleteRow(item)}
+                                  className="text-caption-xs font-bold text-danger-deep transition-transform duration-120 active:scale-[0.92] disabled:opacity-50"
+                                >
+                                  {forcingId === item.id ? '…' : ac('appt.rowForceComplete')}
+                                </button>
+                              ) : null}
                               <button
                                 type="button"
-                                data-testid={`row-reschedule-${item.id}`}
-                                onClick={() => openReschedule(item)}
-                                className="text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92]"
+                                onClick={() => navigate(`/appointments/${item.id}`)}
+                                className="text-caption-xs text-ink-placeholder"
                               >
-                                {ac('appt.rowReschedule')}
+                                {ac('appt.openDetail')} ›
                               </button>
-                            ) : null}
-                            {isZombie24h(item) ? (
-                              <button
-                                type="button"
-                                data-testid={`row-force-complete-${item.id}`}
-                                disabled={forcingId === item.id}
-                                onClick={() => onForceCompleteRow(item)}
-                                className="text-caption-xs font-bold text-danger-deep transition-transform duration-120 active:scale-[0.92] disabled:opacity-50"
-                              >
-                                {forcingId === item.id ? '…' : ac('appt.rowForceComplete')}
-                              </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/appointments/${item.id}`)}
-                              className="text-caption-xs text-ink-placeholder"
-                            >
-                              {ac('appt.openDetail')} ›
-                            </button>
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
             {/* 双归属口径注（语言包 §四 W-02 注记明面） */}
             <div className="wsk">
               <p className="wsk-note border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
