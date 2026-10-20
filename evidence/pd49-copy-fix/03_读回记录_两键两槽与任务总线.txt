@@ -1,0 +1,20 @@
+PD-49 读回记录（本窗栈 server@7241 · 证据库 E:/KIMI_tmp/pd49/philia.db · 2026-10-20）
+
+== 1. 库内直读（迁移 0090 应用后（0089 让予并行窗 PD-48）） ==
+slot_contents mall.hero live => {"url":null,"alt":"商城促销横幅（渐变占位，待素材通道真件）","title_main":"本周上新","title_sub":"给它囤点好的 · 门店同价","cta_text":"去逛逛"}
+copy_overrides mall.heroCta active=1 => {"text":"去逛逛"}
+copy_overrides today.todo.boardingCareCta active=1 => {"text":"寄养打卡 ›"}
+
+== 2. liveMap 公开读口（客户会话） ==
+liveMap mall.hero => {"key": "mall.hero", "url": null, "alt": "商城促销横幅（渐变占位，待素材通道真件）", "title_main": "本周上新", "title_sub": "给它囤点好的 · 门店同价", "cta_text": "去逛逛", "audience": "all", "priority": null}
+activeRow => {"key": "mall.heroCta", "text": "去逛逛"}
+activeRow => {"key": "today.todo.boardingCareCta", "text": "寄养打卡 ›"}
+
+== 3. 员工任务总线（丽丽会话） ==
+丽丽 staffTask.listMy（本窗证据库 7241）
+{"kind": "boarding", "refId": "01M5CPQ32HDKRJKGNCCH90N5DY", "title": "旺财 · 今日寄养照护", "sub": "在住 · 今日照护未打卡", "link": "/boarding/01M5CPQ323B0N638ZJ9RJKDNPN/checkin", "alert": true}
+^^ boarding 任务：link 指向寄养打卡页；工位 CTA 文案键 today.todo.boardingCareCta=寄养打卡 ›（前端渲染）
+
+== 4. e2e（E2E_PORT=7240 避让，两跑落全量日志） ==
+跑2/跑3 均为 1037 ✓ / 8 ✗；8 项 ✗＝56.1×2／57.1／74.11／76.3／77.2／81.4／98.2，与 PD-47 卷宗所载裸基线 e82694c 同红逐条一致（陈旧期望+日期敏感），本窗零新增红。
+注：首跑经管道 tail 截断显示异常计数（1 项），两跑全量日志为准。
