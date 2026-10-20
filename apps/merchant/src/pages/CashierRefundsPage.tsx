@@ -229,7 +229,7 @@ export default function CashierRefundsPage() {
       title={cc('cashier.refundsTitle')}
       sub={cc('cashier.refundsSub')}
       actions={
-        <span className="flex items-center gap-2">
+        <span className="flex flex-wrap items-center gap-2">
           {/* W-08 wtop+G2 发起：现状入口=收银流水单详情（不新造发起链路） */}
           <Link
             to="/cashier/records"
@@ -449,7 +449,7 @@ export default function CashierRefundsPage() {
                               data-testid={`refunds-settle-${r.refundNo}`}
                               title="实退登记（线下原路退回后登记；备注必填留痕）"
                               onClick={() => setSettleTarget(r)}
-                              className="text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92]"
+                              className="inline-flex items-center text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92] max-xl:min-h-[36px]"
                             >
                               实退登记
                             </button>
@@ -462,12 +462,12 @@ export default function CashierRefundsPage() {
                               data-testid={`refunds-reject-${r.refundNo}`}
                               title="驳回退款申请（店长本店/店主全域；驳回留痕可查）"
                               onClick={() => setRejectTarget(r)}
-                              className="text-caption-xs font-bold text-danger transition-transform duration-120 ease-philia-spring active:scale-[0.92]"
+                              className="inline-flex items-center text-caption-xs font-bold text-danger transition-transform duration-120 ease-philia-spring active:scale-[0.92] max-xl:min-h-[36px]"
                             >
                               驳回
                             </button>
                           ) : null}
-                          <span className="text-caption-xs font-bold text-ink">详情 ›</span>
+                          <span className="inline-flex items-center text-caption-xs font-bold text-ink max-xl:min-h-[36px]">详情 ›</span>
                         </span>
                       </td>
                     </tr>

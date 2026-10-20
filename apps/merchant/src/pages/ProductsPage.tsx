@@ -268,7 +268,7 @@ export default function ProductsPage() {
           e.stopPropagation()
           void deleteProduct(p)
         }}
-        className="u1-ring rounded-chip bg-card px-2 py-1 text-caption-xs font-semibold text-danger-deep transition-transform duration-120 ease-philia-spring active:scale-[0.96]"
+        className="u1-ring min-h-[36px] rounded-chip bg-card px-2 py-1 text-caption-xs font-semibold text-danger-deep transition-transform duration-120 ease-philia-spring active:scale-[0.96] lg:min-h-0"
       >
         {pd('prod.deleteCta')}
       </button>
@@ -641,7 +641,7 @@ export default function ProductsPage() {
       )}
 
       {listQuery.data && listQuery.data.total > listQuery.data.items.length ? (
-        <p className="mt-2 text-[11px] text-[rgba(44,40,34,.42)]">
+        <p className="mt-2 text-xs text-[rgba(44,40,34,.42)]">
           结果较多，当前显示前 {listQuery.data.items.length} 条，请用分类 / 搜索缩小范围
         </p>
       ) : null}

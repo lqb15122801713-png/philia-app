@@ -1,0 +1,624 @@
+{
+  "passed": 104,
+  "total": 104,
+  "results": [
+    {
+      "id": "dock 五槽冻结「总览/门店/收银/报表/我的」",
+      "ok": true,
+      "detail": "labels=总览/门店/收银/报表/我的"
+    },
+    {
+      "id": "dock 激活＝cream 顶短划 #F2DC8C",
+      "ok": true,
+      "detail": "dash=rgb(242, 220, 140)"
+    },
+    {
+      "id": "dock 无爪印",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-01 驾驶舱（212:2）结构：WAlert＋M3 KPI＋合计条＋今日预约＋晨报卡",
+      "ok": true,
+      "detail": "{\"alert\":true,\"m3\":true,\"total\":true,\"today\":true,\"postcard\":true}",
+      "measurements": {
+        "alert": true,
+        "m3": true,
+        "total": true,
+        "today": true,
+        "postcard": true
+      }
+    },
+    {
+      "id": "W-01 驾驶舱 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-01 驾驶舱 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-01 驾驶舱 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "W-01 驾驶舱 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-01 驾驶舱 dock 激活＝overview",
+      "ok": true,
+      "detail": "active=dock-overview"
+    },
+    {
+      "id": "W-02 预约台账（212:73）结构：筛选 chips＋台账表横滑容器",
+      "ok": true,
+      "detail": "{\"chips\":true,\"tbl\":true}",
+      "measurements": {
+        "chips": true,
+        "tbl": true
+      }
+    },
+    {
+      "id": "W-02 预约台账 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-02 预约台账 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-02 预约台账 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "W-02 预约台账 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-02 预约台账 dock 激活＝store",
+      "ok": true,
+      "detail": "active=dock-store"
+    },
+    {
+      "id": "W-04 监控 Hub（212:144）结构：预警卡＋卡列 390 单列",
+      "ok": true,
+      "detail": "{\"alert\":true,\"singleCol\":true}",
+      "measurements": {
+        "alert": true,
+        "singleCol": true
+      }
+    },
+    {
+      "id": "W-04 监控 Hub 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-04 监控 Hub 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-04 监控 Hub cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-04 监控 Hub 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-04 监控 Hub dock 激活＝store",
+      "ok": true,
+      "detail": "active=dock-store"
+    },
+    {
+      "id": "W-06 收银台（212:220）结构：390 单栏三 tab（开单/购物车/挂单流水）",
+      "ok": true,
+      "detail": "{\"mtabs\":true}",
+      "measurements": {
+        "mtabs": true
+      }
+    },
+    {
+      "id": "W-06 收银台 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-06 收银台 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-06 收银台 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=2"
+    },
+    {
+      "id": "W-06 收银台 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-06 收银台 dock 激活＝cashier",
+      "ok": true,
+      "detail": "active=dock-cashier"
+    },
+    {
+      "id": "W-06 收银台 二态：购物车 tab：红线明面带钉在收款面板下（含「扣次非现金」）",
+      "ok": true,
+      "detail": "{\"redlineText\":true}",
+      "measurements": {
+        "redlineText": true
+      }
+    },
+    {
+      "id": "W-06 收银台 二态 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-06 收银台 二态 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-06 收银台 二态 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "W-06 收银台 二态 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-07 日结（212:291）结构：四分列＋日结表单＋日结单列表",
+      "ok": true,
+      "detail": "{\"split\":true,\"form\":true,\"list\":true}",
+      "measurements": {
+        "split": true,
+        "form": true,
+        "list": true
+      }
+    },
+    {
+      "id": "W-07 日结 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-07 日结 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-07 日结 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=2"
+    },
+    {
+      "id": "W-07 日结 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-07 日结 dock 激活＝cashier",
+      "ok": true,
+      "detail": "active=dock-cashier"
+    },
+    {
+      "id": "W-08 退款（212:362）结构：退款单表（DRAFT→EXECUTED）＋口径卡（涉储值锁死）",
+      "ok": true,
+      "detail": "{\"policy\":true,\"tbl\":true}",
+      "measurements": {
+        "policy": true,
+        "tbl": true
+      }
+    },
+    {
+      "id": "W-08 退款 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-08 退款 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-08 退款 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-08 退款 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-08 退款 dock 激活＝cashier",
+      "ok": true,
+      "detail": "active=dock-cashier"
+    },
+    {
+      "id": "W-09 商城订单（213:2）结构：队列 chips＋回馈金仅抵商品口径明面＋订单表",
+      "ok": true,
+      "detail": "{\"tabs\":true,\"rebate\":true,\"tbl\":true}",
+      "measurements": {
+        "tabs": true,
+        "rebate": true,
+        "tbl": true
+      }
+    },
+    {
+      "id": "W-09 商城订单 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-09 商城订单 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-09 商城订单 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-09 商城订单 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-09 商城订单 dock 激活＝overview",
+      "ok": true,
+      "detail": "active=dock-overview"
+    },
+    {
+      "id": "W-10 商品（213:84）结构：类目 chips＋台账表（低库存红字/日盘档列）",
+      "ok": true,
+      "detail": "{\"search\":true,\"create\":true,\"tbl\":true}",
+      "measurements": {
+        "search": true,
+        "create": true,
+        "tbl": true
+      }
+    },
+    {
+      "id": "W-10 商品 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-10 商品 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-10 商品 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "W-10 商品 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-10 商品 dock 激活＝overview",
+      "ok": true,
+      "detail": "active=dock-overview"
+    },
+    {
+      "id": "W-11 会员·次卡（213:166）结构：三本账 KPI＋持卡列表＋双归属注",
+      "ok": true,
+      "detail": "{\"stats\":true,\"tbl\":true,\"note\":true}",
+      "measurements": {
+        "stats": true,
+        "tbl": true,
+        "note": true
+      }
+    },
+    {
+      "id": "W-11 会员·次卡 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-11 会员·次卡 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-11 会员·次卡 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "W-11 会员·次卡 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-11 会员·次卡 dock 激活＝store",
+      "ok": true,
+      "detail": "active=dock-store"
+    },
+    {
+      "id": "W-12 员工（213:248）结构：在职员工表＋权限口径卡",
+      "ok": true,
+      "detail": "{\"tbl\":true,\"perm\":true}",
+      "measurements": {
+        "tbl": true,
+        "perm": true
+      }
+    },
+    {
+      "id": "W-12 员工 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-12 员工 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-12 员工 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "W-12 员工 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-12 员工 dock 激活＝me",
+      "ok": true,
+      "detail": "active=dock-me"
+    },
+    {
+      "id": "W-13 报表（213:330）结构：KPI 四格＋月结快照＋D1–D9 目录＋台账表",
+      "ok": true,
+      "detail": "{\"quad\":true,\"dir\":true,\"dirD\":true,\"tbl\":true}",
+      "measurements": {
+        "quad": true,
+        "dir": true,
+        "dirD": true,
+        "tbl": true
+      }
+    },
+    {
+      "id": "W-13 报表 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-13 报表 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-13 报表 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-13 报表 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-13 报表 dock 激活＝report",
+      "ok": true,
+      "detail": "active=dock-report"
+    },
+    {
+      "id": "W-14 权限矩阵（213:412）结构：手机分区卡列（非桌面缩略）＋锁死区红签",
+      "ok": true,
+      "detail": "{\"phoneCards\":true,\"roles\":4,\"locked\":true}",
+      "measurements": {
+        "phoneCards": true,
+        "roles": 4,
+        "locked": true
+      }
+    },
+    {
+      "id": "W-14 权限矩阵 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-14 权限矩阵 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-14 权限矩阵 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-14 权限矩阵 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-14 权限矩阵 dock 激活＝me",
+      "ok": true,
+      "detail": "active=dock-me"
+    },
+    {
+      "id": "W-15 门店设置（213:494）结构：档案/营业/开关＋管理入口面板",
+      "ok": true,
+      "detail": "{\"entries\":true}",
+      "measurements": {
+        "entries": true
+      }
+    },
+    {
+      "id": "W-15 门店设置 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-15 门店设置 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-15 门店设置 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-15 门店设置 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-15 门店设置 dock 激活＝store",
+      "ok": true,
+      "detail": "active=dock-store"
+    },
+    {
+      "id": "W-16 运营后台（213:576）结构：端口卡面 home；展示名运营后台·无「开发者」",
+      "ok": true,
+      "detail": "{\"home\":true,\"opsName\":true,\"devWord\":false}",
+      "measurements": {
+        "home": true,
+        "opsName": true,
+        "devWord": false
+      }
+    },
+    {
+      "id": "W-16 运营后台 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-16 运营后台 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-16 运营后台 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-16 运营后台 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-16 运营后台 dock 激活＝me",
+      "ok": true,
+      "detail": "active=dock-me"
+    },
+    {
+      "id": "W-16 运营后台 二态：口视图：A–E 域端口目录＋危险区",
+      "ok": true,
+      "detail": "{\"ports\":true,\"danger\":true,\"dangerText\":true}",
+      "measurements": {
+        "ports": true,
+        "danger": true,
+        "dangerText": true
+      }
+    },
+    {
+      "id": "W-16 运营后台 二态 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-16 运营后台 二态 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-16 运营后台 二态 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-16 运营后台 二态 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-我的 店主（203:5480）结构：身份卡＋经营/账本/系统三组入口（owner 见运营后台端）",
+      "ok": true,
+      "detail": "{\"identity\":true,\"store\":true,\"ops\":true,\"books\":true,\"system\":true,\"consoleEntry\":true}",
+      "measurements": {
+        "identity": true,
+        "store": true,
+        "ops": true,
+        "books": true,
+        "system": true,
+        "consoleEntry": true
+      }
+    },
+    {
+      "id": "W-我的 店主 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "W-我的 店主 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "W-我的 店主 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "W-我的 店主 页面零横向溢出",
+      "ok": true,
+      "detail": "overflowX=0px"
+    },
+    {
+      "id": "W-我的 店主 dock 激活＝me",
+      "ok": true,
+      "detail": "active=dock-me"
+    },
+    {
+      "id": "全程无真付/真退/提交预约/开会员请求",
+      "ok": true,
+      "detail": "命中=0 条"
+    }
+  ]
+}

@@ -279,7 +279,8 @@ export function WRedline({ items, testId }: { items?: string[]; testId?: string 
   );
 }
 
-/* ---- 权限矩阵（角色×权限 四态格 ✓/—/只读/锁死；锁死区任何端不可改） ---- */
+/* ---- 权限矩阵（角色×权限 四态格 ✓/—/只读/锁死；锁死区任何端不可改；
+     PD46 U7：<lg 渲染手机分区卡列（`213:412`），≥lg 桌面表原样） ---- */
 export type WMatrixCell = 'ok' | 'no' | 'readonly' | 'locked';
 export function WMatrix({ roles, rows, testId }: {
   roles: string[];
@@ -294,24 +295,39 @@ export function WMatrix({ roles, rows, testId }: {
   };
   return (
     <section className="wsk-matrix" data-testid={testId ?? 'wsk-matrix'}>
-      <table>
-        <thead>
-          <tr>
-            <th />
-            {roles.map((r) => <th key={r}>{r}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.key}>
-              <td>{row.label}</td>
-              {row.cells.map((c, i) => (
-                <td key={i}><span className={`mx ${c}`}>{cellText[c]}</span></td>
-              ))}
+      <div className="hidden lg:block">
+        <table>
+          <thead>
+            <tr>
+              <th />
+              {roles.map((r) => <th key={r}>{r}</th>)}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key}>
+                <td>{row.label}</td>
+                {row.cells.map((c, i) => (
+                  <td key={i}><span className={`mx ${c}`}>{cellText[c]}</span></td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="lg:hidden" data-testid="wsk-matrix-phone">
+        {rows.map((row) => (
+          <div className="mrole" key={row.key} data-testid={`wsk-matrix-role-${row.key}`}>
+            <div className="mrole-hd">{row.label}</div>
+            {row.cells.map((c, i) => (
+              <div className="mrow" key={i}>
+                <span>{roles[i]}</span>
+                <span className={`mx ${c}`}>{cellText[c]}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

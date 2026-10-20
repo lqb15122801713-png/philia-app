@@ -66,6 +66,7 @@ import {
 } from '@/components/cashier/offlineQueue'
 import PaySheet from '@/components/cashier/PaySheet'
 import PickPanel from '@/components/cashier/PickPanel'
+import { WRedline } from '@/components/skeleton'
 import {
   BILLS_TODAY_KEY,
   CASHIER_ROOT_KEY,
@@ -827,6 +828,10 @@ export default function CashierPage() {
               onOpenSell={() => openSell({ planKey: 'plan_yinghuo' })}
               onDismissSavings={onDismissSavings}
             />
+          </div>
+          {/* PD46 U7 · `212:220` 收银台强化：红线明面带钉在收款面板下（手机态；桌面深脸归 U6） */}
+          <div className="wsk mt-3 lg:hidden">
+            <WRedline />
           </div>
         </section>
 

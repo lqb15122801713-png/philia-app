@@ -424,7 +424,7 @@ export default function SettingsPage() {
                   return (
                     <div
                       key={k}
-                      className="flex items-center justify-between rounded-control bg-canvas px-3 py-2"
+                      className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2 rounded-control bg-canvas px-3 py-2"
                     >
                       <span className="w-12 text-caption font-semibold text-ink">{DAY_LABEL[k]}</span>
                       {d.on ? (
@@ -561,7 +561,7 @@ export default function SettingsPage() {
                           <button
                             type="button"
                             onClick={() => setEditorFor(s)}
-                            className="shrink-0 text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92]"
+                            className="min-h-[36px] shrink-0 text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92] lg:min-h-0"
                           >
                             编辑 ›
                           </button>

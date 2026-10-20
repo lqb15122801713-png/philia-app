@@ -466,7 +466,7 @@ function OwnerConsole() {
                 {cadm('cadm.homeBackHome')}
               </Btn>
             </div>
-            <div className="flex flex-col items-start gap-3.5 lg:flex-row">
+            <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start">
               <WcPorts
                 groups={PORT_GROUPS}
                 active={view}

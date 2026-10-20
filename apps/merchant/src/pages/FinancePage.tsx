@@ -538,7 +538,9 @@ export default function FinancePage() {
                   {fc('fin.ledgerEmpty', { period: MODE_LABEL[mode] })}
                 </div>
               ) : (
-                <table className="u3-tbl">
+                /* 390 降级：横滑容器（u3-noscrollx），表本体保底宽 */
+                <div className="u3-noscrollx overflow-x-auto">
+                <table className="u3-tbl min-w-[820px]">
                   <thead>
                     <tr>
                       <th>日期</th>
@@ -582,7 +584,7 @@ export default function FinancePage() {
                                 setSettlingId(r.id);
                                 markPaid.mutate(r.id);
                               }}
-                              className="text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92] disabled:opacity-50"
+                              className="min-h-[36px] text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92] disabled:opacity-50 lg:min-h-0"
                             >
                               {settlingId === r.id ? '收款中…' : '收款 ›'}
                             </button>
@@ -592,6 +594,7 @@ export default function FinancePage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
 

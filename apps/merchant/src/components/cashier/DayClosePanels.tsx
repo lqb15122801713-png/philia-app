@@ -739,7 +739,7 @@ export function DayCloseList({
                             data-testid={`dayclose-reclose-${r.id}`}
                             title="拆箱后同日重新日结（全日口径）"
                             onClick={() => onReclose(r)}
-                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92]"
+                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92] max-xl:min-h-[36px]"
                           >
                             <RotateCcw size={12} strokeWidth={2} aria-hidden />
                             重新日结
@@ -751,7 +751,7 @@ export function DayCloseList({
                             data-testid={`dayclose-adjust-${r.id}`}
                             title="调整备注（只增不改，留痕）"
                             onClick={() => onAdjust(r)}
-                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92]"
+                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92] max-xl:min-h-[36px]"
                           >
                             <PencilLine size={12} strokeWidth={2} aria-hidden />
                             调整备注
@@ -765,7 +765,7 @@ export function DayCloseList({
                             disabled={exportingId === r.id}
                             title="导出 CSV（仅店主）"
                             onClick={() => onExport(r)}
-                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92] disabled:opacity-50"
+                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92] max-xl:min-h-[36px] disabled:opacity-50"
                           >
                             <Download size={12} strokeWidth={2} aria-hidden />
                             {exportingId === r.id ? '导出中…' : '导出'}
@@ -777,12 +777,12 @@ export function DayCloseList({
                             data-testid={`dayclose-reverse-${r.id}`}
                             title="反结账（拆箱，仅店主 · 强制原因）"
                             onClick={() => onReverse(r)}
-                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-danger transition-transform duration-120 active:scale-[0.92]"
+                            className="inline-flex items-center gap-1 text-caption-xs font-bold text-danger transition-transform duration-120 active:scale-[0.92] max-xl:min-h-[36px]"
                           >
                             反结账
                           </button>
                         ) : null}
-                        <span className="text-caption-xs font-bold text-ink">详情 ›</span>
+                        <span className="inline-flex items-center text-caption-xs font-bold text-ink max-xl:min-h-[36px]">详情 ›</span>
                       </span>
                     </td>
                   </tr>
