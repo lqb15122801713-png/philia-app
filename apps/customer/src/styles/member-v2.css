@@ -284,3 +284,48 @@
 .m2.m2--vi .m2-cf-t2 .cf-stamp { border-color: rgba(250, 247, 240, .55); color: #FAF7F0; }
 .m2.m2--vi .m2-cf-t1 { background: linear-gradient(140deg, #F8E9BE, #F2DC8C); color: #4A4034; }
 .m2.m2--vi .m2-cf-t1 .cf-stamp { border-color: rgba(74, 64, 52, .45); color: #4A4034; }
+
+/* PD42 U3（174:608）：会员码深底全屏 */
+.m2.m2--vi.membercard-full {
+  min-height: 100dvh; background: #5C5040; color: #FAF7F0;
+  position: relative; display: flex; flex-direction: column;
+}
+.membercard-top {
+  padding: max(20px, env(safe-area-inset-top)) 24px 0;
+  display: flex; justify-content: flex-end; min-height: 52px;
+}
+.membercard-close {
+  border: 0; border-radius: 999px; background: rgba(250, 247, 240, .08);
+  color: #FAF7F0; padding: 8px 13px; font-size: 12px; cursor: pointer;
+}
+.membercard-flow { width: min(310px, calc(100% - 80px)); margin: 71px auto 0; }
+.membercard-panel { overflow: hidden; border-radius: 24px; background: #FFFFFF; color: #2C2822; }
+.membercard-panel--state { padding: 24px; }
+.membercard-name { padding: 32px 16px 0; text-align: center; font-size: 16px; font-weight: 700; }
+.membercard-code { padding: 22px 16px 24px; text-align: center; }
+.membercard-qrbox {
+  width: 180px; height: 180px; margin: 0 auto; border-radius: 6px;
+  background: #F3EEE4; display: grid; place-items: center;
+}
+.membercard-qrbox img { display: block; width: 140px; height: 140px; }
+.membercard-qrbox--pending { color: #A89779; font-size: 12px; }
+.membercode-qr-pending { display: grid; place-items: center; color: #A89779; font-size: 12px; }
+.membercard-barcode-button {
+  display: block; width: 112px; height: 40px; margin: 22px auto 0; padding: 0;
+  border: 0; background: transparent; cursor: pointer;
+}
+.membercard-barcode { display: block; width: 112px; height: 40px; }
+.membercard-scanhint { margin: 16px 0 0; color: #A89779; font-size: 12px; }
+.membercard-token-error { min-height: 180px; display: grid; place-content: center; gap: 8px; color: #5C5040; }
+.membercard-token-error p { margin: 0; font-size: 13px; font-weight: 700; }
+.membercard-guide { margin-top: 16px; }
+.membercard-guide .m2-btn-primary { margin-top: 16px; }
+.membercard-footer {
+  position: absolute; left: 0; right: 0; bottom: calc(96px + env(safe-area-inset-bottom));
+  text-align: center; color: #A89779; font-size: 12px; pointer-events: none;
+}
+.membercard-preview-note { margin: 12px 24px 0; color: #C9BBA0; font-size: 12px; text-align: center; }
+@media (max-height: 780px) {
+  .membercard-flow { margin-top: 44px; }
+  .membercard-footer { bottom: calc(44px + env(safe-area-inset-bottom)); }
+}

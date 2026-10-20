@@ -189,7 +189,8 @@ export default function App() {
   const isMallPath = pathname === '/mall' || pathname === '/mall/'
   const isHomePath = pathname === '/' || pathname === '/home'
   const isLiveProcessPath = pathname.startsWith('/appointments/') && pathname.endsWith('/live')
-  const suppressInstallBanner = isBoardingPath || isBookingSuccessPath || isMallPath || isHomePath || isLiveProcessPath
+  const isMemberCardPath = pathname === '/me/card' || pathname === '/me/card/'
+  const suppressInstallBanner = isBoardingPath || isBookingSuccessPath || isMallPath || isHomePath || isLiveProcessPath || isMemberCardPath
   const hasBookingDock = isGroomingPath || isBoardingPath || isBookingSuccessPath
   const isMainPath =
     pathname === '/' ||
@@ -201,7 +202,7 @@ export default function App() {
 
   return (
     <div className={hasBookingDock ? 'booking-with-dock min-h-screen bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}>
-      <main className="mx-auto max-w-lg pb-24">
+      <main className={isMemberCardPath ? 'mx-auto max-w-lg' : 'mx-auto max-w-lg pb-24'}>
         <Routes>
           {/* 开发登录页：守卫之外，且不显示 dock（T2.0 新增路由，已向主代理汇报） */}
           <Route path="/dev-login" element={<DevLoginPage />} />

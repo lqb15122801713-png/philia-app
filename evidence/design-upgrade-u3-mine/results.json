@@ -1,0 +1,66 @@
+{
+  "task": "PD42 / CJ-1018-08 / U3 我的码",
+  "baseline": "08f0e36bdfd566be78fe7e7f5656a429550fccf2",
+  "branch": "feat/design-upgrade-u3-mine",
+  "figma": {
+    "file": "ot5SBoqhKAw2UIZRVFzhel",
+    "nodes": ["189:104", "174:608"],
+    "vi": "193:2"
+  },
+  "evidence": {
+    "me": "shots/me-390x900.png",
+    "memberCard": "shots/member-card-390x844.png",
+    "meResults": "results-me.json",
+    "memberCardResults": "results-card.json"
+  },
+  "commands": [
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "customer/merchant/staff build green; existing chunk-size warnings retained"
+    },
+    {
+      "command": "npm run lint -w @philia/customer",
+      "exitCode": 1,
+      "result": "baseline lint still reports 73 errors / 4 warnings; no reported path belongs to this U3 diff"
+    },
+    {
+      "command": "node ../../node_modules/eslint/bin/eslint.js src/pages/MePage.tsx src/pages/MemberCardPage.tsx src/App.tsx src/components/member/copy.ts src/components/member/MemberCodeVisual.tsx src/components/member/useMemberCardToken.ts",
+      "exitCode": 0,
+      "result": "changed customer files lint green"
+    },
+    {
+      "command": "node scripts/design-upgrade-u3-mine-check.mjs me",
+      "exitCode": 0,
+      "result": "5/5 PASS"
+    },
+    {
+      "command": "node scripts/design-upgrade-u3-mine-check.mjs card",
+      "exitCode": 0,
+      "result": "10/10 PASS"
+    },
+    {
+      "command": "APP_PORT=7173 API_PORT=7243 DEBUG_PORT=9254 node scripts/me-page-e2e.mjs",
+      "exitCode": 0,
+      "result": "15/15 PASS, including settings logout"
+    },
+    {
+      "command": "cd server && npm run typecheck",
+      "exitCode": 0,
+      "result": "server typecheck green"
+    },
+    {
+      "command": "cd server && E2E_PORT=7293 npm run test:e2e",
+      "exitCode": 1,
+      "result": "7 pre-existing data-contract failures: 56.1 x2, 57.1, 74.11, 76.3, 77.2, 98.2; server files are absent from this diff"
+    }
+  ],
+  "guards": {
+    "noOpenFree": true,
+    "noPaymentOrBookingSubmission": true,
+    "noCleanNodes": true,
+    "noPawPlaceholder": true,
+    "secondaryTextAtLeast12px": true,
+    "fixedFigmaSampleValuesNotHardcoded": true
+  }
+}
