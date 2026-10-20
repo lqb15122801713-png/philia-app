@@ -605,10 +605,17 @@
       "breakpoints": true
     },
     {
-      "idx": 89,
+"idx": 89,
       "version": "6",
       "when": 1792501500000,
       "tag": "0089_pd48_slotkey_repair",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "6",
+      "when": 1792500795487,
+      "tag": "0090_pd49_copy_fix",
       "breakpoints": true
     }
   ]

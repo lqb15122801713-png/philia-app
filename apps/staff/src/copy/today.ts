@@ -45,7 +45,7 @@ const TODAY_COPY_TABLE = {
   'today.todo.reschedule': '改期回退 {n} 单待确认',
   'today.todo.boardingIn': '寄养入住 {n} 只待登记',
   'today.todo.boardingInCta': '入住 ›',
-  'today.todo.boardingCareCta': '去打卡 ›',
+  'today.todo.boardingCareCta': '寄养打卡 ›',
 } as const;
 
 export const TODAY_COPY = withCopyOverrides(TODAY_COPY_TABLE);
