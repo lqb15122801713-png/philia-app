@@ -1,0 +1,87 @@
+[
+  {
+    "key": "login.accounts.title",
+    "text": "选择员工账号"
+  },
+  {
+    "key": "login.agreement",
+    "text": "登录即同意《员工内测协议》与《服务影像记录规范》"
+  },
+  {
+    "key": "login.gate.hint",
+    "text": "输入口令后加载可登录账号；无口令或口令错误将无法登录。"
+  },
+  {
+    "key": "login.gate.placeholder",
+    "text": "内测口令"
+  },
+  {
+    "key": "login.gate.required",
+    "text": "需先输入内测口令"
+  },
+  {
+    "key": "login.gate.title",
+    "text": "内测口令"
+  },
+  {
+    "key": "login.gateEntry",
+    "text": "口令入内测"
+  },
+  {
+    "key": "login.loggedIn.enter",
+    "text": "进入任务台"
+  },
+  {
+    "key": "login.loggedIn.lead",
+    "text": "当前已登录"
+  },
+  {
+    "key": "login.loggedIn.logout",
+    "text": "退出登录"
+  },
+  {
+    "key": "login.manifesto.line1",
+    "text": "照顾好每一个"
+  },
+  {
+    "key": "login.manifesto.line2",
+    "text": "被托付的小生命"
+  },
+  {
+    "key": "login.manual.placeholder",
+    "text": "手动输入 userId（ULID）"
+  },
+  {
+    "key": "login.primaryCta",
+    "text": "选择员工账号登录"
+  },
+  {
+    "key": "login.role.frontdesk",
+    "text": "前台 frontdesk"
+  },
+  {
+    "key": "login.role.groomer",
+    "text": "美容师 groomer"
+  },
+  {
+    "key": "login.seed.empty",
+    "text": "未拉到员工种子用户，请重跑 server 的 db:seed，或手动输入 userId"
+  },
+  {
+    "key": "login.seed.loadFailed",
+    "text": "种子用户拉取失败（{error}），请确认 server 已启动，或手动输入 userId"
+  },
+  {
+    "key": "login.seed.tip",
+    "text": "提示：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。\n非员工账号登录后会被引导回本页切换。"
+  },
+  {
+    "key": "login.storeLine",
+    "text": "菲丽亚宠物·示例店 · 员工内测通道"
+  },
+  {
+    "key": "login.wordmark",
+    "text": "PHILIA · 员工端"
+  }
+]
+total=21
