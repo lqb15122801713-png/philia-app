@@ -4914,7 +4914,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "mall.heroCta",
   "domain": "mall",
-  "text": "去看看",
+  "text": "去逛逛",
   "screen": "客户·商城",
   "position": "MallPage 页面内文案"
  },
@@ -29463,7 +29463,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "today.todo.boardingCareCta",
   "domain": "staff:today",
-  "text": "去打卡 ›",
+  "text": "寄养打卡 ›",
   "screen": "员工·工位",
   "position": "TodayPage 页面内文案"
  },

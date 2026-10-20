@@ -144,7 +144,7 @@ const MALL_COPY_TABLE = {
   /* ---- 产品-1015 换皮 片4 · 批D：mall.hero 促销横幅（槽位缺省回退）+ 商品角标 + 类目 chip 展示名 ---- */
   'mall.heroTitle': '本周上新',
   'mall.heroSub': '给它囤点好的 · 门店同价',
-  'mall.heroCta': '去看看',
+  'mall.heroCta': '去逛逛',
   'mall.groupbuyTitle': '团购活动待上线',
   'mall.groupbuyBody': '团购频道正在筹备，先看看商城里的精选商品。',
   'mall.groupbuyCta': '去逛逛商城',
