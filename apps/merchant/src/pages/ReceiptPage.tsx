@@ -40,7 +40,7 @@ export default function ReceiptPage() {
             position: absolute; left: 0; top: 0;
             width: 72mm; margin: 0; padding: 0;
             box-shadow: none !important; border-radius: 0 !important;
-            font-size: 11px;
+            font-size: 12px;
           }
         }
       `}</style>
@@ -64,18 +64,18 @@ export default function ReceiptPage() {
           ))}
         </div>
       ) : detailQ.isError || !d || !bill ? (
-        <p className="py-10 text-center text-caption text-[rgba(59,46,36,.62)]">单据加载失败</p>
+        <p className="py-10 text-center text-caption text-[rgba(44,40,34,.62)]">单据加载失败</p>
       ) : (
         <div
           id="receipt-sheet"
-          className="w-full max-w-[320px] rounded-[16px] bg-[#FFFDF6] px-4 py-5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+          className="w-full max-w-[320px] rounded-[16px] bg-card px-4 py-5 shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
         >
           {/* 头：门店名 / 小票题 / 单号 / 时刻 / 开单人 / 买家 */}
           <div className="text-center">
             <div className="text-body-sm font-bold">{storeName}</div>
-            <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.receiptTitle')}</div>
+            <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">{cc('cashier.receiptTitle')}</div>
           </div>
-          <div className="mt-3 border-t border-dashed border-[rgba(59,46,36,.18)] pt-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <div className="mt-3 border-t border-dashed border-[rgba(44,40,34,.18)] pt-2 text-caption-xs text-[rgba(44,40,34,.62)]">
             <div className="flex justify-between">
               <span>单号</span>
               <span className="font-number tabular-nums text-ink">{bill.billNo}</span>
@@ -95,7 +95,7 @@ export default function ReceiptPage() {
           </div>
 
           {/* 行项：名+规格+数量+单价+改价划线+单品备注+寄养按晚明细 */}
-          <div className="mt-2 border-t border-dashed border-[rgba(59,46,36,.18)] pt-2">
+          <div className="mt-2 border-t border-dashed border-[rgba(44,40,34,.18)] pt-2">
             {d.items.map((it) => {
               const eff = it.adjustedPriceFen ?? it.unitPriceFen
               /* 寄养（boarding）预约行附按晚明细（server 仅该变体透出 nightBreakdown） */
@@ -107,17 +107,17 @@ export default function ReceiptPage() {
                     <span className="shrink-0 font-number font-semibold tabular-nums text-ink">
                       ¥{fenToYuan(eff * it.qty)}
                       {it.adjustedPriceFen != null ? (
-                        <span className="ml-1 font-normal text-[rgba(59,46,36,.3)] line-through">
+                        <span className="ml-1 font-normal text-[rgba(44,40,34,.3)] line-through">
                           ¥{fenToYuan(it.unitPriceFen * it.qty)}
                         </span>
                       ) : null}
                     </span>
                   </div>
-                  <div className="mt-0.5 font-number tabular-nums text-[rgba(59,46,36,.42)]">
+                  <div className="mt-0.5 font-number tabular-nums text-[rgba(44,40,34,.42)]">
                     {it.specSnapshot ? `${it.specSnapshot} · ` : ''}× {it.qty} · 单价 ¥{fenToYuan(eff)}
                   </div>
                   {nb ? (
-                    <div className="mt-0.5 font-number tabular-nums text-[rgba(59,46,36,.42)]">
+                    <div className="mt-0.5 font-number tabular-nums text-[rgba(44,40,34,.42)]">
                       {cc('cashier.receiptNightLine', {
                         total: nb.totalNights,
                         occ: nb.occurredNights,
@@ -127,7 +127,7 @@ export default function ReceiptPage() {
                     </div>
                   ) : null}
                   {it.note ? (
-                    <div className="mt-0.5 text-[rgba(59,46,36,.55)]">备注：{it.note}</div>
+                    <div className="mt-0.5 text-[rgba(44,40,34,.55)]">备注：{it.note}</div>
                   ) : null}
                 </div>
               )
@@ -135,24 +135,24 @@ export default function ReceiptPage() {
           </div>
 
           {/* 金额：合计 / 单级优惠 / 抹零 / 应收 */}
-          <div className="mt-2 border-t border-dashed border-[rgba(59,46,36,.18)] pt-2 text-caption-xs">
-            <div className="flex justify-between py-0.5 text-[rgba(59,46,36,.62)]">
+          <div className="mt-2 border-t border-dashed border-[rgba(44,40,34,.18)] pt-2 text-caption-xs">
+            <div className="flex justify-between py-0.5 text-[rgba(44,40,34,.62)]">
               <span>合计</span>
               <b className="font-number tabular-nums text-ink">¥{fenToYuan(bill.subtotalFen)}</b>
             </div>
             {bill.discountFen !== 0 ? (
-              <div className="flex justify-between py-0.5 text-[rgba(59,46,36,.62)]">
+              <div className="flex justify-between py-0.5 text-[rgba(44,40,34,.62)]">
                 <span>整单优惠</span>
                 <b className="font-number tabular-nums text-ink">−¥{fenToYuan(bill.discountFen)}</b>
               </div>
             ) : null}
             {bill.roundingFen > 0 ? (
-              <div className="flex justify-between py-0.5 text-[rgba(59,46,36,.62)]">
+              <div className="flex justify-between py-0.5 text-[rgba(44,40,34,.62)]">
                 <span>{cc('cashier.roundingLabel')}</span>
                 <b className="font-number tabular-nums text-ink">−¥{fenToYuan(bill.roundingFen)}</b>
               </div>
             ) : null}
-            <div className="mt-1 flex items-baseline justify-between border-t border-dashed border-[rgba(59,46,36,.18)] pt-1.5">
+            <div className="mt-1 flex items-baseline justify-between border-t border-dashed border-[rgba(44,40,34,.18)] pt-1.5">
               <span className="text-caption font-semibold">应收</span>
               <b className="font-number text-title font-bold tabular-nums">¥{fenToYuan(bill.payableFen)}</b>
             </div>
@@ -160,9 +160,9 @@ export default function ReceiptPage() {
 
           {/* 支付段分列 */}
           {d.payments.length > 0 ? (
-            <div className="mt-2 border-t border-dashed border-[rgba(59,46,36,.18)] pt-2 text-caption-xs">
+            <div className="mt-2 border-t border-dashed border-[rgba(44,40,34,.18)] pt-2 text-caption-xs">
               {d.payments.map((p) => (
-                <div key={p.id} className="flex justify-between py-0.5 text-[rgba(59,46,36,.62)]">
+                <div key={p.id} className="flex justify-between py-0.5 text-[rgba(44,40,34,.62)]">
                   <span>{PAY_METHOD_LABEL[p.method] ?? p.method}</span>
                   <b className="font-number tabular-nums text-ink">¥{fenToYuan(p.amountFen)}</b>
                 </div>
@@ -172,11 +172,11 @@ export default function ReceiptPage() {
 
           {/* 单级备注 + 尾注 */}
           {bill.note ? (
-            <div className="mt-2 border-t border-dashed border-[rgba(59,46,36,.18)] pt-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="mt-2 border-t border-dashed border-[rgba(44,40,34,.18)] pt-2 text-caption-xs text-[rgba(44,40,34,.62)]">
               备注：{bill.note}
             </div>
           ) : null}
-          <div className="mt-3 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="mt-3 text-center text-caption-xs text-[rgba(44,40,34,.42)]">
             {cc('cashier.receiptThanks')}
           </div>
         </div>

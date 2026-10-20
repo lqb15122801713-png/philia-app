@@ -268,7 +268,7 @@ export default function TransfersPage() {
           <h3>{iv('trf.move.title')}</h3>
           <span className="aside">{iv('trf.move.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           {(['out', 'in'] as const).map((d) => {
             const on = direction === d;
             return (
@@ -279,7 +279,7 @@ export default function TransfersPage() {
                 onClick={() => setDirection(d)}
                 data-testid={`transfers-dir-${d}`}
                 className={`min-h-[36px] rounded-chip px-3 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                  on ? 'bg-ink text-[#F2DFA6]' : 'bg-sunken text-ink-secondary'
+                  on ? 'bg-ink text-[#F2DC8C]' : 'bg-sunken text-ink-secondary'
                 }`}
               >
                 {d === 'out' ? iv('trf.move.dirOut') : iv('trf.move.dirIn')}
@@ -297,8 +297,8 @@ export default function TransfersPage() {
             ))}
           </div>
         ) : transferQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void transferQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -306,29 +306,29 @@ export default function TransfersPage() {
             </div>
           </div>
         ) : transfers.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('trf.move.empty')}
           </p>
         ) : (
           transfers.map((t) => {
             const totalQty = t.itemsJson.reduce((s, it) => s + it.qty, 0);
             return (
-              <div key={t.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`transfers-row-${t.id}`}>
+              <div key={t.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`transfers-row-${t.id}`}>
                 <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="u1-num text-body-sm font-bold text-ink">{t.orderNo}</span>
                       <Badge tone={transferStatusTone(t.status)}>{transferStatusLabel(t.status)}</Badge>
-                      <span className="text-caption text-[rgba(59,46,36,.62)]">
+                      <span className="text-caption text-[rgba(44,40,34,.62)]">
                         {direction === 'out'
                           ? iv('trf.move.toLabel', { name: t.toStoreName ?? storeNameOf(t.toStoreId) })
                           : iv('trf.move.fromLabel', { name: t.fromStoreName ?? storeNameOf(t.fromStoreId) })}
                       </span>
                     </div>
-                    <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                       {iv('trf.move.itemsSummary', { n: t.itemsJson.length, q: totalQty })} · {fmtAt(t.createdAt)}
                     </div>
-                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                       {t.itemsJson.map((it) => `${it.name} ×${it.qty}`).join('、')}
                     </div>
                   </div>
@@ -374,8 +374,8 @@ export default function TransfersPage() {
             ))}
           </div>
         ) : transitQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void transitQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -383,22 +383,22 @@ export default function TransfersPage() {
             </div>
           </div>
         ) : transitItems.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('trf.transit.empty')}
           </p>
         ) : (
           transitItems.map((t) => (
-            <div key={t.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`transfers-transit-row-${t.id}`}>
+            <div key={t.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`transfers-transit-row-${t.id}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="u1-num text-body-sm font-bold text-ink">{t.orderNo}</span>
                   {t.overdue ? <span className="u3-st red">{iv('trf.transit.overdue')}</span> : null}
                 </div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {storeNameOf(t.fromStoreId)} → {storeNameOf(t.toStoreId)} ·{' '}
                   {t.inTransitHours !== null ? iv('trf.transit.hours', { h: t.inTransitHours }) : iv('trf.transit.hoursUnknown')}
                 </div>
-                <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                   {t.itemsJson.map((it) => `${it.name} ×${it.qty}`).join('、')}
                 </div>
               </div>
@@ -424,7 +424,7 @@ export default function TransfersPage() {
           <h3>{iv('trf.rep.title')}</h3>
           <span className="aside">{iv('trf.rep.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-end gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="flex flex-wrap items-end gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <Field label={iv('trf.move.productLabel')}>
             <select
               className={inputCls}
@@ -472,8 +472,8 @@ export default function TransfersPage() {
             ))}
           </div>
         ) : replenishQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{iv('inv.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{iv('inv.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void replenishQ.refetch()}>
                 {iv('inv.common.retry')}
@@ -481,12 +481,12 @@ export default function TransfersPage() {
             </div>
           </div>
         ) : replenishes.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {iv('trf.rep.empty')}
           </p>
         ) : (
           replenishes.map((r) => (
-            <div key={r.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`transfers-rep-row-${r.id}`}>
+            <div key={r.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`transfers-rep-row-${r.id}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-body-sm font-bold text-ink">{r.productName}</span>
@@ -495,7 +495,7 @@ export default function TransfersPage() {
                     {replenishStatusLabel(r.status)}
                   </Badge>
                 </div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{fmtAt(r.createdAt)}</div>
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">{fmtAt(r.createdAt)}</div>
               </div>
               {r.status === 'approved' ? (
                 <Btn
@@ -531,7 +531,7 @@ export default function TransfersPage() {
       >
         <div className="grid gap-3">
           {otherStores.length === 0 ? (
-            <p className="text-caption text-[rgba(59,46,36,.62)]">{iv('trf.move.noStore')}</p>
+            <p className="text-caption text-[rgba(44,40,34,.62)]">{iv('trf.move.noStore')}</p>
           ) : (
             <Field label={iv('trf.move.toStoreLabel')}>
               <select className={inputCls} value={trToStoreId} onChange={(e) => setTrToStoreId(e.target.value)} data-testid="transfers-create-store">

@@ -160,7 +160,8 @@ export default function PickPanel({
             disabled={!quickValid}
             title={quickValid ? undefined : cc('cashier.quickInvalid')}
             onClick={submitQuick}
-            className="shrink-0 rounded-full bg-brand-primary px-3.5 py-[7px] text-caption-xs font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+            /* PD45 U6：cream 预算收敛——本屏唯一 cream=结账；快速加单降深棕 CTA */
+            className="shrink-0 rounded-full bg-brand-cta px-3.5 py-[7px] text-caption-xs font-bold text-brand-cta-on shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {cc('cashier.quickAdd')}
           </button>

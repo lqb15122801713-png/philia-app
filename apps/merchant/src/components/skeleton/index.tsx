@@ -218,7 +218,7 @@ export function WCapCal({ monthLabel, weekdays, days, testId }: {
       </div>
       <div className="grid" style={{ marginBottom: 4 }}>
         {weekdays.map((w) => (
-          <div key={w} style={{ textAlign: 'center', fontFamily: 'var(--wsk-mono)', fontSize: 8.5, color: 'var(--wsk-muted)' }}>{w}</div>
+          <div key={w} style={{ textAlign: 'center', fontFamily: 'var(--wsk-mono)', fontSize: 12, color: 'var(--wsk-muted)' }}>{w}</div>
         ))}
       </div>
       <div className="grid">

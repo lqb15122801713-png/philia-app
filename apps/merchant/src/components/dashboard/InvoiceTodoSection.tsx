@@ -21,7 +21,7 @@ import { dc } from '@/copy/dashboard'
 import { INVOICE_PENDING_QUERY_KEY, INVOICE_SECTION_ID, type InvoicePendingItem } from './utils'
 
 /** 类型签 chip（u3 面板浅底工艺：sunken 底墨色字） */
-const CHIP_CLS = 'rounded-md bg-sunken px-[7px] py-[2px] text-[11px] font-semibold text-ink'
+const CHIP_CLS = 'rounded-md bg-sunken px-[7px] py-[2px] text-[12px] font-semibold text-ink'
 /** 行内操作钮（QuietButton 同族缩小档） */
 const ROW_BTN_CLS =
   'u1-ring shrink-0 rounded-full bg-card px-3.5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'

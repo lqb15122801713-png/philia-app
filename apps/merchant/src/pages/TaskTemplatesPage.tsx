@@ -46,7 +46,7 @@ function WeekdayChips({ value, onChange }: { value: number[]; onChange: (v: numb
             aria-pressed={on}
             onClick={() => onChange(on ? value.filter((x) => x !== d) : [...value, d].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)))}
             className={`min-h-[36px] rounded-chip px-3 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-              on ? 'bg-ink text-[#F2DFA6]' : 'bg-sunken text-ink-secondary'
+              on ? 'bg-ink text-[#F2DC8C]' : 'bg-sunken text-ink-secondary'
             }`}
           >
             {WEEKDAY_LABEL[d]}
@@ -225,7 +225,7 @@ export default function TaskTemplatesPage() {
           <h3>{editingId ? tk('tasktpl.form.titleEdit') : tk('tasktpl.form.titleNew')}</h3>
           <span className="aside">{tk('tasktpl.form.aside')}</span>
         </div>
-        <div className="space-y-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="space-y-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={tk('tasktpl.form.titleLabel')}>
               <input
@@ -315,7 +315,7 @@ export default function TaskTemplatesPage() {
                 inputMode="numeric"
                 placeholder={tk('tasktpl.form.remindPh')}
                 data-testid="tasktpl-remind"
-                className="u1-ring w-32 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(59,46,36,.42)] focus:outline-none"
+                className="u1-ring w-32 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(44,40,34,.42)] focus:outline-none"
               />
             </Field>
             <span className="ml-auto flex items-center gap-2">
@@ -345,8 +345,8 @@ export default function TaskTemplatesPage() {
             ))}
           </div>
         ) : templatesQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{tk('tasktpl.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{tk('tasktpl.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void templatesQ.refetch()}>
                 {tk('tasktpl.common.retry')}
@@ -354,7 +354,7 @@ export default function TaskTemplatesPage() {
             </div>
           </div>
         ) : templates.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center text-caption text-[rgba(44,40,34,.62)]">
             {tk('tasktpl.list.empty')}
           </p>
         ) : (
@@ -362,15 +362,15 @@ export default function TaskTemplatesPage() {
             <div
               key={t.id}
               data-testid={`tasktpl-row-${t.id}`}
-              className={`flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 ${t.active ? '' : 'opacity-55'}`}
+              className={`flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 ${t.active ? '' : 'opacity-55'}`}
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-body-sm font-bold text-ink">{t.title}</span>
                   {!t.active ? <Badge tone="muted">{tk('tasktpl.list.inactiveBadge')}</Badge> : null}
                 </div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{templateLine(t, staffNameOf)}</div>
-                {t.detail ? <div className="mt-0.5 line-clamp-1 text-caption-xs text-[rgba(59,46,36,.62)]">{t.detail}</div> : null}
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">{templateLine(t, staffNameOf)}</div>
+                {t.detail ? <div className="mt-0.5 line-clamp-1 text-caption-xs text-[rgba(44,40,34,.62)]">{t.detail}</div> : null}
               </div>
               <Btn variant="subtle" size="sm" onClick={() => startEdit(t)} data-testid={`tasktpl-edit-${t.id}`}>
                 {tk('tasktpl.list.editCta')}
@@ -404,8 +404,8 @@ export default function TaskTemplatesPage() {
             ))}
           </div>
         ) : runsQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center">
-            <p className="text-caption text-[rgba(59,46,36,.62)]">{tk('tasktpl.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center">
+            <p className="text-caption text-[rgba(44,40,34,.62)]">{tk('tasktpl.common.loadFail')}</p>
             <div className="mt-3">
               <Btn variant="subtle" size="sm" onClick={() => void runsQ.refetch()}>
                 {tk('tasktpl.common.retry')}
@@ -413,7 +413,7 @@ export default function TaskTemplatesPage() {
             </div>
           </div>
         ) : runs.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {tk('tasktpl.runs.empty')}
           </p>
         ) : (
@@ -421,7 +421,7 @@ export default function TaskTemplatesPage() {
             <thead>
               <tr>
                 {[tk('tasktpl.runs.colDate'), tk('tasktpl.runs.colTemplate'), tk('tasktpl.runs.colDoneBy'), tk('tasktpl.runs.colStatus')].map((h) => (
-                  <th key={h} className="border-b border-[rgba(59,46,36,.08)] px-[17px] py-2 text-left text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                  <th key={h} className="border-b border-[rgba(44,40,34,.08)] px-[17px] py-2 text-left text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
                     {h}
                   </th>
                 ))}
@@ -430,10 +430,10 @@ export default function TaskTemplatesPage() {
             <tbody>
               {runs.map((r) => (
                 <tr key={r.id}>
-                  <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">{r.bizDate}</td>
-                  <td className="border-b border-[rgba(59,46,36,.06)] px-[17px] py-2 font-semibold text-ink">{r.templateTitle}</td>
-                  <td className="border-b border-[rgba(59,46,36,.06)] px-[17px] py-2 text-[rgba(59,46,36,.62)]">{r.doneByName ?? r.staffName ?? '—'}</td>
-                  <td className="border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">
+                  <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">{r.bizDate}</td>
+                  <td className="border-b border-[rgba(44,40,34,.06)] px-[17px] py-2 font-semibold text-ink">{r.templateTitle}</td>
+                  <td className="border-b border-[rgba(44,40,34,.06)] px-[17px] py-2 text-[rgba(44,40,34,.62)]">{r.doneByName ?? r.staffName ?? '—'}</td>
+                  <td className="border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">
                     <Badge tone={r.status === 'done' ? 'success' : r.status === 'missed' ? 'danger' : 'muted'}>{runStatusLabel(r.status)}</Badge>
                   </td>
                 </tr>

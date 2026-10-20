@@ -2,8 +2,8 @@
  * 经营总览数据卡行（U3 §2 · 母本 .stats 四卡）：今日预约 / 今日营业额 / 在店寄养 / 接单模式
  *
  * - 换皮批片 3（v2.0 §八：深色密度位留给驾驶舱总览卡）：四卡改深棕渐变 150deg
- *   #3B2E24→#2A1F15（圆角 20），卡内大数=mono 轨 font-number tabular-nums 纸白
- *   #FAF8F2（淡金点睛预算让位给页内既有件，见批 3 报告）；财务页 u3-stat 白卡不受影响；
+ *   philia 深棕渐变（PD45 U6 令牌化），卡内大数=mono 轨 font-number tabular-nums 纸白
+ *   canvas（cream 点睛预算让位给页内既有件，见批 3 报告）；财务页 u3-stat 白卡不受影响；
  * - 今日预约副行 = byStatus 今日分状态聚合：服务中=in_service+in_boarding、
  *   待到店=confirmed+pending、已完成=completed；
  * - 今日营业额（M1-补2 R1 同源改造）：v=todayTender.receivedTotalFen（统一聚合出口，
@@ -24,19 +24,19 @@ import { dc } from '@/copy/dashboard'
 import { fenToYuanGrouped, type DashboardStats, type TodayApptItem } from './utils'
 import { AmortizationDashNote } from '../member/amortization'
 
-/* 深棕渐变总览卡（§八 深色密度位）：150deg #3B2E24→#2A1F15 · 圆角 20 */
+/* 深棕渐变总览卡（§八 深色密度位；PD45 U6 换代=令牌渐变 philia 135° brand→pressed · 圆角 20） */
 const CARD_CLS =
-  'rounded-panel bg-[linear-gradient(150deg,#3B2E24,#2A1F15)] px-[17px] py-[15px]'
+  'rounded-panel bg-philia-gradient px-[17px] py-[15px]'
 /* 大数位：mono 轨 tabular 纸白，金额大数分组展示不断行 */
 const VALUE_CLS =
-  'mt-1.5 whitespace-nowrap font-number tabular-nums text-[26px] font-bold leading-8 text-[#FAF8F2]'
-const SUB_CLS = 'mt-1 text-[11px] text-[rgba(250,248,242,.62)]'
-const SUB_NUM_CLS = 'font-number tabular-nums font-bold text-[rgba(250,248,242,.92)]'
+  'mt-1.5 whitespace-nowrap font-number tabular-nums text-[26px] font-bold leading-8 text-canvas'
+const SUB_CLS = 'mt-1 text-[12px] text-canvas/60'
+const SUB_NUM_CLS = 'font-number tabular-nums font-bold text-canvas/90'
 
 function StatShell({ cap, children }: { cap: string; children: ReactNode }) {
   return (
     <div className={CARD_CLS}>
-      <div className="text-[11px] font-semibold text-[rgba(250,248,242,.55)]">{cap}</div>
+      <div className="text-[12px] font-semibold text-canvas/55">{cap}</div>
       {children}
     </div>
   )
@@ -107,7 +107,7 @@ export default function StatCards({
         </div>
         {/* QA40-D1（PD-03 件 2）：分摊口径注（参考口径小字，主数口径不变）；
             深卡上反白由后代选择器覆写（amortization.tsx 属别批文件，不动） */}
-        <div className="[&>div]:text-[rgba(250,248,242,.55)]">
+        <div className="[&>div]:text-canvas/55">
           <AmortizationDashNote />
         </div>
       </StatShell>
@@ -118,11 +118,11 @@ export default function StatCards({
       </StatShell>
 
       <StatShell cap={dc('dash.statCapMode')}>
-        <div className="mt-1.5 whitespace-nowrap text-[17px] font-semibold leading-8 text-[#FAF8F2]">
+        <div className="mt-1.5 whitespace-nowrap text-[17px] font-semibold leading-8 text-canvas">
           {dc('dash.statModeValue')}
         </div>
-        {/* livetag 同族（深棕底淡金字）+ 淡金发丝圈在深卡上托出层次 */}
-        <span className="mt-2 inline-block rounded-md bg-[#2E2318] px-[7px] py-[2px] text-[11px] font-bold text-[#F2DFA6] ring-1 ring-[rgba(242,223,166,.28)]">
+        {/* livetag 同族（深棕底 cream 字）+ cream 发丝圈在深卡上托出层次（PD45 U6 令牌化） */}
+        <span className="mt-2 inline-block rounded-md bg-success-deep px-[7px] py-[2px] text-[12px] font-bold text-brand-primary ring-1 ring-[rgba(242,220,140,.28)]">
           {dc('dash.statModePill')}
         </span>
       </StatShell>

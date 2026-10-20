@@ -80,7 +80,8 @@ export default function ScanVerifyCard({ onIdentified }: { onIdentified: (m: Cas
           data-testid="cashier-scan-verify"
           disabled={busy || token.replace(/\s+/g, '') === ''}
           onClick={() => void verify()}
-          className="shrink-0 rounded-full bg-brand-primary px-4 py-2.5 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          /* PD45 U6：cream 预算收敛——本屏唯一 cream=结账；扫码核销降深棕 CTA */
+          className="shrink-0 rounded-full bg-brand-cta px-4 py-2.5 text-caption font-bold text-brand-cta-on shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           {busy ? cc('cashier.scanVerifying') : cc('cashier.scanVerifyCta')}
         </button>

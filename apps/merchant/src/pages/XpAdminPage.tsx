@@ -114,7 +114,7 @@ export default function XpAdminPage() {
   const rejected = rejectedQ.data?.applications ?? [];
 
   const renderPendingRow = (a: XpApplicationRow, isRevoke: boolean) => (
-    <div key={a.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`xpadmin-row-${a.id}`}>
+    <div key={a.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`xpadmin-row-${a.id}`}>
       <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -126,10 +126,10 @@ export default function XpAdminPage() {
               <Badge tone="muted">{xp('xpadmin.revoke.originalLine', { n: a.targetEventPoints })}</Badge>
             ) : null}
           </div>
-          <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
             {xp('xpadmin.review.reasonLabel')}：{a.reason}
           </div>
-          <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
             {xp('xpadmin.review.appliedAt', { at: fmtAt(a.createdAt) })}
           </div>
         </div>
@@ -155,33 +155,33 @@ export default function XpAdminPage() {
 
   const renderHistory = (list: XpApplicationRow[], status: 'approved' | 'rejected') => (
     <div className="min-w-0 flex-1">
-      <p className="px-[17px] pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+      <p className="px-[17px] pt-3 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
         {status === 'approved' ? xp('xpadmin.history.statusApproved') : xp('xpadmin.history.statusRejected')}（{list.length}）
       </p>
       {list.length === 0 ? (
-        <p className="px-[17px] py-6 text-center text-caption text-[rgba(59,46,36,.62)]">{xp('xpadmin.history.empty')}</p>
+        <p className="px-[17px] py-6 text-center text-caption text-[rgba(44,40,34,.62)]">{xp('xpadmin.history.empty')}</p>
       ) : (
         list.map((a) => (
-          <div key={a.id} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`xpadmin-history-row-${a.id}`}>
+          <div key={a.id} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`xpadmin-history-row-${a.id}`}>
             <div className="flex items-center gap-1.5">
               <span className="text-body-sm font-bold text-ink">{a.staffName ?? a.staffId}</span>
               <Badge tone="muted">{kindLabel(a.appKind)}</Badge>
               <Badge tone={status === 'approved' ? 'success' : 'danger'}>
                 {status === 'approved' ? xp('xpadmin.history.statusApproved') : xp('xpadmin.history.statusRejected')}
               </Badge>
-              <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">+{a.pointsRequested}</span>
+              <span className="u1-num text-caption-xs text-[rgba(44,40,34,.42)]">+{a.pointsRequested}</span>
             </div>
-            <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
               {xp('xpadmin.review.reasonLabel')}：{a.reason}
             </div>
             {a.reviewNote ? (
-              <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                 {xp('xpadmin.history.reviewLine', {
                   result: status === 'approved' ? xp('xpadmin.history.statusApproved') : xp('xpadmin.history.statusRejected'),
                   note: a.reviewNote,
                 })}
                 {a.reviewedAt ? (
-                  <span className="u1-num text-[rgba(59,46,36,.42)]"> · {xp('xpadmin.history.reviewedAt', { at: fmtAt(a.reviewedAt) })}</span>
+                  <span className="u1-num text-[rgba(44,40,34,.42)]"> · {xp('xpadmin.history.reviewedAt', { at: fmtAt(a.reviewedAt) })}</span>
                 ) : null}
               </div>
             ) : null}
@@ -208,8 +208,8 @@ export default function XpAdminPage() {
             ))}
           </div>
         ) : pendingQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{xp('xpadmin.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{xp('xpadmin.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void pendingQ.refetch()}>
                 {xp('xpadmin.common.retry')}
@@ -217,7 +217,7 @@ export default function XpAdminPage() {
             </div>
           </div>
         ) : awardPending.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {xp('xpadmin.award.empty')}
           </p>
         ) : (
@@ -236,17 +236,17 @@ export default function XpAdminPage() {
             <Skeleton className="mb-2.5 h-12 !rounded-[16px]" />
           </div>
         ) : pendingQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center">
-            <p className="text-caption text-[rgba(59,46,36,.62)]">{xp('xpadmin.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center">
+            <p className="text-caption text-[rgba(44,40,34,.62)]">{xp('xpadmin.common.loadFail')}</p>
           </div>
         ) : revokePending.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {xp('xpadmin.revoke.empty')}
           </p>
         ) : (
           <>
             {revokePending.map((a) => renderPendingRow(a, true))}
-            <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2 text-caption-xs text-[rgba(44,40,34,.42)]">
               {xp('xpadmin.revoke.hedgeNote')}
             </p>
           </>
@@ -259,7 +259,7 @@ export default function XpAdminPage() {
           <h3>{xp('xpadmin.history.title')}</h3>
           <span className="aside">{xp('xpadmin.history.aside')}</span>
         </div>
-        <div className="flex flex-col gap-3 border-t border-[rgba(59,46,36,.06)] pb-3 lg:flex-row lg:gap-0 lg:divide-x lg:divide-[rgba(59,46,36,.06)]">
+        <div className="flex flex-col gap-3 border-t border-[rgba(44,40,34,.06)] pb-3 lg:flex-row lg:gap-0 lg:divide-x lg:divide-[rgba(44,40,34,.06)]">
           {renderHistory(approved, 'approved')}
           {renderHistory(rejected, 'rejected')}
         </div>
@@ -294,7 +294,7 @@ export default function XpAdminPage() {
           maxLength={500}
           placeholder={xp('xpadmin.review.notePh')}
           data-testid="xpadmin-note-input"
-          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
         />
       </Modal>
     </MainScaffold>

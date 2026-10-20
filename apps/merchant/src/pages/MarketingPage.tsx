@@ -121,8 +121,8 @@ function PanelBody({
   }
   if (q.isError) {
     return (
-      <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{mk('mk.common.loadFail')}</p>
+      <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+        <p className="text-body-sm text-[rgba(44,40,34,.62)]">{mk('mk.common.loadFail')}</p>
         <div className="mt-4">
           <Btn variant="subtle" size="sm" onClick={() => void q.refetch()}>
             {mk('mk.common.retry')}
@@ -133,7 +133,7 @@ function PanelBody({
   }
   if (!children) {
     return (
-      <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+      <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
         {empty}
       </p>
     );
@@ -647,7 +647,7 @@ export default function MarketingPage() {
           <h3>{mk('mk.tag.title')}</h3>
           <span className="aside">{mk('mk.tag.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
           {(['', ...TAG_KINDS] as const).map((k) => (
             <button
               key={k || 'all'}
@@ -660,7 +660,7 @@ export default function MarketingPage() {
             </button>
           ))}
           <input
-            className="u1-ring w-44 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(59,46,36,.42)] focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+            className="u1-ring w-44 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(44,40,34,.42)] focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
             placeholder={mk('mk.tag.valueFilterPh')}
             value={tagValue}
             onChange={(e) => setTagValue(e.target.value)}
@@ -703,7 +703,7 @@ export default function MarketingPage() {
           <h3>{mk('mk.coupon.title')}</h3>
           <span className="aside">{mk('mk.coupon.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
           {(['', ...COUPON_TYPES] as const).map((t) => (
             <button
               key={t || 'all'}
@@ -766,7 +766,7 @@ export default function MarketingPage() {
           <h3>{mk('mk.campaign.title')}</h3>
           <span className="aside">{mk('mk.campaign.aside')}</span>
         </div>
-        <div className="flex items-center justify-end border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+        <div className="flex items-center justify-end border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
           <Btn variant="primary" size="sm" onClick={() => setGrantOpen(true)} data-testid="marketing-campaign-grant">
             {mk('mk.campaign.grantCta')}
           </Btn>
@@ -797,7 +797,7 @@ export default function MarketingPage() {
                         {c.targetKind ? `${tagKindLabel(c.targetKind)}=${c.targetValue ?? ''}` : mk('mk.campaign.targetAll')}
                       </td>
                       <td className="u1-num text-right font-bold">{mk('mk.campaign.grantedUnit', { n: c.grantedCount })}</td>
-                      <td className="max-w-40 truncate text-caption-xs text-[rgba(59,46,36,.62)]">{c.note ?? '—'}</td>
+                      <td className="max-w-40 truncate text-caption-xs text-[rgba(44,40,34,.62)]">{c.note ?? '—'}</td>
                       <td className="u1-num text-right text-caption-xs">{fmtDateTime(c.createdAt)}</td>
                     </tr>
                   ))}
@@ -818,7 +818,7 @@ export default function MarketingPage() {
           {bday ? (
             <>
               {/* tier 配置卡（端口 birthday_perk_tier 当前值） */}
-              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] pb-1 pt-3">
+              <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] pb-1 pt-3">
                 <div className="mb-2 text-caption font-semibold">{mk('mk.bday.tierTitle')}</div>
                 {typeof tier.amountFen === 'number' ? (
                   <div className="u3-kv !px-0 !pb-3" data-testid="marketing-bday-tier">
@@ -840,14 +840,14 @@ export default function MarketingPage() {
                     </div>
                   </div>
                 ) : (
-                  <p className="pb-3 text-caption-xs text-[rgba(59,46,36,.42)]">{mk('mk.bday.tierEmpty')}</p>
+                  <p className="pb-3 text-caption-xs text-[rgba(44,40,34,.42)]">{mk('mk.bday.tierEmpty')}</p>
                 )}
               </div>
               {/* upcoming 提醒名单 */}
-              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+              <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
                 <div className="mb-2 text-caption font-semibold">{mk('mk.bday.upcomingTitle')}</div>
                 {bday.upcoming.length === 0 ? (
-                  <p className="py-3 text-center text-caption text-[rgba(59,46,36,.62)]">{mk('mk.bday.upcomingEmpty')}</p>
+                  <p className="py-3 text-center text-caption text-[rgba(44,40,34,.62)]">{mk('mk.bday.upcomingEmpty')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-2" data-testid="marketing-bday-upcoming">
                     {bday.upcoming.map((u: UpcomingRow, i) => (
@@ -861,10 +861,10 @@ export default function MarketingPage() {
                 )}
               </div>
               {/* grants 台账 */}
-              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+              <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
                 <div className="mb-2 text-caption font-semibold">{mk('mk.bday.grantsTitle')}</div>
                 {bday.grants.length === 0 ? (
-                  <p className="py-3 text-center text-caption text-[rgba(59,46,36,.62)]">{mk('mk.bday.grantsEmpty')}</p>
+                  <p className="py-3 text-center text-caption text-[rgba(44,40,34,.62)]">{mk('mk.bday.grantsEmpty')}</p>
                 ) : (
                   <table className="u3-tbl" data-testid="marketing-bday-grants">
                     <thead>
@@ -887,7 +887,7 @@ export default function MarketingPage() {
                 )}
               </div>
               {bday.note ? (
-                <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {bday.note}
                 </p>
               ) : null}
@@ -902,7 +902,7 @@ export default function MarketingPage() {
           <h3>{mk('mk.promo.title')}</h3>
           <span className="aside">{mk('mk.promo.aside')}</span>
         </div>
-        <div className="flex items-center justify-end border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+        <div className="flex items-center justify-end border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
           <Btn
             variant="primary"
             size="sm"
@@ -940,7 +940,7 @@ export default function MarketingPage() {
                       <td className="u1-num whitespace-nowrap text-caption-xs">
                         {p.startsAt || p.endsAt ? `${isoDate(p.startsAt)} ~ ${isoDate(p.endsAt)}` : mk('mk.promo.rangeNone')}
                       </td>
-                      <td className="u1-num max-w-48 truncate text-caption-xs text-[rgba(59,46,36,.62)]" title={JSON.stringify(p.rulesJson)}>
+                      <td className="u1-num max-w-48 truncate text-caption-xs text-[rgba(44,40,34,.62)]" title={JSON.stringify(p.rulesJson)}>
                         {JSON.stringify(p.rulesJson)}
                       </td>
                       <td>
@@ -964,7 +964,7 @@ export default function MarketingPage() {
           )}
         </PanelBody>
         {promosQ.data?.note ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]">
             {promosQ.data.note}
           </p>
         ) : null}
@@ -976,7 +976,7 @@ export default function MarketingPage() {
           <h3>{mk('mk.stack.title')}</h3>
         </div>
         <PanelBody q={stackQ} empty={mk('mk.stack.note')}>
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2">
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2">
             {(
               [
                 ['coupon_stack_rule', mk('mk.stack.couponStack')],
@@ -1000,13 +1000,13 @@ export default function MarketingPage() {
                   <span className="vl">
                     <span className="u1-num">{ruleText}</span>
                     {v && typeof v.note === 'string' ? (
-                      <span className="ml-2 text-caption-xs font-normal text-[rgba(59,46,36,.42)]">{v.note as string}</span>
+                      <span className="ml-2 text-caption-xs font-normal text-[rgba(44,40,34,.42)]">{v.note as string}</span>
                     ) : null}
                   </span>
                 </div>
               );
             })}
-            <p className="py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">{stackQ.data?.note ?? mk('mk.stack.note')}</p>
+            <p className="py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]">{stackQ.data?.note ?? mk('mk.stack.note')}</p>
           </div>
         </PanelBody>
       </div>

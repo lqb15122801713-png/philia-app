@@ -31,8 +31,8 @@ import {
 const HINT_NUM_CLS = 'font-number tabular-nums'
 
 const DOT_RED = '#B4502E' // 警示=赭红（纯红换赭 §1.4）
-const DOT_LEMON = '#F2DFA6' // 淡金点睛（柠檬黄清场，常量名沿用防扩散改）
-const DOT_MINT = '#2E2318' // 服务中=livetag 同族深棕（薄荷绿清场）
+const DOT_LEMON = '#F2DC8C' // cream 点睛（PD45 U6 换代现值；常量名沿用防扩散改）
+const DOT_MINT = '#2C2822' // 服务中=深棕墨 livetag 同族（PD45 U6 深棕收敛 ink 现值）
 
 interface TodoRowSpec {
   key: string

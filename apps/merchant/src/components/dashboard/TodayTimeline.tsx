@@ -73,7 +73,7 @@ export default function TodayTimeline({
           </tbody>
         </table>
       ) : items.length === 0 ? (
-        <p className="px-[17px] pb-7 pt-3 text-center text-[12px] leading-6 text-[rgba(59,46,36,.62)]">
+        <p className="px-[17px] pb-7 pt-3 text-center text-[12px] leading-6 text-[rgba(44,40,34,.62)]">
           {dc('dash.timelineEmpty')}
         </p>
       ) : (
@@ -115,7 +115,7 @@ export default function TodayTimeline({
                   <td className="u1-num text-right font-bold">{hhmm(item.scheduledStart)}</td>
                   <td>
                     {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
-                    <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.42)]">
+                    <div className="mt-0.5 text-[12px] text-[rgba(44,40,34,.42)]">
                       {item.customerName ?? '客户'}
                       {payText ? ` · ${payText}` : ''}
                     </div>
@@ -123,7 +123,7 @@ export default function TodayTimeline({
                   <td>
                     {item.staffName ?? '未指派'}
                     {srcText ? (
-                      <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.42)]">{srcText}</div>
+                      <div className="mt-0.5 text-[12px] text-[rgba(44,40,34,.42)]">{srcText}</div>
                     ) : null}
                   </td>
                   <td>
