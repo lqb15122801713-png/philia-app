@@ -18,6 +18,8 @@ CREATE TABLE `slot_contents` (
 CREATE INDEX `ix_slot_contents_key_status` ON `slot_contents` (`slot_key`,`status`);--> statement-breakpoint
 CREATE INDEX `ix_slot_contents_key_version` ON `slot_contents` (`slot_key`,`version`);--> statement-breakpoint
 -- 六槽注册种子（status='live' 版本 1=码内现状值；famCard/cardFace/product.placeholder 渐变占位 url=NULL）
+-- PD-48 更正：SELECT 列序对齐 INSERT 列单（id, slot_key, version）——旧版 1 与 s.slot_key 错位，
+-- 致六槽 slot_key 全塌成 '1'、真键错入 version 列；已应用库由 0089 迁移拨正。
 WITH s(slot_key, url, alt) AS (VALUES
   ('home.banner', '/brand/banner-home-1200.png', '首页品牌横幅'),
   ('login.hero.staff', '/brand/banner-home-1200.png', '员工端登录页主视觉'),
@@ -27,6 +29,6 @@ WITH s(slot_key, url, alt) AS (VALUES
   ('product.placeholder', NULL, '商品无图占位模板（爪印图标占位，待素材通道真件）')
 )
 INSERT INTO `slot_contents` (`id`,`slot_key`,`version`,`content_json`,`status`,`created_by`,`created_at`,`updated_at`)
-SELECT 'seedslot_' || s.slot_key, 1, s.slot_key, json_object('url', s.url, 'alt', s.alt), 'live', 'system', unixepoch(), unixepoch()
+SELECT 'seedslot_' || s.slot_key, s.slot_key, 1, json_object('url', s.url, 'alt', s.alt), 'live', 'system', unixepoch(), unixepoch()
 FROM s
 WHERE NOT EXISTS (SELECT 1 FROM `slot_contents` WHERE `slot_key` = s.slot_key);

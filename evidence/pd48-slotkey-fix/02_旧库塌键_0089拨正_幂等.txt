@@ -1,0 +1,30 @@
+== Path B：塌键旧库（复刻旧 0025 错位产物）+ 0089 拨正 + 幂等重放
+--- 修复前（塌键现场）
+seedslot_home.banner | key=1 | v=home.banner(text) | live
+seedslot_login.hero.staff | key=1 | v=login.hero.staff(text) | live
+seedslot_mall.hero | key=mall.hero | v=1(integer) | live
+seedslot_member.cardFace | key=1 | v=member.cardFace(text) | live
+seedslot_member.famCard | key=1 | v=member.famCard(text) | live
+seedslot_odd | key=1 | v=7(integer) | pending
+seedslot_pets.emptyIllustration | key=1 | v=pets.emptyIllustration(text) | live
+seedslot_product.placeholder | key=1 | v=product.placeholder(text) | live
+0089 第一次：changes = 6
+--- 0089 第一次后
+seedslot_home.banner | key=home.banner | v=1(integer) | live
+seedslot_login.hero.staff | key=login.hero.staff | v=1(integer) | live
+seedslot_mall.hero | key=mall.hero | v=1(integer) | live
+seedslot_member.cardFace | key=member.cardFace | v=1(integer) | live
+seedslot_member.famCard | key=member.famCard | v=1(integer) | live
+seedslot_odd | key=1 | v=7(integer) | pending
+seedslot_pets.emptyIllustration | key=pets.emptyIllustration | v=1(integer) | live
+seedslot_product.placeholder | key=product.placeholder | v=1(integer) | live
+0089 第二次（幂等重放）：changes = 0
+--- 0089 第二次后
+seedslot_home.banner | key=home.banner | v=1(integer) | live
+seedslot_login.hero.staff | key=login.hero.staff | v=1(integer) | live
+seedslot_mall.hero | key=mall.hero | v=1(integer) | live
+seedslot_member.cardFace | key=member.cardFace | v=1(integer) | live
+seedslot_member.famCard | key=member.famCard | v=1(integer) | live
+seedslot_odd | key=1 | v=7(integer) | pending
+seedslot_pets.emptyIllustration | key=pets.emptyIllustration | v=1(integer) | live
+seedslot_product.placeholder | key=product.placeholder | v=1(integer) | live
