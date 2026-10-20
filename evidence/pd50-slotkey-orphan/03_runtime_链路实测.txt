@@ -1,0 +1,18 @@
+[pd50] 临时库迁移 + 种子…
+PASS 前置：orphan live 挂 key=1（现场复刻）
+PASS db:migrate 重跑成功（真实迁移路径应用 0091）
+--- migrator 应用 0091 后 home.banner 组： [{"id":"01M5CY0TCCGECB2ANFYCJY9V0T","slot_key":"home.banner","version":1,"vt":"integer","status":"archived"},{"id":"01M5CJ3ORPHANLIVE0000001","slot_key":"home.banner","version":2,"vt":"integer","status":"live"}]
+PASS 迁移后：无 key=1 残余 + orphan 拨正 home.banner v2 live + 种子 v1 archived
+[pd50] 起 server…
+PASS server 就绪（/api/health）
+PASS ①liveMap：首页横幅 key=home.banner（无 key=1 塌键透出）
+PASS ②客壳运营条吃 slotPort live（值=orphan 运营发布件 url/alt，非壳默认 /brand 路径）
+PASS ③控台 list：无 slotKey=1 组（键分裂消）+ home.banner 组 live=orphan v2
+PASS ③upload home.banner ≠400：pending v3 落库（版本续排无分裂）
+PASS ③旧塌键 slotKey=1 → 400 未知槽位键（注册表纪律不回潮）
+PASS 闭环：publish 后 liveMap 即新值（orphan 转 archived 留痕）
+PASS 闭环：revert 后回 orphan 运营件（/api/img/slots/1/orphan-banner.jpg）
+PASS ④customer upload → 403（无误投面）
+TMPLEFT C:\Users\lqb15\AppData\Local\Temp\pd50_runtime_1792509240317.db
+
+[pd50-runtime] ALL PASS

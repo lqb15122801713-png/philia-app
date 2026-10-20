@@ -1,0 +1,58 @@
+0091 语句段数=3
+--- 新库全迁移（含 0091）后 slot_contents
+seedslot_home.banner | key=home.banner | v=1(integer) | live | by=system
+seedslot_login.hero.staff | key=login.hero.staff | v=1(integer) | live | by=system
+seedslot_mall.hero | key=mall.hero | v=1(integer) | live | by=system
+seedslot_member.cardFace | key=member.cardFace | v=1(integer) | live | by=system
+seedslot_member.famCard | key=member.famCard | v=1(integer) | live | by=system
+seedslot_pets.emptyIllustration | key=pets.emptyIllustration | v=1(integer) | live | by=system
+seedslot_philia.magazine.02 | key=philia.magazine.02 | v=1(integer) | live | by=system
+seedslot_philia.magazine.03 | key=philia.magazine.03 | v=1(integer) | live | by=system
+seedslot_philia.magazine.lead | key=philia.magazine.lead | v=1(integer) | live | by=system
+seedslot_product.placeholder | key=product.placeholder | v=1(integer) | live | by=system
+PASS ①新库：无 slot_key=1 塌键/orphan 行
+PASS ①新库：home.banner 单 live 且 version=1（0091 零命中，种子原样）
+PASS ①新库：全槽单 live 收敛（0091③常态零命中）
+--- 修复前（0089 后 orphan 现场）
+01M5CJ3ORPHANLIVE0000001 | key=1 | v=product.placeholder1(text) | live | by=system
+01M5CJ3ORPHANPEND0000002 | key=1 | v=product.placeholder11(text) | pending | by=system
+seedslot_odd | key=1 | v=7(integer) | pending | by=system
+seedslot_home.banner | key=home.banner | v=1(integer) | archived | by=system
+seedslot_login.hero.staff | key=login.hero.staff | v=1(integer) | archived | by=system
+seedslot_mall.hero | key=mall.hero | v=1(integer) | live | by=system
+seedslot_member.cardFace | key=member.cardFace | v=1(integer) | archived | by=system
+seedslot_member.famCard | key=member.famCard | v=1(integer) | archived | by=system
+seedslot_pets.emptyIllustration | key=pets.emptyIllustration | v=1(integer) | archived | by=system
+seedslot_philia.magazine.02 | key=philia.magazine.02 | v=1(integer) | live | by=system
+seedslot_philia.magazine.03 | key=philia.magazine.03 | v=1(integer) | live | by=system
+seedslot_philia.magazine.lead | key=philia.magazine.lead | v=1(integer) | live | by=system
+seedslot_product.placeholder | key=product.placeholder | v=1(integer) | archived | by=system
+PASS ②前置：orphan live 挂 key=1 且 version=文本垃圾（现场复刻成功）
+0091 第一次：changes = 6
+--- 0091 第一次后
+seedslot_home.banner | key=home.banner | v=1(integer) | archived | by=system
+01M5CJ3ORPHANLIVE0000001 | key=home.banner | v=2(integer) | live | by=system
+01M5CJ3ORPHANPEND0000002 | key=home.banner | v=3(integer) | pending | by=system
+seedslot_odd | key=home.banner | v=4(integer) | pending | by=system
+seedslot_login.hero.staff | key=login.hero.staff | v=1(integer) | archived | by=system
+seedslot_mall.hero | key=mall.hero | v=1(integer) | live | by=system
+seedslot_member.cardFace | key=member.cardFace | v=1(integer) | archived | by=system
+seedslot_member.famCard | key=member.famCard | v=1(integer) | archived | by=system
+seedslot_pets.emptyIllustration | key=pets.emptyIllustration | v=1(integer) | archived | by=system
+seedslot_philia.magazine.02 | key=philia.magazine.02 | v=1(integer) | live | by=system
+seedslot_philia.magazine.03 | key=philia.magazine.03 | v=1(integer) | live | by=system
+seedslot_philia.magazine.lead | key=philia.magazine.lead | v=1(integer) | live | by=system
+seedslot_product.placeholder | key=product.placeholder | v=1(integer) | archived | by=system
+PASS ②迁并：无 slot_key=1 残余行
+PASS ②迁并：orphan live → home.banner 且仍 live（运营发布件保住）
+PASS ②迁并：版本号续排为整数（种子 v1 archived → orphan live v2 → pending v3 → 干扰行 v4）
+PASS ②单 live 收敛：home.banner 恰一条 live（=orphan）
+PASS ②不误伤：其余四槽种子仍 archived（不回抬，回落码内默认同帧）；mall 系槽 live 不动
+0091 第二次（幂等重放）：changes = 0
+PASS ②幂等：重放零副作用
+人为 dual-live：live 数=2
+PASS ③防御：dual-live 收敛为 orphan 单 live（高版本留存，种子回 archived）
+TMPDB C:\Users\lqb15\AppData\Local\Temp\pd50_fresh_1792509232925.db
+TMPDB C:\Users\lqb15\AppData\Local\Temp\pd50_scene_1792509233349.db
+
+[pd50-migrate] ALL PASS
