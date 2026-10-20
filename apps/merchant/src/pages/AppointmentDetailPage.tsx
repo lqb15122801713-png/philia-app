@@ -600,7 +600,7 @@ export default function AppointmentDetailPage() {
                 {(appt.status === 'pending' || appt.status === 'confirmed') && !appt.checkedInAt ? (
                   <FieldRow label="核销码">
                     <span className="u1-num tracking-[0.2em]">{appt.code}</span>
-                    <span className="ml-2 text-[11px] font-normal text-ink-placeholder">
+                    <span className="ml-2 text-[12px] font-normal text-ink-placeholder">
                       {ac('appt.verifyCodeHint')}
                     </span>
                   </FieldRow>

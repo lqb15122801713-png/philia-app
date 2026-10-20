@@ -78,12 +78,12 @@ export default function BoardingStayRow({
     <tr
       className="rowlink"
       onClick={onSelect}
-      style={selected ? { background: 'rgba(242,223,166,.45)' } : undefined}
+      style={selected ? { background: 'rgba(242,220,140,.45)' } : undefined}
       data-testid={`boarding-stay-${row.stay.id}`}
     >
       <td>
         <div className="font-semibold text-ink">{pet.name}</div>
-        <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+        <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
           {customer.nickname ?? '客户'}
           {tail ? ` · 尾号 ${tail}` : ''}
         </div>

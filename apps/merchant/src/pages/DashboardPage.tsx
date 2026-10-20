@@ -477,7 +477,7 @@ export default function DashboardPage() {
                 >
                   {CHAIN_CAPS.map((c) => (
                     <div key={c.key}>
-                      <div className="text-[11px] font-semibold text-ink-placeholder">
+                      <div className="text-[12px] font-semibold text-ink-placeholder">
                         {dc(c.cap)}
                       </div>
                       <div
@@ -549,20 +549,20 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
               <div>
-                <div className="text-[11px] font-semibold text-ink-placeholder">
+                <div className="text-[12px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapAppt')}
                 </div>
                 <div className="mt-1 font-number text-[24px] font-bold tabular-nums">
                   {stats ? stats.todayCount : '—'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-ink-secondary">
+                <div className="mt-0.5 text-[12px] text-ink-secondary">
                   服务中 <b className="font-number tabular-nums">{serving}</b> · 待到店{' '}
                   <b className="font-number tabular-nums">{waiting}</b> · 已完成{' '}
                   <b className="font-number tabular-nums">{doneCount}</b>
                 </div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold text-ink-placeholder">
+                <div className="text-[12px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapRevenue')}
                 </div>
                 <div
@@ -571,7 +571,7 @@ export default function DashboardPage() {
                 >
                   {tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-ink-secondary">
+                <div className="mt-0.5 text-[12px] text-ink-secondary">
                   已收 <b className="font-number tabular-nums">{tenderPaidCount}</b> 笔 · 待收{' '}
                   <b className="font-number tabular-nums">{stats?.todo.unpaid ?? 0}</b> 笔
                 </div>
@@ -579,22 +579,22 @@ export default function DashboardPage() {
                 <AmortizationDashNote />
               </div>
               <div>
-                <div className="text-[11px] font-semibold text-ink-placeholder">
+                <div className="text-[12px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapBoarding')}
                 </div>
                 <div className="mt-1 font-number text-[24px] font-bold tabular-nums">
                   {boardingItems ? boardingCount : '—'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-ink-secondary">{roomText}</div>
+                <div className="mt-0.5 text-[12px] text-ink-secondary">{roomText}</div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold text-ink-placeholder">
+                <div className="text-[12px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapMode')}
                 </div>
                 <div className="mt-1 text-[17px] font-semibold leading-8">
                   {dc('dash.statModeValue')}
                 </div>
-                <span className="mt-1 inline-block rounded-md bg-brand-primary px-[7px] py-[2px] text-[11px] font-bold text-ink">
+                <span className="mt-1 inline-block rounded-md bg-brand-primary px-[7px] py-[2px] text-[12px] font-bold text-ink">
                   {dc('dash.statModePill')}
                 </span>
               </div>

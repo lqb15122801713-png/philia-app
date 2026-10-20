@@ -146,7 +146,7 @@ export function CollabSplitSection({
         </div>
       ) : collabQ.isError ? (
         <div className="px-[17px] pb-3.5 text-center">
-          <p className="text-caption text-[rgba(59,46,36,.62)]">{py('payroll.common.loadFail')}</p>
+          <p className="text-caption text-[rgba(44,40,34,.62)]">{py('payroll.common.loadFail')}</p>
           <div className="mt-2">
             <Btn variant="subtle" size="sm" onClick={() => void collabQ.refetch()}>
               {py('payroll.common.retry')}
@@ -156,17 +156,17 @@ export function CollabSplitSection({
       ) : !editing ? (
         <div className="px-[17px] pb-3.5">
           {collaborators.length === 0 ? (
-            <p className="text-caption text-[rgba(59,46,36,.62)]">{py('payroll.collab.empty')}</p>
+            <p className="text-caption text-[rgba(44,40,34,.62)]">{py('payroll.collab.empty')}</p>
           ) : (
             collaborators.map((c) => (
               <div key={c.id} className="flex items-center gap-1.5 py-1 text-caption" data-testid={`collab-row-${c.staffId}`}>
                 <span className="min-w-0 flex-1 font-semibold text-ink">{c.staffName ?? staffNameOf(c.staffId) ?? c.staffId}</span>
                 <Badge tone="muted">{collabRoleLabel(c.role)}</Badge>
-                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">{(c.splitBp / 100).toFixed(2)}%</span>
+                <span className="u1-num text-caption-xs text-[rgba(44,40,34,.62)]">{(c.splitBp / 100).toFixed(2)}%</span>
               </div>
             ))
           )}
-          <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]">
             {readonly ? py('payroll.collab.readonlyNote') : py('payroll.collab.mainNote')}
           </p>
           {!readonly ? (
@@ -232,7 +232,7 @@ export function CollabSplitSection({
               {py('payroll.collab.addCta')}
             </Btn>
           </div>
-          <p className={`text-caption-xs ${sumOver ? 'text-danger-deep' : 'text-[rgba(59,46,36,.42)]'}`} data-testid="collab-sum">
+          <p className={`text-caption-xs ${sumOver ? 'text-danger-deep' : 'text-[rgba(44,40,34,.42)]'}`} data-testid="collab-sum">
             {py('payroll.collab.sumLine', { sum: (sumBp / 100).toFixed(2), rest: ((10000 - sumBp) / 100).toFixed(2) })}
           </p>
           <div className="flex items-center gap-2">

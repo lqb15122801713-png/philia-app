@@ -60,7 +60,7 @@ const DOT_WOOD = '#B9A482';
 /** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：注册用户纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
 const PLAN_TIER_COLOR: Record<string, string> = {
   plan_weiguang: '#FBF6EA',
-  plan_yinghuo: '#F2DFA6',
+  plan_yinghuo: '#F2DC8C',
   plan_zhuguang: '#A08B62',
   plan_nuanyang: '#34271C',
 };
@@ -332,7 +332,7 @@ export default function PassPage() {
             <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-[rgba(44,40,34,.42)]" data-testid="pass-three-books-note">
+        <p className="mt-2 text-[12px] text-[rgba(44,40,34,.42)]" data-testid="pass-three-books-note">
           {pc('pass.threeBooksNote')}
         </p>
       </div>
@@ -384,18 +384,18 @@ export default function PassPage() {
                           <TierDot planKey={tier} />
                           <span>
                             <span className="font-bold text-ink">{p.customerNickname ?? '未命名'}</span>
-                            <span className="ml-1.5 text-[11px] text-[rgba(44,40,34,.42)]">
+                            <span className="ml-1.5 text-[12px] text-[rgba(44,40,34,.42)]">
                               {tier ? planShortLabel(tier) : pc('pass.tierNone')}
                             </span>
                             {p.customerPhone ? (
-                              <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(44,40,34,.42)]">
+                              <div className="mt-0.5 font-number text-[12px] tabular-nums text-[rgba(44,40,34,.42)]">
                                 尾号 {p.customerPhone.slice(-4)}
                               </div>
                             ) : null}
                           </span>
                         </span>
                       </td>
-                      <td className="whitespace-nowrap font-number text-[11px] tabular-nums text-[rgba(44,40,34,.62)]" title={p.id}>
+                      <td className="whitespace-nowrap font-number text-[12px] tabular-nums text-[rgba(44,40,34,.62)]" title={p.id}>
                         #{p.id.slice(-8)}
                       </td>
                       <td className="text-[rgba(44,40,34,.62)]">
@@ -406,7 +406,7 @@ export default function PassPage() {
                         <span className="font-number text-sm font-bold tabular-nums text-ink">
                           {p.remainTimes}
                         </span>
-                        <span className="ml-0.5 text-[11px] text-[rgba(44,40,34,.42)]">次</span>
+                        <span className="ml-0.5 text-[12px] text-[rgba(44,40,34,.42)]">次</span>
                       </td>
                       <td className="whitespace-nowrap font-number tabular-nums text-[rgba(44,40,34,.62)]">
                         {isoDate(p.expiresAt)}
@@ -420,7 +420,7 @@ export default function PassPage() {
                             type="button"
                             data-testid={`pass-topup-${p.id}`}
                             onClick={() => openTopUp(p.userId)}
-                            className="text-[11px] font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                            className="text-[12px] font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
                           >
                             充次
                           </button>
@@ -428,7 +428,7 @@ export default function PassPage() {
                             type="button"
                             data-testid={`pass-logs-${p.id}`}
                             onClick={() => setLogsFor(p)}
-                            className="text-[11px] font-semibold text-[rgba(44,40,34,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                            className="text-[12px] font-semibold text-[rgba(44,40,34,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
                           >
                             记录
                           </button>
@@ -440,7 +440,7 @@ export default function PassPage() {
               </tbody>
             </table>
             {/* W-11 双归属注（售卡店/通用店口径明面） */}
-            <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-[11px] text-[rgba(44,40,34,.42)]" data-testid="pass-dual-home-note">
+            <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-[12px] text-[rgba(44,40,34,.42)]" data-testid="pass-dual-home-note">
               {pc('pass.dualHomeNote')}
             </p>
             </>

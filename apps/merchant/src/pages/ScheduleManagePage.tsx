@@ -62,7 +62,7 @@ function WeekdayChips({ value, onChange }: { value: number[]; onChange: (v: numb
             aria-pressed={on}
             onClick={() => onChange(on ? value.filter((x) => x !== d) : [...value, d].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)))}
             className={`min-h-[36px] rounded-chip px-3 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-              on ? 'bg-ink text-[#F2DFA6]' : 'bg-sunken text-ink-secondary'
+              on ? 'bg-ink text-[#F2DC8C]' : 'bg-sunken text-ink-secondary'
             }`}
           >
             {WEEKDAY_LABEL[d]}
@@ -356,7 +356,7 @@ export default function ScheduleManagePage() {
             </Btn>
           </span>
         </div>
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2 text-caption-xs text-[rgba(44,40,34,.42)]">
           {sc('sched.gen.publishNote')}
         </p>
       </div>
@@ -371,7 +371,7 @@ export default function ScheduleManagePage() {
           </div>
         ) : weekQuery.isError ? (
           <div className="px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{sc('sched.common.loadFail')}</p>
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{sc('sched.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void weekQuery.refetch()}>
                 {sc('sched.common.retry')}
@@ -379,16 +379,16 @@ export default function ScheduleManagePage() {
             </div>
           </div>
         ) : staffRows.length === 0 ? (
-          <div className="px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">{sc('sched.week.empty')}</div>
+          <div className="px-[17px] py-12 text-center text-body-sm text-[rgba(44,40,34,.62)]">{sc('sched.week.empty')}</div>
         ) : (
           <table className="w-full min-w-[860px] border-collapse text-caption" data-testid="sched-grid">
             <thead>
               <tr>
-                <th className="border-b border-[rgba(59,46,36,.08)] px-2 py-2 text-left text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                <th className="border-b border-[rgba(44,40,34,.08)] px-2 py-2 text-left text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
                   {sc('sched.week.staffCol')}
                 </th>
                 {days.map((d, i) => (
-                  <th key={d} className="border-b border-[rgba(59,46,36,.08)] px-2 py-2 text-center text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                  <th key={d} className="border-b border-[rgba(44,40,34,.08)] px-2 py-2 text-center text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
                     {WEEKDAY_LABEL[(i + 1) % 7]}
                     <span className="u1-num ml-1 font-normal">{d.slice(5)}</span>
                   </th>
@@ -398,7 +398,7 @@ export default function ScheduleManagePage() {
             <tbody>
               {staffRows.map((s) => (
                 <tr key={s.id}>
-                  <td className="border-b border-[rgba(59,46,36,.06)] px-2 py-2 align-top font-semibold text-ink">{s.name}</td>
+                  <td className="border-b border-[rgba(44,40,34,.06)] px-2 py-2 align-top font-semibold text-ink">{s.name}</td>
                   {days.map((d) => {
                     const blocks = cellMap.get(`${s.id}|${d}`) ?? [];
                     return (
@@ -407,7 +407,7 @@ export default function ScheduleManagePage() {
                         data-testid={`sched-cell-${s.id}-${d}`}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => void onDrop(e, s.id, d)}
-                        className="min-w-[110px] border-b border-l border-[rgba(59,46,36,.06)] px-1.5 py-1.5 align-top"
+                        className="min-w-[110px] border-b border-l border-[rgba(44,40,34,.06)] px-1.5 py-1.5 align-top"
                       >
                         {blocks.map((a) => (
                           <ShiftBlock key={a.id} a={a} onDragStart={onDragStart} />
@@ -428,14 +428,14 @@ export default function ScheduleManagePage() {
           <h3>{sc('sched.tpl.title')}</h3>
           <span className="aside">{sc('sched.tpl.aside')}</span>
         </div>
-        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <div className="flex flex-wrap items-center gap-2.5">
             <input
               value={tplName}
               onChange={(e) => setTplName(e.target.value)}
               placeholder={sc('sched.tpl.namePh')}
               data-testid="sched-template-name"
-              className="u1-ring w-44 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(59,46,36,.42)] focus:outline-none"
+              className="u1-ring w-44 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(44,40,34,.42)] focus:outline-none"
             />
             <input type="time" value={tplStart} onChange={(e) => setTplStart(e.target.value)} data-testid="sched-template-start"
               className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none" />
@@ -452,17 +452,17 @@ export default function ScheduleManagePage() {
             <Skeleton className="h-10 !rounded-[16px]" />
           </div>
         ) : templates.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-6 text-center text-caption text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-6 text-center text-caption text-[rgba(44,40,34,.42)]">
             {sc('sched.tpl.empty')}
           </p>
         ) : (
           templates.map((t) => (
-            <div key={t.id} className="flex items-center gap-2.5 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`sched-template-row-${t.id}`}>
+            <div key={t.id} className="flex items-center gap-2.5 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`sched-template-row-${t.id}`}>
               <span className="text-body-sm font-bold text-ink">{t.name}</span>
-              <span className="u1-num text-caption text-[rgba(59,46,36,.62)]">
+              <span className="u1-num text-caption text-[rgba(44,40,34,.62)]">
                 {minToHm(t.startMin)}–{minToHm(t.endMin)}
               </span>
-              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+              <span className="text-caption-xs text-[rgba(44,40,34,.42)]">
                 {[...t.weekdays].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((d) => WEEKDAY_LABEL[d] ?? d).join('/')}
               </span>
               {!t.active ? <Badge tone="muted">{sc('sched.tpl.deactivated')}</Badge> : null}
@@ -487,13 +487,13 @@ export default function ScheduleManagePage() {
             <div
               key={s.id}
               data-testid={`sched-swap-row-${s.id}`}
-              className="flex items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+              className="flex items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3"
             >
               <div className="min-w-0 flex-1">
                 <div className="text-body-sm font-semibold text-ink">
                   {s.fromStaffName ?? '?'} → {s.toStaffName ?? sc('sched.swap.openTarget')}
                 </div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {s.date} {minToHm(s.startMin ?? 0)}–{minToHm(s.endMin ?? 0)} · {s.reason}
                 </div>
               </div>
@@ -518,7 +518,7 @@ export default function ScheduleManagePage() {
             </div>
           ))
         ) : (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4 text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4 text-caption text-[rgba(44,40,34,.62)]">
             {sc('sched.swap.empty')}
           </p>
         )}
@@ -530,14 +530,14 @@ export default function ScheduleManagePage() {
           <h3>{sc('sched.import.title')}</h3>
           <span className="aside">{sc('sched.import.aside')}</span>
         </div>
-        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <textarea
             value={csvText}
             onChange={(e) => setCsvText(e.target.value)}
             rows={5}
             placeholder={sc('sched.import.placeholder')}
             data-testid="sched-import-input"
-            className="u1-ring w-full rounded-input bg-card px-3 py-2.5 font-mono text-caption text-ink placeholder:text-[rgba(59,46,36,.42)] focus:outline-none"
+            className="u1-ring w-full rounded-input bg-card px-3 py-2.5 font-mono text-caption text-ink placeholder:text-[rgba(44,40,34,.42)] focus:outline-none"
           />
           <div className="mt-2 flex items-center gap-2">
             <Btn variant="subtle" size="sm" disabled={importBusy} onClick={() => void runPreview()} data-testid="sched-import-preview">
@@ -551,27 +551,27 @@ export default function ScheduleManagePage() {
           </div>
           {preview ? (
             <div className="mt-3" data-testid="sched-import-table">
-              <p className="mb-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <p className="mb-1.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                 {sc('sched.import.summary', { ok: preview.okRows, fail: preview.failRows })}
               </p>
               <table className="w-full border-collapse text-caption">
                 <thead>
                   <tr>
                     {[sc('sched.import.colLine'), sc('sched.import.colStaff'), sc('sched.import.colDate'), sc('sched.import.colRange'), sc('sched.import.colResult')].map((h) => (
-                      <th key={h} className="border-b border-[rgba(59,46,36,.08)] px-2 py-1.5 text-left text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{h}</th>
+                      <th key={h} className="border-b border-[rgba(44,40,34,.08)] px-2 py-1.5 text-left text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {preview.rows.map((r) => (
                     <tr key={r.line}>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-2 py-1.5">{r.line}</td>
-                      <td className="border-b border-[rgba(59,46,36,.06)] px-2 py-1.5">{r.staffInput || '—'}</td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-2 py-1.5">{r.date ?? '—'}</td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-2 py-1.5">
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-2 py-1.5">{r.line}</td>
+                      <td className="border-b border-[rgba(44,40,34,.06)] px-2 py-1.5">{r.staffInput || '—'}</td>
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-2 py-1.5">{r.date ?? '—'}</td>
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-2 py-1.5">
                         {r.startMin !== undefined && r.endMin !== undefined ? `${minToHm(r.startMin)}–${minToHm(r.endMin)}` : '—'}
                       </td>
-                      <td className="border-b border-[rgba(59,46,36,.06)] px-2 py-1.5">
+                      <td className="border-b border-[rgba(44,40,34,.06)] px-2 py-1.5">
                         {r.ok ? <Badge tone="success">{sc('sched.import.rowOk')}</Badge> : <Badge tone="danger">{r.failReason ?? '—'}</Badge>}
                       </td>
                     </tr>
@@ -594,16 +594,16 @@ export default function ScheduleManagePage() {
             <Skeleton className="h-10 !rounded-[16px]" />
           </div>
         ) : skillRows.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-6 text-center text-caption text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-6 text-center text-caption text-[rgba(44,40,34,.42)]">
             {sc('sched.skill.empty')}
           </p>
         ) : tagList.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-6 text-center text-caption text-[rgba(59,46,36,.42)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-6 text-center text-caption text-[rgba(44,40,34,.42)]">
             {sc('sched.skill.noTags')}
           </p>
         ) : (
           skillRows.map((row) => (
-            <div key={row.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5" data-testid={`sched-skill-row-${row.id}`}>
+            <div key={row.id} className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5" data-testid={`sched-skill-row-${row.id}`}>
               <span className="w-20 shrink-0 text-body-sm font-bold text-ink">{row.name}</span>
               {tagList.map((tag) => {
                 const on = (skillMap.get(row.id) ?? []).includes(tag);
@@ -617,7 +617,7 @@ export default function ScheduleManagePage() {
                     onClick={() => void toggleSkill(row.id, tag)}
                     data-testid={`sched-skill-${row.id}-${tag}`}
                     className={`min-h-[36px] rounded-chip px-3 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50 ${
-                      on ? 'bg-ink text-[#F2DFA6]' : 'bg-sunken text-ink-secondary'
+                      on ? 'bg-ink text-[#F2DC8C]' : 'bg-sunken text-ink-secondary'
                     }`}
                   >
                     {tag}
@@ -634,7 +634,7 @@ export default function ScheduleManagePage() {
         <div className="u3-panel-head">
           <h3>{sc('sched.wifi.title')}</h3>
         </div>
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4 text-caption text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4 text-caption text-[rgba(44,40,34,.62)]">
           {sc('sched.wifi.pending')}
         </p>
       </div>

@@ -77,6 +77,8 @@ const CASHIER_COPY_TABLE = {
   'cashier.dayFrozenBannerBody': '账面=冻结快照停涨（账面 ¥{book} · 实点 ¥{actual}）；现在起新开的单自动计入次日班次',
   /* ---- 走查P2修复批 D-35：班次区冻结明示徽（与留痕并存；真冻结态驱动，不改 D-29 钱域口径） ---- */
   'cashier.shiftFrozenBadge': '今日已日结 · 账目已冻结',
+  /* ---- PD45 U6 · C6 日结「已冻结」明示标签分列（历史行状态格＋详情字段；冻结/反结账规则零翻案） ---- */
+  'cashier.closeStatusFrozen': '已冻结',
   'cashier.closeShiftConfirmTitle': '交接班确认',
   'cashier.closeShiftConfirmBody':
     '交接班=关闭当前班次（不冻结账目）；下一笔收银将自动开新班。 如需冻结当班账目，请用「日结」。',

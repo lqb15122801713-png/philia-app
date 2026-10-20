@@ -224,7 +224,7 @@ export function ConsoleSearch({ onPickPort, onPickCopyKey, onPickScreen, onPickS
         className="u1-ring flex items-center gap-2 rounded-input bg-card px-3 py-[7px] text-caption-xs text-[rgba(44,40,34,.42)] transition-colors hover:bg-canvas"
       >
         <span>{cadm('cadm.searchCta')}</span>
-        <kbd className="rounded-chip bg-canvas px-1.5 py-0.5 font-number text-[10px] text-[rgba(44,40,34,.42)]">⌘K</kbd>
+        <kbd className="rounded-chip bg-canvas px-1.5 py-0.5 font-number text-[12px] text-[rgba(44,40,34,.42)]">⌘K</kbd>
       </button>
 
       <Modal

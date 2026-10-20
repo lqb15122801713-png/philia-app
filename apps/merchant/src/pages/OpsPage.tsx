@@ -320,7 +320,7 @@ export default function OpsPage() {
           <h3>{op('ops.pdca.title')}</h3>
           <span className="aside">{op('ops.pdca.aside')}</span>
         </div>
-        <div className="flex flex-wrap gap-1.5 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3" data-testid="ops-pdca-filters">
+        <div className="flex flex-wrap gap-1.5 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3" data-testid="ops-pdca-filters">
           {['all', ...PDCA_STATUS_KEYS].map((k) => {
             const on = statusFilter === k;
             return (
@@ -331,7 +331,7 @@ export default function OpsPage() {
                 onClick={() => setStatusFilter(k)}
                 data-testid={`ops-pdca-filter-${k}`}
                 className={`min-h-[36px] rounded-chip px-3 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                  on ? 'bg-ink text-[#F2DFA6]' : 'bg-sunken text-ink-secondary'
+                  on ? 'bg-ink text-[#F2DC8C]' : 'bg-sunken text-ink-secondary'
                 }`}
               >
                 {k === 'all' ? op('ops.pdca.filterAll') : pdcaStatusLabel(k)}
@@ -346,8 +346,8 @@ export default function OpsPage() {
             ))}
           </div>
         ) : pdcaQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{op('ops.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void pdcaQ.refetch()}>
                 {op('ops.common.retry')}
@@ -355,12 +355,12 @@ export default function OpsPage() {
             </div>
           </div>
         ) : issues.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {op('ops.pdca.empty')}
           </p>
         ) : (
           issues.map((it) => (
-            <div key={it.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`ops-pdca-row-${it.id}`}>
+            <div key={it.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`ops-pdca-row-${it.id}`}>
               <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -368,7 +368,7 @@ export default function OpsPage() {
                     <Badge tone={pdcaStatusTone(it.status)}>{pdcaStatusLabel(it.status)}</Badge>
                     {it.category ? <Badge tone="muted">{it.category}</Badge> : null}
                   </div>
-                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                     {fmtAt(it.createdAt)}
                     {it.raisedByName ? ` · ${it.raisedByName}` : ''}
                   </div>
@@ -403,25 +403,25 @@ export default function OpsPage() {
                 </Btn>
               </div>
               {expandIssue === it.id ? (
-                <div className="border-t border-[rgba(59,46,36,.06)] bg-canvas px-[17px] py-3" data-testid={`ops-pdca-detail-${it.id}`}>
+                <div className="border-t border-[rgba(44,40,34,.06)] bg-canvas px-[17px] py-3" data-testid={`ops-pdca-detail-${it.id}`}>
                   {it.detail ? <p className="mb-2 text-caption text-ink">{it.detail}</p> : null}
                   {it.fixNote ? (
-                    <p className="mb-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <p className="mb-1 text-caption-xs text-[rgba(44,40,34,.62)]">
                       {op('ops.pdca.fixNoteLabel')}：{it.fixNote}
                       {it.fixedAt ? <span className="u1-num">（{fmtAt(it.fixedAt)}）</span> : null}
                     </p>
                   ) : null}
                   {it.recheckNote ? (
-                    <p className="mb-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <p className="mb-1 text-caption-xs text-[rgba(44,40,34,.62)]">
                       {op('ops.pdca.recheckNoteLabel')}：{it.recheckNote}
                       {it.recheckAt ? <span className="u1-num">（{fmtAt(it.recheckAt)}）</span> : null}
                     </p>
                   ) : null}
                   {it.timeline.length > 0 ? (
                     <div className="mt-2">
-                      <p className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{op('ops.pdca.timelineTitle')}</p>
+                      <p className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{op('ops.pdca.timelineTitle')}</p>
                       {it.timeline.map((t, i) => (
-                        <div key={i} className="flex items-baseline gap-2 py-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                        <div key={i} className="flex items-baseline gap-2 py-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                           <span className="u1-num shrink-0">{fmtAt(t.at)}</span>
                           <span className="font-semibold text-ink">{t.action}</span>
                           {t.by ? <span>{t.by}</span> : null}
@@ -450,8 +450,8 @@ export default function OpsPage() {
             ))}
           </div>
         ) : selfQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{op('ops.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void selfQ.refetch()}>
                 {op('ops.common.retry')}
@@ -459,19 +459,19 @@ export default function OpsPage() {
             </div>
           </div>
         ) : runs.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {op('ops.self.empty')}
           </p>
         ) : (
           runs.map((r: SelfCheckRunRow) => (
-            <div key={r.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`ops-self-row-${r.id}`}>
+            <div key={r.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`ops-self-row-${r.id}`}>
               <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="u1-num text-body-sm font-bold text-ink">{r.bizDate}</span>
                     <Badge tone="brand">{op('ops.self.scoreLabel', { n: r.score })}</Badge>
                   </div>
-                  <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                     {op('ops.self.filledBy', { name: r.filledByName ?? '—' })}
                   </div>
                 </div>
@@ -493,15 +493,15 @@ export default function OpsPage() {
                 </Btn>
               </div>
               {expandRun === r.id ? (
-                <div className="border-t border-[rgba(59,46,36,.06)] bg-canvas px-[17px] py-3" data-testid={`ops-self-detail-${r.id}`}>
+                <div className="border-t border-[rgba(44,40,34,.06)] bg-canvas px-[17px] py-3" data-testid={`ops-self-detail-${r.id}`}>
                   {r.items.map((it) => (
                     <div key={it.key} className="flex items-center gap-2 py-1 text-caption">
                       <span className="min-w-0 flex-1 text-ink">{it.label}</span>
-                      <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">{it.score}</span>
+                      <span className="u1-num text-caption-xs text-[rgba(44,40,34,.42)]">{it.score}</span>
                       <Badge tone={it.passed === false ? 'danger' : 'success'}>
                         {it.passed === false ? op('ops.self.itemFailed') : op('ops.self.itemPassed')}
                       </Badge>
-                      {it.note ? <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{it.note}</span> : null}
+                      {it.note ? <span className="text-caption-xs text-[rgba(44,40,34,.62)]">{it.note}</span> : null}
                     </div>
                   ))}
                 </div>
@@ -522,8 +522,8 @@ export default function OpsPage() {
             <Skeleton className="h-16 !rounded-[16px]" />
           </div>
         ) : summaryQ.isError || !summary ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center">
-            <p className="text-caption text-[rgba(59,46,36,.62)]">{op('ops.sum.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center">
+            <p className="text-caption text-[rgba(44,40,34,.62)]">{op('ops.sum.loadFail')}</p>
             <div className="mt-3">
               <Btn variant="subtle" size="sm" onClick={() => void summaryQ.refetch()}>
                 {op('ops.common.retry')}
@@ -531,7 +531,7 @@ export default function OpsPage() {
             </div>
           </div>
         ) : (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
             <div className="u3-kv !px-0">
               <div className="cell">
                 <div className="cap">{op('ops.sum.closed30d')}</div>
@@ -551,9 +551,9 @@ export default function OpsPage() {
               </div>
             </div>
             <div className="mt-3">
-              <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{op('ops.sum.byCategory')}</p>
+              <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{op('ops.sum.byCategory')}</p>
               {topCategories.length === 0 ? (
-                <p className="text-caption text-[rgba(59,46,36,.42)]">{op('ops.sum.emptyCategory')}</p>
+                <p className="text-caption text-[rgba(44,40,34,.42)]">{op('ops.sum.emptyCategory')}</p>
               ) : (
                 <div data-testid="ops-sum-bycategory">
                   {topCategories.map((c) => (
@@ -565,7 +565,7 @@ export default function OpsPage() {
                 </div>
               )}
             </div>
-            <p className="mt-3 border-t border-[rgba(59,46,36,.06)] pt-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="mt-3 border-t border-[rgba(44,40,34,.06)] pt-2 text-caption-xs text-[rgba(44,40,34,.42)]">
               {op('ops.sum.storeScopeNote')}
             </p>
           </div>
@@ -585,8 +585,8 @@ export default function OpsPage() {
             ))}
           </div>
         ) : appealQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{op('ops.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void appealQ.refetch()}>
                 {op('ops.common.retry')}
@@ -596,12 +596,12 @@ export default function OpsPage() {
         ) : (
           <>
             {pendingAppeals.length === 0 ? (
-              <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+              <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
                 {op('ops.appeal.empty')}
               </p>
             ) : (
               pendingAppeals.map((a) => (
-                <div key={a.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`metric-appeal-row-${a.id}`}>
+                <div key={a.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`metric-appeal-row-${a.id}`}>
                   <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
@@ -611,7 +611,7 @@ export default function OpsPage() {
                       <p className="mt-0.5 text-caption text-ink">
                         {op('ops.appeal.reasonLabel')}：{a.reason}
                       </p>
-                      <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{fmtAt(a.createdAt)}</div>
+                      <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">{fmtAt(a.createdAt)}</div>
                     </div>
                     <Btn
                       variant="primary"
@@ -634,30 +634,30 @@ export default function OpsPage() {
               ))
             )}
             {reviewedAppeals.length > 0 ? (
-              <div className="border-t border-[rgba(59,46,36,.06)] bg-canvas px-[17px] py-3" data-testid="metric-appeal-reviewed">
-                <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{op('ops.appeal.reviewedTitle')}</p>
+              <div className="border-t border-[rgba(44,40,34,.06)] bg-canvas px-[17px] py-3" data-testid="metric-appeal-reviewed">
+                <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{op('ops.appeal.reviewedTitle')}</p>
                 {reviewedAppeals.map((a) => (
-                  <div key={a.id} className="border-t border-[rgba(59,46,36,.06)] py-2 first:border-t-0" data-testid={`metric-appeal-reviewed-${a.id}`}>
+                  <div key={a.id} className="border-t border-[rgba(44,40,34,.06)] py-2 first:border-t-0" data-testid={`metric-appeal-reviewed-${a.id}`}>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-caption font-semibold text-ink">{a.staffName}</span>
                       <Badge tone="muted">{appealTargetLabel(a.targetType)}</Badge>
                       <Badge tone={a.status === 'approved' ? 'success' : 'danger'}>
                         {a.status === 'approved' ? op('ops.appeal.statusApproved') : op('ops.appeal.statusRejected')}
                       </Badge>
-                      <span className="u1-num ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <span className="u1-num ml-auto text-caption-xs text-[rgba(44,40,34,.42)]">
                         {op('ops.appeal.reviewedAtLabel')} {fmtAt(a.reviewedAt)}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <p className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                       {op('ops.appeal.reasonLabel')}：{a.reason}
                     </p>
                     {a.reviewNote ? (
-                      <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <p className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                         {op('ops.appeal.reviewNoteLabel')}：{a.reviewNote}
                       </p>
                     ) : null}
                     {a.correctionJson ? (
-                      <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <p className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                         {op('ops.appeal.correctionLabel')}：
                         <span className="u1-num">
                           {String(a.correctionJson.before ?? '—')} → {String(a.correctionJson.after ?? '—')}
@@ -686,8 +686,8 @@ export default function OpsPage() {
             ))}
           </div>
         ) : stockApprovalQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{op('ops.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void stockApprovalQ.refetch()}>
                 {op('ops.common.retry')}
@@ -695,19 +695,19 @@ export default function OpsPage() {
             </div>
           </div>
         ) : stockApprovals.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {op('ops.stock.empty')}
           </p>
         ) : (
           stockApprovals.map((a) => (
-            <div key={a.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`stock-approval-row-${a.id}`}>
+            <div key={a.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`stock-approval-row-${a.id}`}>
               <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <Badge tone="brand">{stockKindLabel(a.kind)}</Badge>
                     <span className="min-w-0 flex-1 truncate text-body-sm font-bold text-ink">{a.summary}</span>
                   </div>
-                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                     {op('ops.stock.applicantLabel')} {a.applicantName ?? '—'} · {fmtAt(a.createdAt)}
                   </div>
                 </div>
@@ -744,8 +744,8 @@ export default function OpsPage() {
             <Skeleton className="h-12 !rounded-[16px]" />
           </div>
         ) : quitQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.quitLoadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{op('ops.quitLoadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void quitQ.refetch()}>
                 {op('ops.common.retry')}
@@ -753,14 +753,14 @@ export default function OpsPage() {
             </div>
           </div>
         ) : quitItems.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {op('ops.quitEmpty')}
           </p>
         ) : (
           quitItems.map((row) => {
             const r = row.request;
             return (
-              <div key={r.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`quit-approval-row-${r.id}`}>
+              <div key={r.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`quit-approval-row-${r.id}`}>
                 <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -769,7 +769,7 @@ export default function OpsPage() {
                         {op('ops.quitLine', { nick: row.nickname ?? '—', planKey: r.planKey, amount: (r.refundFen / 100).toFixed(2), months: r.monthsRemaining })}
                       </span>
                     </div>
-                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                       {op('ops.quitReasonLabel')}：{r.reason} · {fmtAt(r.createdAt)}
                     </div>
                   </div>
@@ -835,7 +835,7 @@ export default function OpsPage() {
           maxLength={500}
           placeholder={ask?.kind === 'recheck' ? op('ops.pdca.notePh') : op('ops.self.notePh')}
           data-testid="ops-note-input"
-          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
         />
       </Modal>
 
@@ -885,7 +885,7 @@ export default function OpsPage() {
                 maxLength={255}
                 placeholder={op('ops.appeal.correctionNotePh')}
                 data-testid="metric-appeal-correction-note"
-                className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
               />
             </>
           ) : null}
@@ -896,7 +896,7 @@ export default function OpsPage() {
             maxLength={500}
             placeholder={appealAsk?.kind === 'approve' ? op('ops.appeal.approveNotePh') : op('ops.appeal.rejectNotePh')}
             data-testid="metric-appeal-note"
-            className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+            className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
           />
         </div>
       </Modal>
@@ -923,7 +923,7 @@ export default function OpsPage() {
           maxLength={200}
           placeholder={op('ops.stock.notePh')}
           data-testid="stock-approval-note"
-          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
         />
       </Modal>
     </MainScaffold>

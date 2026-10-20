@@ -17,6 +17,9 @@ const APPT_COPY_TABLE = {
   'appt.createCta': '＋ 新增预约',
   'appt.createGuide': '新客户预约请引导至客户端预约页；到店客可由前台手动核销登记',
   'appt.listEmpty': '这一天没有预约',
+  /* ---- PD45 U6 · C4/C5 入口分列（列表行操作列；资格行才露） ---- */
+  'appt.rowReschedule': '改期',
+  'appt.rowForceComplete': '强制完成',
 
   /* ---- 预约详情 /appointments/:id ---- */
   'appt.detailNotFoundTitle': '找不到这个预约',

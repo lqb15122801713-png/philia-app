@@ -456,7 +456,7 @@ export default function PayrollPage() {
           <h3>{py('payroll.slip.title')}</h3>
           <span className="aside">{py('payroll.slip.aside')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <label className="flex items-center gap-2 text-caption text-ink-secondary">
             {py('payroll.slip.monthLabel')}
             <input
@@ -490,8 +490,8 @@ export default function PayrollPage() {
             ))}
           </div>
         ) : runQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{py('payroll.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{py('payroll.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void runQ.refetch()}>
                 {py('payroll.common.retry')}
@@ -499,7 +499,7 @@ export default function PayrollPage() {
             </div>
           </div>
         ) : !run || items.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {py('payroll.slip.empty')}
           </p>
         ) : (
@@ -517,7 +517,7 @@ export default function PayrollPage() {
                     py('payroll.slip.colDisburse'),
                     py('payroll.slip.colAction'),
                   ].map((h) => (
-                    <th key={h} className="border-b border-[rgba(59,46,36,.08)] px-[17px] py-2 text-left text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                    <th key={h} className="border-b border-[rgba(44,40,34,.08)] px-[17px] py-2 text-left text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
                       {h}
                     </th>
                   ))}
@@ -528,19 +528,19 @@ export default function PayrollPage() {
                   const marked = it.markedAt !== null && it.markedAt !== undefined;
                   return (
                     <tr key={it.id} className={marked ? 'opacity-55' : ''} data-testid={`payroll-item-${it.id}`}>
-                      <td className="border-b border-[rgba(59,46,36,.06)] px-[17px] py-2 font-semibold text-ink">
+                      <td className="border-b border-[rgba(44,40,34,.06)] px-[17px] py-2 font-semibold text-ink">
                         {it.staffName ?? it.staffId}
                       </td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">{fmtMoney(it.commissionFen)}</td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">{fmtMoney(it.performanceFen)}</td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">{fmtMoney(it.deductionFen)}</td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">{fmtMoney(it.adjustmentFen)}</td>
-                      <td className="u1-num border-b border-[rgba(59,46,36,.06)] px-[17px] py-2 font-bold text-ink">{fmtMoney(it.netFen)}</td>
-                      <td className="border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">{fmtMoney(it.commissionFen)}</td>
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">{fmtMoney(it.performanceFen)}</td>
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">{fmtMoney(it.deductionFen)}</td>
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">{fmtMoney(it.adjustmentFen)}</td>
+                      <td className="u1-num border-b border-[rgba(44,40,34,.06)] px-[17px] py-2 font-bold text-ink">{fmtMoney(it.netFen)}</td>
+                      <td className="border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">
                         {marked ? (
                           <div>
                             <Badge tone="success">{py('payroll.slip.markedBadge')}</Badge>
-                            <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                            <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                               {py('payroll.slip.markedByLine', { by: it.markedBy ?? '—', at: fmtAt(it.markedAt) })}
                             </div>
                           </div>
@@ -548,7 +548,7 @@ export default function PayrollPage() {
                           <Badge tone="muted">—</Badge>
                         )}
                       </td>
-                      <td className="border-b border-[rgba(59,46,36,.06)] px-[17px] py-2">
+                      <td className="border-b border-[rgba(44,40,34,.06)] px-[17px] py-2">
                         {!marked ? (
                           <Btn variant="subtle" size="sm" onClick={() => openMark(it)} data-testid={`payroll-mark-${it.id}`}>
                             {py('payroll.slip.markCta')}
@@ -560,7 +560,7 @@ export default function PayrollPage() {
                 })}
               </tbody>
             </table>
-            <p className="px-[17px] py-2 text-caption-xs text-[rgba(59,46,36,.42)]">{py('payroll.slip.disbursedNote')}</p>
+            <p className="px-[17px] py-2 text-caption-xs text-[rgba(44,40,34,.42)]">{py('payroll.slip.disbursedNote')}</p>
           </>
         )}
       </div>
@@ -571,7 +571,7 @@ export default function PayrollPage() {
           <h3>{py('payroll.appeal.title')}</h3>
           <span className="aside">{py('payroll.appeal.aside')}</span>
         </div>
-        <div className="flex flex-wrap gap-1.5 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3" data-testid="payroll-appeal-filters">
+        <div className="flex flex-wrap gap-1.5 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3" data-testid="payroll-appeal-filters">
           {['all', ...APPEAL_STATUS_KEYS].map((k) => {
             const on = appealFilter === k;
             return (
@@ -582,7 +582,7 @@ export default function PayrollPage() {
                 onClick={() => setAppealFilter(k)}
                 data-testid={`payroll-appeal-filter-${k}`}
                 className={`min-h-[36px] rounded-chip px-3 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                  on ? 'bg-ink text-[#F2DFA6]' : 'bg-sunken text-ink-secondary'
+                  on ? 'bg-ink text-[#F2DC8C]' : 'bg-sunken text-ink-secondary'
                 }`}
               >
                 {k === 'all' ? py('payroll.appeal.filterAll') : appealStatusLabel(k)}
@@ -597,8 +597,8 @@ export default function PayrollPage() {
             ))}
           </div>
         ) : appealsQ.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{py('payroll.common.loadFail')}</p>
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(44,40,34,.62)]">{py('payroll.common.loadFail')}</p>
             <div className="mt-4">
               <Btn variant="subtle" size="sm" onClick={() => void appealsQ.refetch()}>
                 {py('payroll.common.retry')}
@@ -606,12 +606,12 @@ export default function PayrollPage() {
             </div>
           </div>
         ) : appeals.length === 0 ? (
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">
             {py('payroll.appeal.empty')}
           </p>
         ) : (
           appeals.map((a) => (
-            <div key={a.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`payroll-appeal-row-${a.id}`}>
+            <div key={a.id} className="border-t border-[rgba(44,40,34,.06)]" data-testid={`payroll-appeal-row-${a.id}`}>
               <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -619,7 +619,7 @@ export default function PayrollPage() {
                     <Badge tone="muted">{appealKindLabel(a.targetKind)}</Badge>
                     <Badge tone={appealStatusTone(a.status)}>{appealStatusLabel(a.status)}</Badge>
                   </div>
-                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                     {py('payroll.appeal.monthLine', { month: a.month })} · {fmtAt(a.createdAt)}
                     {a.targetAmountFen != null ? ` · ${py('payroll.appeal.targetAmountLine', { amount: fmtMoney(a.targetAmountFen) })}` : ''}
                   </div>
@@ -654,21 +654,21 @@ export default function PayrollPage() {
                 ) : null}
               </div>
               {expandAppeal === a.id ? (
-                <div className="border-t border-[rgba(59,46,36,.06)] bg-canvas px-[17px] py-3" data-testid={`payroll-appeal-detail-${a.id}`}>
+                <div className="border-t border-[rgba(44,40,34,.06)] bg-canvas px-[17px] py-3" data-testid={`payroll-appeal-detail-${a.id}`}>
                   {a.targetLabel ? <p className="mb-1 text-caption text-ink">{a.targetLabel}</p> : null}
-                  <p className="mb-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                  <p className="mb-1 text-caption-xs text-[rgba(44,40,34,.62)]">
                     {py('payroll.appeal.reasonLabel')}：{a.reason}
                   </p>
                   {a.evidenceUrls && a.evidenceUrls.length > 0 ? (
                     <div className="mb-1 flex flex-wrap gap-1.5">
-                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{py('payroll.appeal.evidenceLabel')}：</span>
+                      <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{py('payroll.appeal.evidenceLabel')}：</span>
                       {a.evidenceUrls.map((url, i) => (
                         <a
                           key={url}
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-caption-xs text-ink underline decoration-[rgba(59,46,36,.3)] underline-offset-2"
+                          className="text-caption-xs text-ink underline decoration-[rgba(44,40,34,.3)] underline-offset-2"
                         >
                           {i + 1}
                         </a>
@@ -676,13 +676,13 @@ export default function PayrollPage() {
                     </div>
                   ) : null}
                   {a.status !== 'pending' && a.reviewNote ? (
-                    <p className="mb-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <p className="mb-1 text-caption-xs text-[rgba(44,40,34,.62)]">
                       {py('payroll.appeal.reviewLine', { result: appealStatusLabel(a.status), note: a.reviewNote })}
                       {a.reviewedAt ? <span className="u1-num">（{fmtAt(a.reviewedAt)}）</span> : null}
                     </p>
                   ) : null}
                   {a.status === 'approved' && a.refundFen != null ? (
-                    <p className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <p className="text-caption-xs text-[rgba(44,40,34,.62)]">
                       {py('payroll.appeal.refundLine', { amount: fmtMoney(a.refundFen) })}
                     </p>
                   ) : null}
@@ -699,7 +699,7 @@ export default function PayrollPage() {
           <h3>{py('payroll.ded.title')}</h3>
           <span className="aside">{py('payroll.ded.aside')}</span>
         </div>
-        <div className="space-y-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3" data-testid="payroll-ded-form">
+        <div className="space-y-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3" data-testid="payroll-ded-form">
           <div className="flex flex-wrap items-end gap-3">
             <Field label={py('payroll.ded.staffLabel')}>
               <select
@@ -733,7 +733,7 @@ export default function PayrollPage() {
                 inputMode="decimal"
                 placeholder={py('payroll.ded.amountPh')}
                 data-testid="payroll-ded-amount"
-                className="u1-ring w-32 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(59,46,36,.42)] focus:outline-none"
+                className="u1-ring w-32 rounded-control bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(44,40,34,.42)] focus:outline-none"
               />
             </Field>
           </div>
@@ -755,8 +755,8 @@ export default function PayrollPage() {
             </Btn>
           </div>
         </div>
-        <div className="border-t border-[rgba(59,46,36,.06)]">
-          <p className="px-[17px] pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{py('payroll.ded.listTitle')}</p>
+        <div className="border-t border-[rgba(44,40,34,.06)]">
+          <p className="px-[17px] pt-3 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{py('payroll.ded.listTitle')}</p>
           {deductionsQ.isPending ? (
             <div className="px-[17px] py-3" aria-label="加载中">
               {[0, 1].map((i) => (
@@ -765,7 +765,7 @@ export default function PayrollPage() {
             </div>
           ) : deductionsQ.isError ? (
             <div className="px-[17px] py-8 text-center">
-              <p className="text-caption text-[rgba(59,46,36,.62)]">{py('payroll.common.loadFail')}</p>
+              <p className="text-caption text-[rgba(44,40,34,.62)]">{py('payroll.common.loadFail')}</p>
               <div className="mt-3">
                 <Btn variant="subtle" size="sm" onClick={() => void deductionsQ.refetch()}>
                   {py('payroll.common.retry')}
@@ -773,14 +773,14 @@ export default function PayrollPage() {
               </div>
             </div>
           ) : deductions.length === 0 ? (
-            <p className="px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">{py('payroll.ded.empty')}</p>
+            <p className="px-[17px] py-8 text-center text-caption text-[rgba(44,40,34,.62)]">{py('payroll.ded.empty')}</p>
           ) : (
             deductions.map((d) => {
               const reverted = d.status === 'reverted';
               return (
                 <div
                   key={d.id}
-                  className={`flex flex-wrap items-center gap-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 ${reverted ? 'opacity-55' : ''}`}
+                  className={`flex flex-wrap items-center gap-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 ${reverted ? 'opacity-55' : ''}`}
                   data-testid={`payroll-ded-row-${d.id}`}
                 >
                   <div className="min-w-0 flex-1">
@@ -789,12 +789,12 @@ export default function PayrollPage() {
                       <span className="u1-num text-body-sm font-bold text-ink">{fmtMoney(d.amountFen)}</span>
                       {reverted ? <Badge tone="muted">{py('payroll.ded.revertedBadge')}</Badge> : null}
                     </div>
-                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                       {d.reason}
-                      <span className="u1-num text-[rgba(59,46,36,.42)]"> · {d.month} · {fmtAt(d.createdAt)}</span>
+                      <span className="u1-num text-[rgba(44,40,34,.42)]"> · {d.month} · {fmtAt(d.createdAt)}</span>
                     </div>
                     {reverted && d.revertedAt ? (
-                      <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <div className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                         {py('payroll.ded.revertLine', { at: fmtAt(d.revertedAt) })}
                         {d.revertNote ? ` · ${d.revertNote}` : ''}
                       </div>
@@ -814,7 +814,7 @@ export default function PayrollPage() {
             <h3>{py('payroll.sim.title')}</h3>
             <span className="aside">{py('payroll.sim.aside')}</span>
           </div>
-          <div className="space-y-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+          <div className="space-y-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
             <div className="flex flex-wrap items-end gap-3">
               <Field label={py('payroll.sim.monthLabel')}>
                 <input
@@ -858,14 +858,14 @@ export default function PayrollPage() {
                     </select>
                     <button
                       type="button"
-                      className="text-caption-xs font-bold text-[rgba(59,46,36,.62)] underline underline-offset-2"
+                      className="text-caption-xs font-bold text-[rgba(44,40,34,.62)] underline underline-offset-2"
                       onClick={() => setSimRows((prev) => prev.filter((_, i) => i !== idx))}
                     >
                       {py('payroll.sim.removeRow')}
                     </button>
                   </div>
                   {fields.length === 0 ? (
-                    <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{py('payroll.sim.noNumeric')}</p>
+                    <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]">{py('payroll.sim.noNumeric')}</p>
                   ) : (
                     <div className="mt-2 flex flex-wrap items-end gap-3">
                       {fields.map((f) => (
@@ -908,11 +908,11 @@ export default function PayrollPage() {
                           <td className="font-semibold text-ink">{it.name}</td>
                           <td className="text-right font-number tabular-nums">{fmtMoney(it.baseline.commissionTotalFen)}</td>
                           <td className="text-right font-number tabular-nums">{fmtMoney(it.simulated.commissionTotalFen)}</td>
-                          <td className={`text-right font-number tabular-nums ${it.deltaCommissionFen !== 0 ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.42)]'}`}>
+                          <td className={`text-right font-number tabular-nums ${it.deltaCommissionFen !== 0 ? 'font-bold text-ink' : 'text-[rgba(44,40,34,.42)]'}`}>
                             {it.deltaCommissionFen > 0 ? '+' : ''}
                             {fmtMoney(it.deltaCommissionFen)}
                           </td>
-                          <td className={`text-right font-number tabular-nums ${it.deltaNetFen !== 0 ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.42)]'}`}>
+                          <td className={`text-right font-number tabular-nums ${it.deltaNetFen !== 0 ? 'font-bold text-ink' : 'text-[rgba(44,40,34,.42)]'}`}>
                             {it.deltaNetFen > 0 ? '+' : ''}
                             {fmtMoney(it.deltaNetFen)}
                           </td>
@@ -921,7 +921,7 @@ export default function PayrollPage() {
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]">
                   {py('payroll.sim.readonlyNote')} · {simResult.note}
                 </p>
               </div>
@@ -936,7 +936,7 @@ export default function PayrollPage() {
           <h3>{py('payroll.adjust.title')}</h3>
           <span className="aside">{py('payroll.adjust.aside')}</span>
         </div>
-        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+        <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3">
           <p className="mb-3 rounded-input bg-brand-primary-light px-3 py-2 text-caption text-ink" data-testid="pay-adjust-threshold-note">
             {py('payroll.adjust.thresholdNote')}
           </p>
@@ -1022,7 +1022,7 @@ export default function PayrollPage() {
           ) : null}
 
           {/* 调整单队列（pending 在前） */}
-          <p className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{py('payroll.adjust.queueTitle')}</p>
+          <p className="text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{py('payroll.adjust.queueTitle')}</p>
           <div data-testid="pay-adjust-queue">
             {adjustQ.isPending ? (
               <div className="py-3" aria-label="加载中">
@@ -1035,10 +1035,10 @@ export default function PayrollPage() {
                 {py('payroll.adjust.loadFail')}：{errMsg(adjustQ.error)}
               </p>
             ) : adjustItems.length === 0 ? (
-              <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{py('payroll.adjust.queueEmpty')}</p>
+              <p className="py-4 text-center text-caption-xs text-[rgba(44,40,34,.42)]">{py('payroll.adjust.queueEmpty')}</p>
             ) : (
               adjustItems.map((it) => (
-                <div key={it.proposal.id} className="border-t border-[rgba(59,46,36,.06)] py-2.5 first:border-t-0">
+                <div key={it.proposal.id} className="border-t border-[rgba(44,40,34,.06)] py-2.5 first:border-t-0">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -1046,9 +1046,9 @@ export default function PayrollPage() {
                           {it.proposal.kind === 'commission' ? py('payroll.adjust.kindCommission') : py('payroll.adjust.kindWorkHours')}
                         </Badge>
                         <span className="text-caption font-semibold text-ink">{it.staffName ?? it.proposal.staffId}</span>
-                        <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">{it.proposal.month}</span>
+                        <span className="u1-num text-caption-xs text-[rgba(44,40,34,.42)]">{it.proposal.month}</span>
                       </div>
-                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.62)]">
                         <span className="font-number font-bold tabular-nums text-ink">
                           {it.proposal.amountFen > 0 ? '+' : ''}
                           {fmtMoney(it.proposal.amountFen)}
@@ -1056,7 +1056,7 @@ export default function PayrollPage() {
                         {' · '}
                         {it.proposal.reason}
                       </div>
-                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]">
                         {it.proposerNickname ?? '—'} · {fmtAt(it.proposal.createdAt)}
                         {it.reviewNote ? ` · ${it.reviewNote}` : ''}
                       </div>
@@ -1102,7 +1102,7 @@ export default function PayrollPage() {
           </>
         }
       >
-        <p className="mb-3 text-caption-xs text-[rgba(59,46,36,.62)]">{py('payroll.slip.markNote')}</p>
+        <p className="mb-3 text-caption-xs text-[rgba(44,40,34,.62)]">{py('payroll.slip.markNote')}</p>
         <input
           value={methodNote}
           onChange={(e) => setMethodNote(e.target.value)}
@@ -1156,7 +1156,7 @@ export default function PayrollPage() {
           maxLength={500}
           placeholder={appealAsk?.kind === 'reject' ? py('payroll.appeal.notePh') : py('payroll.appeal.approveNotePh')}
           data-testid="payroll-appeal-note"
-          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
         />
       </Modal>
     </MainScaffold>

@@ -31,7 +31,7 @@ import { useMerchantRole } from '@/lib/roles'
 
 const tabCls = (on: boolean) =>
   `rounded-full px-3.5 py-[7px] text-caption transition-colors ${
-    on ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'
+    on ? 'bg-ink font-semibold text-canvas' : 'text-[rgba(44,40,34,.6)]'
   }`
 
 function FilterTabs<T extends string>({
@@ -142,7 +142,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
           ))}
         </div>
       ) : (listQ.data ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(44,40,34,.62)]">
           {cc('cashier.ledgerEmpty')}
         </p>
       ) : (
@@ -168,7 +168,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
                 return (
                   <tr key={r.id} data-testid={`ledger-credit-row-${r.id}`}>
                     <td className="u1-num font-semibold">{r.billNo}</td>
-                    <td className="text-[rgba(59,46,36,.62)]">
+                    <td className="text-[rgba(44,40,34,.62)]">
                       {r.customerName ?? '散客'}
                       {r.note ? <span className="block text-caption-xs">{r.note}</span> : null}
                     </td>
@@ -178,7 +178,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
                     <td>
                       <span className={chip.cls}>{chip.label}</span>
                       {r.status === 'written_off' && r.writeoffReason ? (
-                        <span className="block text-caption-xs text-[rgba(59,46,36,.42)]">{r.writeoffReason}</span>
+                        <span className="block text-caption-xs text-[rgba(44,40,34,.42)]">{r.writeoffReason}</span>
                       ) : null}
                     </td>
                     <td className="u1-num">{fmtDateTime(r.createdAt)}</td>
@@ -251,7 +251,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
       >
         {settleTarget ? (
           <div>
-            <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="rounded-[14px] bg-canvas px-3.5 py-3 text-caption-xs text-[rgba(44,40,34,.62)]">
               单号 <b className="font-number tabular-nums text-ink">{settleTarget.billNo}</b>
               {' · '}在挂余额 <b className="font-number tabular-nums text-ink">¥{fenToYuan(settleRemaining)}</b>
               <p className="mt-1">{cc('cashier.creditSettleNote')}</p>
@@ -262,7 +262,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
               placeholder="结清金额 ¥"
               value={settleAmount}
               onChange={(e) => setSettleAmount(e.target.value)}
-              className="mt-3 w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+              className="mt-3 w-full rounded-[14px] bg-card px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
             />
             <input
               data-testid="ledger-credit-settle-note"
@@ -270,7 +270,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
               placeholder="注记（选填，如：现金收讫）"
               value={settleNote}
               onChange={(e) => setSettleNote(e.target.value)}
-              className="mt-2 w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+              className="mt-2 w-full rounded-[14px] bg-card px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
             />
             {settleFen !== null && settleFen > settleRemaining ? (
               <p className="mt-2 text-caption-xs font-semibold text-danger-deep">
@@ -306,7 +306,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
       >
         {writeoffTarget ? (
           <div>
-            <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="rounded-[14px] bg-canvas px-3.5 py-3 text-caption-xs text-[rgba(44,40,34,.62)]">
               单号 <b className="font-number tabular-nums text-ink">{writeoffTarget.billNo}</b>
               {' · '}在挂余额{' '}
               <b className="font-number tabular-nums text-ink">
@@ -320,7 +320,7 @@ function CreditLedgerPanel({ isOwner }: { isOwner: boolean }) {
               placeholder="核销原因（必填，留痕）"
               value={writeoffReason}
               onChange={(e) => setWriteoffReason(e.target.value)}
-              className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+              className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-card px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
             />
             {writeoffReason.trim().length === 0 ? (
               <p className="mt-2 text-caption-xs font-semibold text-danger-deep">核销原因必填</p>
@@ -392,7 +392,7 @@ function DepositLedgerPanel() {
           ))}
         </div>
       ) : (listQ.data?.items ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(44,40,34,.62)]">
           {cc('cashier.ledgerEmpty')}
         </p>
       ) : (
@@ -418,7 +418,7 @@ function DepositLedgerPanel() {
                       <span className={chip.cls}>{chip.label}</span>
                     </td>
                     <td className="u1-num">{r.heldAt ? fmtDateTime(r.heldAt) : fmtDateTime(r.createdAt)}</td>
-                    <td className="text-[rgba(59,46,36,.62)]">{r.note ?? '—'}</td>
+                    <td className="text-[rgba(44,40,34,.62)]">{r.note ?? '—'}</td>
                   </tr>
                 )
               })}
@@ -476,7 +476,7 @@ function PrepaidLedgerPanel() {
           ))}
         </div>
       ) : (listQ.data ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(44,40,34,.62)]">
           {cc('cashier.ledgerEmpty')}
         </p>
       ) : (
@@ -498,12 +498,12 @@ function PrepaidLedgerPanel() {
                 return (
                   <tr key={r.id} data-testid={`ledger-prepaid-row-${r.id}`}>
                     <td className="font-semibold">{r.customerName ?? '—'}</td>
-                    <td className="u1-num text-[rgba(59,46,36,.62)]">{r.customerPhoneMasked ?? '—'}</td>
+                    <td className="u1-num text-[rgba(44,40,34,.62)]">{r.customerPhoneMasked ?? '—'}</td>
                     <td className="u1-num text-right font-semibold">¥{fenToYuan(r.amountFen)}</td>
                     <td>
                       <span className={chip.cls}>{chip.label}</span>
                     </td>
-                    <td className="u1-num text-[rgba(59,46,36,.62)]">
+                    <td className="u1-num text-[rgba(44,40,34,.62)]">
                       {fmtDateTime(r.appointment.scheduledStart)} · {r.appointment.type}
                     </td>
                     <td className="u1-num">{fmtDateTime(r.createdAt)}</td>
@@ -561,7 +561,7 @@ function AgreementLedgerPanel({ isOwner }: { isOwner: boolean }) {
             data-testid="ledger-agreement-export"
             disabled={exporting}
             onClick={() => void doExport()}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             <Download size={13} strokeWidth={1.8} aria-hidden />
             {exporting ? '导出中…' : cc('cashier.agreementExport')}
@@ -575,7 +575,7 @@ function AgreementLedgerPanel({ isOwner }: { isOwner: boolean }) {
           ))}
         </div>
       ) : (listQ.data?.items ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(44,40,34,.62)]">
           {cc('cashier.ledgerEmpty')}
         </p>
       ) : (
@@ -594,9 +594,9 @@ function AgreementLedgerPanel({ isOwner }: { isOwner: boolean }) {
               {(listQ.data?.items ?? []).map((r: AgreementListRow) => (
                 <tr key={r.id} data-testid={`ledger-agreement-row-${r.id}`}>
                   <td className="font-semibold">{r.nickname ?? r.userId}</td>
-                  <td className="u1-num text-[rgba(59,46,36,.62)]">{r.phoneMasked ?? '—'}</td>
+                  <td className="u1-num text-[rgba(44,40,34,.62)]">{r.phoneMasked ?? '—'}</td>
                   <td>{r.agreementLabel}</td>
-                  <td className="u1-num text-[rgba(59,46,36,.62)]">{r.version}</td>
+                  <td className="u1-num text-[rgba(44,40,34,.62)]">{r.version}</td>
                   <td className="u1-num">{fmtDateTime(r.checkedAt)}</td>
                 </tr>
               ))}
@@ -659,11 +659,11 @@ function PayChannelReconPanel() {
           ))}
         </div>
       ) : reconQ.isError ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(44,40,34,.62)]">
           读取失败（仅店主可看对账）：{errMsg(reconQ.error)}
         </p>
       ) : (data?.items ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(44,40,34,.62)]">
           暂无线上支付单
         </p>
       ) : (

@@ -13,10 +13,14 @@
  *   取消申请 N / 寄养 N / 日期 ›。计数真值 = 今日 listForStore 全量在前端按口径聚合。
  *   状态档点击 = 前端过滤（查询参数不变）；「日期 ›」就地展开原生 input[type=date]，
  *   选日才改 from/to（当日 0 点区间）。选中非今天时「今天」chip 不再 on。
- * - 表（u3-panel + u3-tbl）：行点击进入 /appointments/:id；列表纯读——S4 起
- *   确认/婉拒链路在详情页。空态=「这一天没有预约」。
+ * - 表（u3-panel + u3-tbl）：行点击进入 /appointments/:id；确认/婉拒链路在详情页。
+ *   空态=「这一天没有预约」。
  *   （片 5 段 1：行渲染由 AppointmentRow 收进本页内联——七列含核销码列，
  *   AppointmentRow 文件零改留给编译兼容；状态胶囊口径与其一致。）
+ *   （PD45 U6：操作列 C4–C6 之 C4/C5 入口分列——pending|confirmed 行露「改期」
+ *   （直开 RescheduleSheet，详情页同件同口径）；in_service 且超 24h 未翻步行露
+ *   「强制完成」（复用 forceCompleteStale 端点＋同一确认句/留痕注，监控 Hub 同语义；
+ *   均只露入口，业务规则/资格判定零翻案）。）
  * - 深链：?status=cancel_requested|pending|… 初始化状态档（总览异常卡会跳）；
  *   ?from=todo 兼容 = 不锁当天（from/to 省略查全量），防异常卡「去处理」被「今天」吞单。
  * - SSE（store 频道）：appointment.created / cancel_requested → 红点 toast + invalidate；
@@ -30,6 +34,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '../components/MainScaffold';
+import { RescheduleSheet, type RescheduleTarget } from '../components/appointments/RescheduleSheet';
 import {
   StatusChips,
   type CategoryKey,
@@ -48,6 +53,7 @@ import {
   type ListForStoreItem,
 } from '../components/appointments/appt-utils';
 import { ac } from '../copy/appointments';
+import { oc } from '../copy/monitor';
 
 /** 状态胶囊口径（规格书 §3，与 AppointmentRow 一致；进度未回=裸「服务中」不伪造） */
 function statusCapsule(
@@ -264,6 +270,47 @@ export default function AppointmentsPage() {
 
   /* ---------------- 交互 ---------------- */
 
+  /* PD45 U6 · C5 改期入口分列：列表行直接开 RescheduleSheet（资格口径与详情页一致
+     =pending|confirmed；sheet 内服务端强校验不翻案）；C4 强制完成入口分列：
+     列表僵尸行（in_service 且超 24h 未翻步，判定同监控 Hub isZombie24h）行内露 CTA，
+     复用 forceCompleteStale 单源端点＋同一确认句/留痕注（业务规则零翻案）。 */
+  const [reschedTarget, setReschedTarget] = useState<RescheduleTarget | null>(null);
+  const [forcingId, setForcingId] = useState<string | null>(null);
+
+  const ZOMBIE_MS = 24 * 3600 * 1000;
+  // 当前时刻（照 MonitorHubPage 先例：渲染期取 new Date()，分钟级口径足够）
+  const nowTs = new Date().getTime();
+  const isZombie24h = (i: ListForStoreItem) =>
+    i.status === 'in_service' && nowTs - new Date(i.checkedInAt ?? i.scheduledStart).getTime() > ZOMBIE_MS;
+  const canReschedule = (i: ListForStoreItem) => i.status === 'pending' || i.status === 'confirmed';
+
+  const openReschedule = (i: ListForStoreItem) =>
+    setReschedTarget({
+      id: i.id,
+      storeId: i.storeId,
+      serviceId: i.serviceId,
+      scheduledStart: new Date(i.scheduledStart),
+      type: i.type,
+      scheduledEnd: i.scheduledEnd ? new Date(i.scheduledEnd) : null,
+      petId: i.petId ?? null,
+    });
+
+  const onForceCompleteRow = (i: ListForStoreItem) => {
+    if (!window.confirm(oc('mon.forceCompleteConfirm'))) return;
+    void (async () => {
+      setForcingId(i.id);
+      try {
+        await trpc.appointment.forceCompleteStale.mutate({ appointmentId: i.id, note: oc('mon.forceCompleteNote') });
+        showToast(oc('mon.forceCompleteToast'), 'info');
+        invalidateLists();
+      } catch (e) {
+        showToast(`${oc('mon.forceCompleteFail')}：${e instanceof Error ? e.message : ''}`, 'alert');
+      } finally {
+        setForcingId(null);
+      }
+    })();
+  };
+
   const sub = ac('appt.listSub', {
     date: day === null ? ac('appt.listSubAllDates') : fmtDate(new Date(`${day}T00:00:00`)),
     count: items.length,
@@ -387,7 +434,7 @@ export default function AppointmentsPage() {
                         {/* 宠物 / 服务（副行：客户昵称·尾号） */}
                         <td>
                           <span className="font-semibold">{item.petName ?? '宠物'}</span>
-                          <span className="mt-0.5 block text-[11px] text-ink-placeholder">
+                          <span className="mt-0.5 block text-[12px] text-ink-placeholder">
                             {item.serviceName ?? '服务'} ·{' '}
                             {customerLabel(item.customerName, item.customerPhoneTail)}
                           </span>
@@ -396,7 +443,7 @@ export default function AppointmentsPage() {
                         <td>
                           {item.staffName ?? '未指派'}
                           {srcLabel ? (
-                            <span className="ml-1 text-[11px] text-ink-placeholder">
+                            <span className="ml-1 text-[12px] text-ink-placeholder">
                               {srcLabel}
                             </span>
                           ) : null}
@@ -413,9 +460,38 @@ export default function AppointmentsPage() {
                         <td>
                           <span className={`u3-st ${cap.cls}`}>{cap.text}</span>
                         </td>
-                        {/* 操作：详情链 */}
-                        <td className="whitespace-nowrap text-ink-placeholder">
-                          {ac('appt.openDetail')} ›
+                        {/* 操作：C5 改期／C4 强制完成入口分列（资格行才露）＋详情链；行点击不串 */}
+                        <td className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <span className="inline-flex items-center gap-2.5">
+                            {canReschedule(item) ? (
+                              <button
+                                type="button"
+                                data-testid={`row-reschedule-${item.id}`}
+                                onClick={() => openReschedule(item)}
+                                className="text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92]"
+                              >
+                                {ac('appt.rowReschedule')}
+                              </button>
+                            ) : null}
+                            {isZombie24h(item) ? (
+                              <button
+                                type="button"
+                                data-testid={`row-force-complete-${item.id}`}
+                                disabled={forcingId === item.id}
+                                onClick={() => onForceCompleteRow(item)}
+                                className="text-caption-xs font-bold text-danger-deep transition-transform duration-120 active:scale-[0.92] disabled:opacity-50"
+                              >
+                                {forcingId === item.id ? '…' : ac('appt.rowForceComplete')}
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/appointments/${item.id}`)}
+                              className="text-caption-xs text-ink-placeholder"
+                            >
+                              {ac('appt.openDetail')} ›
+                            </button>
+                          </span>
                         </td>
                       </tr>
                     );
@@ -432,6 +508,17 @@ export default function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {/* C5 改期入口分列：列表行直开改期弹层（资格=pending|confirmed；服务端强校验不翻案） */}
+      <RescheduleSheet
+        open={reschedTarget !== null}
+        target={reschedTarget}
+        onClose={() => setReschedTarget(null)}
+        onChanged={() => {
+          setReschedTarget(null);
+          invalidateLists();
+        }}
+      />
     </MainScaffold>
   );
 }
