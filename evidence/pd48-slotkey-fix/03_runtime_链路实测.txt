@@ -1,0 +1,12 @@
+[pd48] 临时库迁移 + 种子…
+PASS ①种子落库：10 槽全真键/version=1/live，无 slot_key=1 塌键
+[pd48] 起 server…
+PASS server 就绪（/api/health）
+PASS ②liveMap 客户读口：key=home.banner（/brand/banner-home-1200.png）+ 无塌键 1 + mall.hero 三行在
+PASS 控台 list：home.banner 组在（live v1）+ 无 slotKey=1 组
+PASS ③upload home.banner ≠400：pending v2 落库
+PASS 闭环：publish 后 liveMap 即新值
+PASS 闭环：revert 后回 /brand 默认
+PASS ④回归：customer upload 403 + 旧塌键 slotKey=1 → 400 未知槽位键
+
+[pd48] ALL PASS

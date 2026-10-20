@@ -1,0 +1,17 @@
+== Path A：新库全迁移（0025 更正后源头即正，0089 零命中）
+[migrate] 迁移目录: E:\KIMI code\pd48-slotkey-fix\server\drizzle
+[migrate] 迁移完成，已应用 87 条迁移：
+  - hash=7014c5ccfe81…  applied_at=2026-09-04T15:18:00.969Z
+87
+-- slot_contents 读回：
+home.banner | v=1 | live | kt=text vt=integer
+login.hero.staff | v=1 | live | kt=text vt=integer
+mall.hero | v=1 | live | kt=text vt=integer
+member.cardFace | v=1 | live | kt=text vt=integer
+member.famCard | v=1 | live | kt=text vt=integer
+pets.emptyIllustration | v=1 | live | kt=text vt=integer
+philia.magazine.02 | v=1 | live | kt=text vt=integer
+philia.magazine.03 | v=1 | live | kt=text vt=integer
+philia.magazine.lead | v=1 | live | kt=text vt=integer
+product.placeholder | v=1 | live | kt=text vt=integer
+slot_key=1 rows: 0 | total: 10

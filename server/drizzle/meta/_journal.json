@@ -603,6 +603,13 @@
       "when": 1792485820033,
       "tag": "0088_pd47_ops_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "6",
+      "when": 1792501500000,
+      "tag": "0089_pd48_slotkey_repair",
+      "breakpoints": true
     }
   ]
 }
