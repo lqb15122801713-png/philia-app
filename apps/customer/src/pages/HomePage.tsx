@@ -12,7 +12,7 @@ import {
   Store,
   Ticket,
 } from 'lucide-react'
-import { CK, getStepDef, slotContentOf, slotPreviewState, useMe, usePhiliaClient } from '@philia/shared'
+import { CK, getStepDef, resolveSlotUrl, slotContentOf, slotPreviewState, useMe, usePhiliaClient } from '@philia/shared'
 import { fenToYuan, fmtHM } from '@/components/booking/format'
 import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
@@ -156,7 +156,7 @@ export default function HomePage() {
         ? !!user && plan?.free === true
         : bannerIsGuest || plan?.free === true
   const bannerSlot = bannerAudienceHit ? bannerSlotRaw : undefined
-  const bannerImage: string | null = null
+  const bannerImage = resolveSlotUrl(bannerSlot?.url ?? null)
   const magazineImages: Array<string | null> = [null, null, null]
   const groomingServices = services.filter((service) => service.type === 'grooming')
   const boardingServices = services.filter((service) => service.type === 'boarding')
