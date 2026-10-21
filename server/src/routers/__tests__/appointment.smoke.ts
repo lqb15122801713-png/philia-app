@@ -106,6 +106,7 @@ try {
   const { appointmentRouter, verifyCode, signCode, resetCheckinRateLimitForTest } = await import(
     '../appointment'
   );
+  const { serviceStepRouter } = await import('../serviceStep');
 
   const migrationsFolder = fileURLToPath(new URL('../../../drizzle', import.meta.url));
   await migrate(db, { migrationsFolder });
@@ -573,6 +574,80 @@ try {
     await rejects(bStaff.checkin({ code: appt2.code }), 'TOO_MANY_REQUESTS'),
   );
   resetCheckinRateLimitForTest();
+
+  /* ==================== 3b. PD-65：核销店范围／execute404 ==================== */
+  console.log('\n[3b] PD-65：同店前台核销他人 grooming 单 → 真进服务（toast 与 execute 一致）');
+  // 场景钉死令包缺陷：小美（同店 frontdesk）核销派给阿强的单——核销 toast 成功则 execute 不得再 404。
+  // 失败路径：groomer（st-e，本单指派人）核销 → FORBIDDEN「核销需前台账号操作」；
+  // 前端 toast 以 mutation resolve 为准（QrScanner/ManualCodeInput catch → toast.error），
+  // 拒绝即不可能出现成功 toast——此处断言零脏状态（status/checked_in_at/steps 全不动）。
+  const pd65Appt = await insertDirectAppt({ code: 'PD65A2', status: 'confirmed', start: at(21, 10), staffId: 'st-e' });
+  const eStaff = appointmentRouter.createCaller(ctxStaff('u-e', 'st-e', 's-1'));
+  check(
+    'PD-65 失败路径：groomer 核销 → FORBIDDEN「核销需前台账号操作」（无成功 toast 前提）',
+    await rejects(eStaff.checkin({ code: 'PD65A2' }), 'FORBIDDEN', /核销需前台账号操作/),
+  );
+  const pd65AfterFail = await db
+    .select()
+    .from(schema.appointments)
+    .where(eq(schema.appointments.id, pd65Appt.id))
+    .get();
+  const pd65StepsAfterFail = await db
+    .select()
+    .from(schema.appointmentSteps)
+    .where(eq(schema.appointmentSteps.appointmentId, pd65Appt.id));
+  check(
+    'PD-65 失败路径无脏状态：status 仍 confirmed / checked_in_at NULL / 六步 0 行',
+    pd65AfterFail?.status === 'confirmed' &&
+      pd65AfterFail.checkedInAt === null &&
+      pd65StepsAfterFail.length === 0,
+    { status: pd65AfterFail?.status, checkedInAt: pd65AfterFail?.checkedInAt, steps: pd65StepsAfterFail.length },
+  );
+  // 成功路径：同店前台 st-b（非指派人）核销 → 真成功（状态变更断言）
+  const ck65 = await bStaff.checkin({ code: 'PD65A2' });
+  check(
+    'PD-65 成功路径：同店前台核销他人单 → in_service（状态真变更）且原指派保留 staff_id=st-e',
+    ck65.appointment.status === 'in_service' &&
+      ck65.appointment.staffId === 'st-e' &&
+      ck65.idempotent === false,
+    ck65.appointment,
+  );
+  // 一致性断言：同一核销人 execute 读口不再 404（修复前此处 NOT_FOUND「预约不存在」）
+  const get65 = await bStaff.get({ appointmentId: pd65Appt.id });
+  check(
+    'PD-65：核销人 appointment.get 放行（execute 页数据源不再 404）',
+    get65.appointment.status === 'in_service',
+    get65.appointment.status,
+  );
+  const bStep65 = serviceStepRouter.createCaller(ctxStaff('u-b', 'st-b', 's-1'));
+  const list65 = await bStep65.list({ appointmentId: pd65Appt.id });
+  check(
+    'PD-65：核销人 serviceStep.list 放行（六步就绪，step1 active）',
+    list65.length === 6 && list65[0]?.status === 'active',
+    list65.map((s) => [s.stepKey, s.status]),
+  );
+  // 可执行断言：核销人直接推进 step1（传 1 张达标照片 → confirm → step1 done、step2 active=真正进服务）
+  await bStep65.addPhotos({
+    appointmentId: pd65Appt.id,
+    stepKey: 'disinfection',
+    photos: [{ url: `/api/img/pd65/${pd65Appt.id}/1.jpg`, thumbUrl: `/api/img/pd65/${pd65Appt.id}/1_t.jpg` }],
+  });
+  await bStep65.confirmStep({ appointmentId: pd65Appt.id, stepKey: 'disinfection' });
+  const steps65 = await db
+    .select()
+    .from(schema.appointmentSteps)
+    .where(eq(schema.appointmentSteps.appointmentId, pd65Appt.id))
+    .orderBy(asc(schema.appointmentSteps.stepOrder));
+  check(
+    'PD-65：核销人 confirmStep 可执行——step1 done、step2 active（成功则真正进服务）',
+    steps65[0]?.status === 'done' && steps65[1]?.status === 'active',
+    steps65.map((s) => [s.stepKey, s.status]),
+  );
+  // 反锚：跨店员工对同一已核销单仍统一 NOT_FOUND（片 2 裁件①防探测口径不回退）
+  check(
+    'PD-65 反锚：跨店员工读同一已核销单仍统一 NOT_FOUND「预约不存在」',
+    await rejects(cStaff.get({ appointmentId: pd65Appt.id }), 'NOT_FOUND', /预约不存在/),
+  );
 
   /* ==================== 4. type 分支：六步 / 寄养 ==================== */
   console.log('\n[4] type 分支：grooming 六步初始化 / boarding 住宿单');

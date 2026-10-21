@@ -213,7 +213,11 @@ export type AppointmentRow = typeof schema.appointments.$inferSelect;
 /**
  * 预约归属校验，返回预约行：
  * - customer：仅本人预约
- * - staff：本店且（未指派或指派给自己）
+ * - staff：本店且（未指派或指派给自己）；PD-65：已核销单（checked_in_at 非空）
+ *   本店任意员工放行——服务执行=班次共享动作（与 PD-24 D-52 寄养照护同源）：
+ *   核销 S1-R1「本店任意单、不认领、不改写 staff_id」既已成立，核销人/同店员工
+ *   须能真正进服务（execute 读口+步骤写口同闸），责任/提成归属仍以 staff_id 为准不变；
+ *   未核销单「未指派或指派给本人」闸不变，跨店仍统一 NOT_FOUND。
  * - merchant（owner/manager）：本店；片 2 裁件④（片 3 随带）：merchant_clerk 读本店放行
  * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；
  * 归属不通过（含跨店）一律 NOT_FOUND（片 2 裁件①：跨店按 id 取数统一 NOT_FOUND
@@ -252,6 +256,7 @@ export async function assertAppointmentAccess(
     user.storeId === appt.storeId &&
     (appt.staffId === null ||
       appt.staffId === user.staffId ||
+      appt.checkedInAt !== null ||
       (opts?.staffBoardingStorewide === true && appt.type === 'boarding'))
   ) {
     return appt;
