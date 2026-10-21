@@ -1,0 +1,21 @@
+PD-57 口径断言（真实文件读取，临时断言脚本测后自清）
+
+[RED · 修复前]
+命令：node .pd57-steps-assert.mjs
+结果：exit 1
+AssertionError [ERR_ASSERTION]: P-03 must say 六步服务
+P-03 still says 七步服务
+actual: [ 'P-03 must say 六步服务', 'P-03 still says 七步服务' ]
+expected: []
+
+[GREEN · 仅将共享矩阵 P-03 七步服务改为六步服务后]
+命令：node .pd57-steps-assert.mjs
+结果：exit 0
+PD-57 assertion PASS: matrix/live/help are six-step; P-03 route, read-only and cancel anchors remain.
+
+断言覆盖：
+- 共享矩阵 P-03 必须写六步服务，且不得再写七步服务。
+- packages/shared/src/constants/steps.ts 的 SERVICE_STEPS 为六项。
+- ExecutePage.tsx 保留 /6 摘要；me.ts 保留六步影像规范。
+- App.tsx 保留 /execute/:appointmentId；SchedulePage.tsx 保留 serviceStep.list + SkOpList 只读路径。
+- ExecutePage.tsx 保留 cancelled / cancelRequested 引导文案锚点。
