@@ -1,0 +1,31 @@
+PD-57 构建与状态机验证
+
+[静态闸]
+命令：npm run build && npm --prefix server run typecheck
+结果：exit 0。customer、merchant、staff 三端 tsc -b + vite build 均完成；server tsc --noEmit 完成。
+备注：Vite/Rollup 仅输出既有依赖注释与 chunk size 警告，无新增错误。
+
+[六步状态机冒烟]
+命令：node node_modules/tsx/dist/cli.mjs src/routers/__tests__/serviceStep.smoke.ts（cwd=server，独立临时库）
+结果：exit 1；本次未改任何实现文件，失败按基线既有问题留痕，不扩修。
+
+已通过的核心相关断言包括：
+- locked 步拒绝、照片张数门槛、step1→step2 硬序推进。
+- before/after 双槽门槛；list 返回 6 步且照片数为 [1,2,3,2,2,0]。
+- step6 confirm 的完成事件、doneCount=6、完成后再确认拒绝。
+- 重开后恰好一个 active 步及取消单拒绝等路径有相应断言输出。
+
+既有失败（与 PD-57 文案改动无关）：
+1. 跨店 staff addPhotos 期望 FORBIDDEN，实际 NOT_FOUND「预约不存在」。
+2. 跨店 merchant flagForRedo 期望 FORBIDDEN，实际 NOT_FOUND「预约不存在」。
+3. 他人预约 customer list 期望 FORBIDDEN，实际 NOT_FOUND「预约不存在」。
+4. 二次完成时 service_certificates.appointment_id  UNIQUE 约束冲突（既有重复完成证书问题）。
+
+临时库由测试脚本尝试清理；Windows 曾报告一个 smoke.db EBUSY，已按专用路径复查并清理，不触碰 server/data 种子库。
+
+[全量回归]
+命令：E2E_PORT=7357 npm --prefix server run test:e2e（独立临时库）
+结果：exit 1；已跑到 53.2 美容报告生成链，随后 `uploadFor` 遇 `fetch failed`／`ECONNRESET`，原始输出见 `04_e2e_全量回归.txt`。脚本确认 7357 无残留监听；其临时库目录已清理。此次未改实现文件，未将该环境／连接失败归因于本修复，也未改写成通过。
+
+[交付前清理]
+最终口径断言与三端构建、server typecheck 再次 exit 0。专用 API 7358、staff 7157 均已关闭；临时断言脚本、`.pd57-runtime`、两个测试临时目录均已删除。
