@@ -82,6 +82,8 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.killRestore': '恢复',
   'cadm.killRestoreConfirm': '确认恢复？可关参数将解除安全值回落。',
   'cadm.killArmNote': '支付一键关停（非 Banner）：线上支付通道等可关参数瞬时回落安全值（全局）。',
+  /* PD-55 意见轨②（CONSOLE-RETAKE §3）：关停条入危险区容器的题带文案 */
+  'cadm.killDangerTitle': '危险区 · 支付全局关停',
   'cadm.killArm': '支付一键关停',
   'cadm.killArmConfirm': '确认支付一键关停？线上支付通道等可关参数将瞬时回落安全值（与 Banner 槽位下线无关）。',
   'cadm.killDone': '全局开关已切换',
@@ -139,6 +141,13 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.homeAdvancedNote': '15 个端口全在这层，点即达；门面卡面不收参数表',
   'cadm.homeBackHome': '‹ 回办事首页',
   'cadm.homePortBadge': '端口',
+  /* PD-55 意见轨①（CONSOLE-RETAKE §2）：办事卡三层分区签（常办/慎办/占位） */
+  'cadm.homeTierDaily': '常办',
+  'cadm.homeTierDailyNote': '改字换图装修 · 常来常办',
+  'cadm.homeTierCareful': '慎办',
+  'cadm.homeTierCarefulNote': '钱与规则 · 高危件口令复核',
+  'cadm.homeTierPending': '占位',
+  'cadm.homeTierPendingNote': '端口待立 · 只读占位',
   /* 卡面（title=你能干什么 / hint=一句人话说明；置灰口 hint 带待立注记） */
   'cadm.cardCopyTitle': '改文案',
   'cadm.cardCopyHint': '三端任何一句界面文字，在这里改',
