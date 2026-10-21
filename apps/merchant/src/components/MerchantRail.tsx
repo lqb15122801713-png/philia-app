@@ -153,8 +153,11 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
   return (
     <nav data-testid="merchant-rail" className="wrail" aria-label="主导航">
       <div className="wm">PHILIA</div>
-      {groups.map((g) => (
-        <div key={g.key}>
+      {/* PD-54 NAV_CHROME_CLIP：口组区独立滚动（.wrail-body），foot「运营后台端」活动项+
+          店主身份卡钉住轨底常驻视口——1280×800 进页不再裁出「我在哪／我是谁」；IA 不动 */}
+      <div className="wrail-body">
+        {groups.map((g) => (
+          <div key={g.key}>
           {g.label ? (
             <div className="gp">
               {g.label}
@@ -180,7 +183,8 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
             </NavLink>
           ))}
         </div>
-      ))}
+        ))}
+      </div>
       {/* foot=开发者管理端（owner-only 三端口收编为其子行；clerk 经 groupsFor 分流不见） */}
       {!role.isClerk ? (
         <div className="ft" data-testid="rail-foot">
