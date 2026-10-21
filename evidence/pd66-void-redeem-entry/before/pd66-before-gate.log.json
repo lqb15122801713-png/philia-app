@@ -1,0 +1,21 @@
+{
+  "mode": "before",
+  "at": "2026-10-21T11:31:18.784Z",
+  "results": [
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店主）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "before：in_service 详情渲染（服务监视可见）",
+      "detail": "{\"monitor\":true,\"voidEntry\":false,\"statusText\":true}"
+    },
+    {
+      "ok": true,
+      "name": "before：无撤核销入口（NO-VOID-ENTRY-ON-MERCHANT-UI 缺陷实尺）",
+      "detail": "voidEntry=false"
+    }
+  ]
+}

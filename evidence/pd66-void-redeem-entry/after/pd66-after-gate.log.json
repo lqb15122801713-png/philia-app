@@ -1,0 +1,31 @@
+{
+  "mode": "after",
+  "at": "2026-10-21T11:31:54.162Z",
+  "results": [
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店主）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "after：in_service 详情「撤核销」入口可见",
+      "detail": "{\"voidEntry\":true,\"voidText\":true}"
+    },
+    {
+      "ok": true,
+      "name": "after：二次确认闸出现并已接受（window.confirm）",
+      "detail": "dialogSeen=1"
+    },
+    {
+      "ok": true,
+      "name": "after：执行后状态离开 in_service → confirmed（入口随之消失）",
+      "detail": "{\"statusBefore\":\"in_service\",\"statusAfter\":\"confirmed\",\"checkedInAt\":null,\"voidEntryGone\":true,\"confirmedText\":true}"
+    },
+    {
+      "ok": true,
+      "name": "api-check：再核销 → voidCheckin → confirmed（接口实测）",
+      "detail": "{\"reCheckin\":\"in_service\",\"voidStatus\":\"confirmed\",\"idempotent\":false}"
+    }
+  ]
+}

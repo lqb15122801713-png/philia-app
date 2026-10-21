@@ -20,6 +20,11 @@ const APPT_COPY_TABLE = {
   /* ---- PD45 U6 · C4/C5 入口分列（列表行操作列；资格行才露） ---- */
   'appt.rowReschedule': '改期',
   'appt.rowForceComplete': '强制完成',
+  /* ---- PD-66 撤核销（in_service／已核销未收银单；owner|manager，二次确认闸） ---- */
+  'appt.voidCheckinCta': '撤核销',
+  'appt.voidCheckinConfirm': '确认撤回本单核销？预约将回到「已确认」，可重新核销；六步进度与核销时间将清空。',
+  'appt.voidCheckinToast': '已撤回核销，预约回到已确认',
+  'appt.voidCheckinFail': '撤核销失败，请稍后再试',
 
   /* ---- 预约详情 /appointments/:id ---- */
   'appt.detailNotFoundTitle': '找不到这个预约',

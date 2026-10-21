@@ -1,0 +1,62 @@
+{
+  "at": "2026-10-21T11:31:54.161Z",
+  "source": "pd66-void-checkin-shots.mjs（本窗 server:7200 + dev 库真链路）",
+  "appointmentId": "01M5F37SZF3PR97XZ5Z5GCHTZM",
+  "steps": {
+    "reCheckin": {
+      "httpStatus": 200,
+      "status": "in_service"
+    },
+    "before": {
+      "status": "in_service",
+      "checkedInAt": "2026-10-21T11:31:54.000Z"
+    },
+    "voidCheckin": {
+      "httpStatus": 200,
+      "response": {
+        "appointment": {
+          "id": "01M5F37SZF3PR97XZ5Z5GCHTZM",
+          "code": "XUZ8YZ",
+          "customerId": "01M5F356GGVV2XXCKE4BF9JTRA",
+          "storeId": "01M5F356GKWRK7W2FVC63XDKYJ",
+          "staffId": "01M5F356GMD0CVSMY2V2KFN9JJ",
+          "assignSource": "auto",
+          "petId": "01M5F356GN8REVAT6Y3V4C2N2M",
+          "serviceId": "01M5F356GPEM06RSBCPS5XV10X",
+          "type": "grooming",
+          "scheduledStart": "2026-10-22T02:00:00.000Z",
+          "scheduledEnd": "2026-10-22T04:30:00.000Z",
+          "status": "confirmed",
+          "priceFen": 8800,
+          "paymentMode": "pay_at_store",
+          "paidAt": null,
+          "paidFen": null,
+          "note": "PD-66 撤核销入口证据夹具",
+          "cancelReason": null,
+          "cancelSource": null,
+          "emergencyContactJson": null,
+          "medicalAuthJson": null,
+          "walkTimesPerDay": null,
+          "checkedInAt": null,
+          "completedAt": null,
+          "rating": null,
+          "review": null,
+          "receptionistId": null,
+          "createdAt": "2026-10-21T11:23:42.000Z",
+          "updatedAt": "2026-10-21T11:31:54.000Z"
+        },
+        "idempotent": false
+      }
+    },
+    "after": {
+      "status": "confirmed",
+      "checkedInAt": null
+    }
+  },
+  "checks": {
+    "entryVisible": true,
+    "confirmDialog": true,
+    "leftInService": true,
+    "checkedInAtCleared": true
+  }
+}

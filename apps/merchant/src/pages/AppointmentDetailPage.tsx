@@ -8,8 +8,9 @@
  *       + 服务进度卡（u3-stepv 六步+过程照墙，零回退）/寄养信息块 + 事件轨迹卡；
  *   右 = fdot 状态流五节点（确认→核销→服务中→完成→收款，按现状状态机映射；
  *       寄养单第三步=「寄养中」；已取消单=确认节点留痕其余封口）
- *       + 操作钮组（原 MainScaffold actions 全量迁入：改期/改派/服务监视/确认预约/
- *       审批取消申请/去收款，testid 不变，每屏至多一个 cream 主钮口径不变）
+ *       + 操作钮组（原 MainScaffold actions 全量迁入：改期/改派/服务监视/撤核销/确认预约/
+ *       审批取消申请/去收款，testid 不变，每屏至多一个 cream 主钮口径不变；PD-66 撤核销
+ *       仅 in_service 可见，回 confirmed 可再核销，confirm 二次闸 + owner|manager 服务端闸）
  *       + 提示卡（按态一句引导+改派覆盖 merchant 留痕注，语言包 W-03 注记明面）
  *       + 协作拆分块（段 4 既有 CollabSplitSection 原位保留）。
  * - 寄养单：六步卡不渲染（无 steps），换 boardingStay 信息块（房间/称重/物品/退住）+ 轨迹卡。
@@ -59,6 +60,7 @@ import { RescheduleSheet } from '../components/appointments/RescheduleSheet';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
 import { CollabSplitSection } from '../components/payroll/CollabSplitSection';
 import { ac } from '../copy/appointments';
+import { canVoidCheckin } from './appointmentDetail.utils';
 
 /** SSE 断线时的兜底轮询间隔（与总览页同值） */
 const POLL_FALLBACK_MS = 30_000;
@@ -204,6 +206,16 @@ export default function AppointmentDetailPage() {
       invalidateAll();
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : '操作失败，请稍后再试'),
+  });
+
+  // PD-66：撤核销（in_service／已核销未收银单 → 回 confirmed 可再核销；owner|manager 服务端闸 + confirm 二次闸）
+  const voidCheckinMut = useMutation({
+    mutationFn: () => trpc.appointment.voidCheckin.mutate({ appointmentId: aid! }),
+    onSuccess: () => {
+      toast.success(ac('appt.voidCheckinToast'));
+      invalidateAll();
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : ac('appt.voidCheckinFail')),
   });
 
   // 事件轨迹（S4：事件即轨迹，零审计表接口；无时间戳的事件不合成行。
@@ -399,6 +411,17 @@ export default function AppointmentDetailPage() {
           onClick={() => navigate(`/appointments/${appt.id}/monitor`)}
         >
           服务监视
+        </QuietButton>
+      ) : null}
+      {canVoidCheckin(appt.status) ? (
+        <QuietButton
+          testid="detail-void-checkin"
+          disabled={voidCheckinMut.isPending}
+          onClick={() => {
+            if (window.confirm(ac('appt.voidCheckinConfirm'))) voidCheckinMut.mutate();
+          }}
+        >
+          {voidCheckinMut.isPending ? '撤回中…' : ac('appt.voidCheckinCta')}
         </QuietButton>
       ) : null}
       {appt.status === 'pending' ? (

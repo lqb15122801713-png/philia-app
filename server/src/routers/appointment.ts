@@ -1559,6 +1559,71 @@ export const appointmentRouter = router({
     }),
 
   /**
+   * PD-66（NO-VOID-ENTRY-ON-MERCHANT-UI）：撤核销——误核销/夹具单撤出服务中，回 confirmed 可再核销。
+   * - 闸：仅 in_service（grooming 服务中，已核销未收银单）；in_boarding 寄养另案；completed/cancelled 等 400 明文；
+   * - 语义：checkin 事务的逆操作——回 confirmed + 清 checkedInAt；槽位从未因核销释放，无需回补，预约仍占槽；
+   * - 事务：appointments 回 confirmed（条件 where status='in_service' 防并发双击）+
+   *   删除六步初始化行及其步骤照片（腾开 uq_appointment_steps_appt_key，再核销重新初始化）+
+   *   预付台账逆联动 checked_deducted → prepaid_registered（仅本单，幂等）；
+   * - 幂等：confirmed 且无 checkedInAt（=已撤回态/未核销单）→ idempotent=true 原样返回零写库；
+   * - 留痕：appointment.checkinVoided 双频道（appointment+store），payload 带 by/beforeStatus/原 checkedInAt；
+   * - 权限：merchantManagerProcedure（owner|manager——钉店主/有权角色）；二次确认闸在 UI 层。
+   */
+  voidCheckin: merchantManagerProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (appt.status === 'confirmed' && !appt.checkedInAt) return { appointment: appt, idempotent: true as const };
+      if (appt.status !== 'in_service') {
+        badRequest(`当前状态（${appt.status}）不可撤核销——仅服务中（in_service）单可撤回至已确认`);
+      }
+      const now = new Date();
+      const outboxIds: string[] = [];
+      const updated = await ctx.db.transaction(async (tx) => {
+        const row = await tx
+          .update(schema.appointments)
+          .set({ status: 'confirmed', checkedInAt: null, updatedAt: now })
+          .where(and(eq(schema.appointments.id, appt.id), eq(schema.appointments.status, 'in_service')))
+          .returning()
+          .then((r) => r[0]!);
+        // 删六步初始化行（先清步骤照片行）：再核销时 checkin 重新初始化，否则撞 uq_appointment_steps_appt_key
+        const stepIds = (
+          await tx
+            .select({ id: schema.appointmentSteps.id })
+            .from(schema.appointmentSteps)
+            .where(eq(schema.appointmentSteps.appointmentId, appt.id))
+        ).map((s) => s.id);
+        if (stepIds.length > 0) {
+          await tx.delete(schema.stepPhotos).where(inArray(schema.stepPhotos.stepId, stepIds));
+          await tx.delete(schema.appointmentSteps).where(eq(schema.appointmentSteps.appointmentId, appt.id));
+        }
+        /* 预付台账逆联动：checked_deducted → prepaid_registered（核销联动的回翻，幂等） */
+        await tx
+          .update(schema.prepaidRecords)
+          .set({ status: 'prepaid_registered', updatedAt: now })
+          .where(
+            and(
+              eq(schema.prepaidRecords.appointmentId, appt.id),
+              eq(schema.prepaidRecords.status, 'checked_deducted'),
+            ),
+          );
+        const payload = {
+          appointmentId: appt.id,
+          code: appt.code,
+          by: ctx.user.id,
+          beforeStatus: 'in_service',
+          checkedInAt: appt.checkedInAt,
+        };
+        outboxIds.push(await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCheckinVoided, payload));
+        outboxIds.push(await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCheckinVoided, payload));
+        return row;
+      });
+      outboxIds.forEach(broadcastNow);
+      return { appointment: updated, idempotent: false as const };
+    }),
+
+  /**
    * 6. assign（merchant 本店）：派单/改派。校验员工属本店、在职、技能匹配服务 type、
    * 排班覆盖预约时间、同 staff 同 scheduled_start 无 confirmed/in_service 冲突单。
    * 批次 S4（任务 D）：商家保留改派不回归——覆盖写 assignSource='merchant'（列表/详情
