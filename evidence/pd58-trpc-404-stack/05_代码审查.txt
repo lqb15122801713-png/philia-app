@@ -1,0 +1,14 @@
+PD-58 交付前只读代码审查
+
+审查范围：server/src/trpc.ts、server/src/__tests__/trpc404.ts；基线 43ce81c3d01b894efd8762766dc6999c60c309fb 至当前工作树。
+
+结果：
+- Critical：0
+- Important：0
+- Minor：0
+
+要点：formatter 在 superjson 序列化前删除 stack，后续适配器不会重新加入；克隆 data 避免修改 tRPC 原对象；其余错误字段保留。测试经过真实 createApp／Hono／tRPC／superjson 链路，内存库与 finally client.close() 清理正确。统一删除 stack 满足 production 要求并覆盖实际 staging 部署，令包允许但不强制 dev 保留 stack。
+
+审查建议：PR 必须包含新测试和卷宗，并明确全量 e2e 有 8 项非本单断言失败，不得写成全量绿。
+
+审查方式：独立只读 reviewer；未修改文件、索引、HEAD 或分支。
