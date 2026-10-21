@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-21T09:52:07.089Z",
+  "source": "store.dashboardStats 实测（dev-login 店主 seed 13900000001，临时库种子=缺陷同构成）",
+  "todo": {
+    "pending": 3,
+    "unassigned": 5,
+    "cancelRequested": 0,
+    "unpaid": 74,
+    "total": 82
+  },
+  "overdueBoardingCount": 3,
+  "check": {
+    "todo.total === pending+unassigned+cancelRequested+unpaid": true,
+    "overdue 单列不并入 todo.total": true
+  }
+}

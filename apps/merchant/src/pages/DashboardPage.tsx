@@ -50,6 +50,7 @@ import {
   fullDateLabel,
   hhmm,
   openHoursLabel,
+  buildTodoAlertRows,
   todoGrandTotal,
   todayRange,
   type ChainSix,
@@ -249,74 +250,91 @@ export default function DashboardPage() {
 
   const unpaidSample = todayItems?.find((i) => i.status === 'completed' && i.paidAt == null)
 
-  const alertItems: WAlertItem[] = []
-  if (stats) {
-    if (stats.todo.cancelRequested > 0) {
-      alertItems.push({
-        key: 'cancel',
-        text: dc('dash.todoCancelLabel'),
-        count: stats.todo.cancelRequested,
-        to: '/appointments?status=cancel_requested&from=todo',
+  const alertItems: WAlertItem[] = stats
+    ? /* PD-61：行集经 buildTodoAlertRows 单源派生——todo 四件（取消/待派单/待收款/历史待确认）
+         一一对应成行、计入「待办合计」且与 todo.total 同源同构；超期寄养单列显示不计入合计；
+         退款/工单/发票/申诉为独立域行不混入合计（各有专属待办块/页面）。 */
+      buildTodoAlertRows(stats, {
+        refund: refundRequests?.length,
+        ticket: ticketCount,
+        invoice: invoiceCount,
+        phoneAppeal: appealCount,
+      }).flatMap((row): WAlertItem[] => {
+        if (row.count <= 0) return []
+        switch (row.key) {
+          case 'cancelRequested':
+            return [
+              {
+                key: 'cancel',
+                text: dc('dash.todoCancelLabel'),
+                count: row.count,
+                to: '/appointments?status=cancel_requested&from=todo',
+              },
+            ]
+          case 'refund':
+            return [
+              { key: 'refund', text: dc('dash.todoRefundRequestLabel'), count: row.count, to: '/cashier/refunds' },
+            ]
+          case 'unpaid':
+            return [
+              {
+                key: 'unpaid',
+                text: dc('dash.todoUnpaidLabel'),
+                count: row.count,
+                // 批次 M1 联动口径沿用：有样例单 → 收银台自动拉入该预约
+                to: unpaidSample ? `/cashier?pull=${unpaidSample.id}` : '/cashier',
+              },
+            ]
+          case 'unassigned':
+            return [
+              {
+                key: 'unassigned',
+                text: dc('dash.todoUnassignedLabel'),
+                count: row.count,
+                to: '/appointments?status=confirmed&from=todo',
+              },
+            ]
+          case 'overdue':
+            return [{ key: 'overdue', text: dc('dash.todoOverdueLabel'), count: row.count, to: '/boarding' }]
+          case 'pending':
+            return [
+              {
+                key: 'pending',
+                text: dc('dash.todoPendingLabel'),
+                count: row.count,
+                to: '/appointments?status=pending&from=todo',
+              },
+            ]
+          case 'ticket':
+            return [
+              {
+                key: 'ticket',
+                text: dc('dash.todoTicketLabel'),
+                count: row.count,
+                onClick: () => scrollToAnchor(TICKET_SECTION_ID),
+              },
+            ]
+          case 'invoice':
+            return [
+              {
+                key: 'invoice',
+                text: dc('dash.todoInvoiceLabel'),
+                count: row.count,
+                onClick: () => scrollToAnchor(INVOICE_SECTION_ID),
+              },
+            ]
+          case 'phoneAppeal':
+            return [
+              {
+                key: 'phoneAppeal',
+                text: dc('dash.todoAppealLabel'),
+                count: row.count,
+                onClick: () => scrollToAnchor('phone-appeals'),
+              },
+            ]
+        }
       })
-    }
-    if (refundRequests && refundRequests.length > 0) {
-      alertItems.push({
-        key: 'refund',
-        text: dc('dash.todoRefundRequestLabel'),
-        count: refundRequests.length,
-        to: '/cashier/refunds',
-      })
-    }
-    if (stats.todo.unpaid > 0) {
-      alertItems.push({
-        key: 'unpaid',
-        text: dc('dash.todoUnpaidLabel'),
-        count: stats.todo.unpaid,
-        // 批次 M1 联动口径沿用：有样例单 → 收银台自动拉入该预约
-        to: unpaidSample ? `/cashier?pull=${unpaidSample.id}` : '/cashier',
-      })
-    }
-    if (stats.overdueBoardingCount > 0) {
-      alertItems.push({
-        key: 'overdue',
-        text: dc('dash.todoOverdueLabel'),
-        count: stats.overdueBoardingCount,
-        to: '/boarding',
-      })
-    }
-    if (stats.todo.pending > 0) {
-      alertItems.push({
-        key: 'pending',
-        text: dc('dash.todoPendingLabel'),
-        count: stats.todo.pending,
-        to: '/appointments?status=pending&from=todo',
-      })
-    }
-    if (ticketCount !== undefined && ticketCount > 0) {
-      alertItems.push({
-        key: 'ticket',
-        text: dc('dash.todoTicketLabel'),
-        count: ticketCount,
-        onClick: () => scrollToAnchor(TICKET_SECTION_ID),
-      })
-    }
-    if (invoiceCount !== undefined && invoiceCount > 0) {
-      alertItems.push({
-        key: 'invoice',
-        text: dc('dash.todoInvoiceLabel'),
-        count: invoiceCount,
-        onClick: () => scrollToAnchor(INVOICE_SECTION_ID),
-      })
-    }
-    if (appealCount !== undefined && appealCount > 0) {
-      alertItems.push({
-        key: 'phoneAppeal',
-        text: dc('dash.todoAppealLabel'),
-        count: appealCount,
-        onClick: () => scrollToAnchor('phone-appeals'),
-      })
-    }
-  }
+    : []
 
   /* ---------------- M3 单店口径一栏（原 StatCards 四 stat 重排，派生口径不变） ---------------- */
 
