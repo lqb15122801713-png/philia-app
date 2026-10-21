@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-21T02:45:10.700Z",
+  "app": "http://localhost:7152",
+  "api": "http://localhost:7200",
+  "loginStatus": 200,
+  "liveMap_homeBanner": {
+    "key": "home.banner",
+    "url": "/brand/banner-home-1200.png",
+    "alt": "首页品牌横幅",
+    "title_main": null,
+    "title_sub": null,
+    "cta_text": null,
+    "audience": "all",
+    "priority": null
+  },
+  "bannerImgProbe": {
+    "found": true,
+    "tag": "IMG",
+    "src": "/brand/banner-home-1200.png",
+    "alt": "首页品牌横幅",
+    "ariaLabel": null,
+    "fallbackClass": false,
+    "text": null,
+    "naturalOk": true
+  },
+  "extra": {
+    "bannerHtml": "<section code-path=\"src\\pages\\HomePage.tsx:173:7\" class=\"hv2-banner\" data-testid=\"home-banner\" data-block-key=\"home.banner\" aria-label=\"品牌横幅\"><img code-path=\"src\\pages\\HomePage.tsx:44:10\" src=\"/brand/banner-home-1200.png\" alt=\"首页品牌横幅\" class=\"hv2-banner-img\" data-testid=\"home-banner-img\" loading=\"lazy\"><div code-path=\"src\\pages\\HomePage.tsx:175:9\" class=\"hv2-banner-shade\" aria-hidden=\"true\"></div><a code-path=\"src\\pages\\HomePage.tsx:176:9\" class=\"hv2-store-chip\" data-testid=\"home-store-chip\" href=\"/booking/grooming?storeId=01M5E3FTGM15DYTWSXGKKRDVJW\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map-pin h-3.5 w-3.5\" code-path=\"src\\page",
+    "featuredFirst": {
+      "tag": "DIV",
+      "aria": "秋日洗护套餐，待换",
+      "text": "待换"
+    },
+    "bodyHasBannerPending": false
+  }
+}

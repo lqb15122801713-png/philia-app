@@ -1,0 +1,25 @@
+[pd52] 客壳 banner q=null「待换」fallback 修 · 运行时链路实测
+基线：main@4313b1c323841137972f2c0c4c7e4f5e45c53c78 · 分支 feat/pd52-banner-fallback
+环境：临时库 file:.../Temp/pd52_runtime.db（db:migrate + db:seed 真跑）→ server :7200（CORS_ORIGINS 加 7152）→ customer vite dev :7152（避 7100 旧 SW 污染）
+时间：2026-10-21T02:45+08:00 前后（Asia/Shanghai）
+
+--- 静态闸 ---
+PASS build:customer（tsc -b && vite build）exit 0（PWA 预缓存 42 项同基线纪律）
+PASS eslint apps/customer/src/pages/HomePage.tsx exit 0
+PASS diff 最小：HomePage.tsx 仅 2 行（import 加 resolveSlotUrl；bannerImage: null → resolveSlotUrl(bannerSlot?.url ?? null)）
+
+--- 运行时链路（CDP 真浏览器 · 390×844 移动视口）---
+PASS dev-login（示例客户 customer）status=200
+PASS liveMap（带会话 cookie 直查 /trpc/slotPort.liveMap）：home.banner live={ url:/brand/banner-home-1200.png, alt:首页品牌横幅, audience:all }
+PASS ①客壳横幅吃 live：[data-testid=home-banner-img] tag=IMG src=/brand/banner-home-1200.png alt=首页品牌横幅 naturalOk=true（真图加载成功）
+PASS ②非「待换」：banner section innerText 不含「待换」（bodyHasBannerPending=false）；元素无 hv2-image-fallback 类；bannerHtml 首节点=<img> 非兜底 <div>
+PASS ③无图才 fallback（对照）：精选服务首卡（slot 无 live url 路径）=DIV.hv2-image-fallback aria「秋日洗护套餐，待换」——fallback 仍在且无图时才出
+PASS 截图 01_客壳home_banner吃live图.png：横幅=品牌真图（犬只照片）＋标题秋季洗护季＋副标满减进行中·菲丽亚宠物·示例店可用＋CTA 立即预约
+
+--- 边界守护（不扩令）---
+PASS 不改 slot_key／不 publish／未清 pending×3（归 PD-53）／不碰 CLIP·KPI·STEPS
+PASS 不动 drizzle／_journal.json（纯前端接线，迁移号 0093 未启用，更不碰 0094/0095）
+PASS 商/员端零改动（diff 仅 apps/customer HomePage.tsx）
+PASS 修前硬编码 q=null 实证：基线 HomePage.tsx:159 `const bannerImage: string | null = null`（git show 4313b1c 可复）
+
+[pd52-runtime] ALL PASS
