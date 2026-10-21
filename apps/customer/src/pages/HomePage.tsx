@@ -181,7 +181,7 @@ export default function HomePage() {
           <p className="hv2-banner-eyebrow">PHILIA CARE</p>
           <h1 data-testid="home-banner-title">{bannerSlot?.title_main ?? hc('home.bannerSeason')}</h1>
           <p className="hv2-banner-sub" data-testid="home-banner-sub">{bannerSlot?.title_sub ?? hc('home.bannerSub', { store: storeName })}</p>
-          <Link to="/booking/grooming" className="hv2-banner-cta" data-testid="home-banner-cta">
+          <Link to="/booking/grooming" className={`hv2-banner-cta${inServiceAppt ? ' hv2-banner-cta-secondary' : ''}`} data-testid="home-banner-cta">
           {bannerSlot?.cta_text ?? hc('home.bannerCta')}<span aria-hidden="true">›</span>
           </Link>
         </div>

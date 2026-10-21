@@ -1,0 +1,110 @@
+{
+  "at": "2026-10-21T06:54:22.066Z",
+  "customer": "http://127.0.0.1:7260",
+  "merchant": "http://127.0.0.1:7261",
+  "results": [
+    {
+      "id": "B-7202 待办去处理为 ≥44px 按钮",
+      "ok": true,
+      "detail": "去处理:44px/none",
+      "measurements": [
+        {
+          "text": "去处理",
+          "tag": "A",
+          "height": 44,
+          "width": 62,
+          "decoration": "none",
+          "display": "flex",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "id": "B-7201 无进行中预约时 hero 单一主操作",
+      "ok": true,
+      "detail": "primary=home-banner-cta；serviceSecondary=true",
+      "measurements": {
+        "primaryIds": [
+          "home-banner-cta"
+        ],
+        "actions": [
+          {
+            "id": "home-banner-cta",
+            "background": "rgb(250, 247, 240)",
+            "color": "rgb(92, 80, 64)",
+            "height": 44,
+            "filled": true
+          }
+        ],
+        "serviceEntries": [
+          {
+            "id": "home-primary-grooming",
+            "background": "rgb(255, 255, 255)",
+            "borderRadius": "16px",
+            "height": 116
+          },
+          {
+            "id": "home-primary-boarding",
+            "background": "rgb(255, 255, 255)",
+            "borderRadius": "16px",
+            "height": 116
+          },
+          {
+            "id": "home-primary-mall",
+            "background": "rgb(255, 255, 255)",
+            "borderRadius": "16px",
+            "height": 116
+          }
+        ],
+        "serviceProgress": false
+      }
+    },
+    {
+      "id": "B-7201 有进行中预约时状态卡单一主操作",
+      "ok": true,
+      "detail": "primary=home-service-pickup；serviceSecondary=true",
+      "measurements": {
+        "primaryIds": [
+          "home-service-pickup"
+        ],
+        "actions": [
+          {
+            "id": "home-banner-cta",
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(250, 247, 240)",
+            "height": 44,
+            "filled": false
+          },
+          {
+            "id": "home-service-pickup",
+            "background": "rgb(44, 40, 34)",
+            "color": "rgb(250, 247, 240)",
+            "height": 44,
+            "filled": true
+          }
+        ],
+        "serviceEntries": [
+          {
+            "id": "home-primary-grooming",
+            "background": "rgb(255, 255, 255)",
+            "borderRadius": "16px",
+            "height": 116
+          },
+          {
+            "id": "home-primary-boarding",
+            "background": "rgb(255, 255, 255)",
+            "borderRadius": "16px",
+            "height": 116
+          },
+          {
+            "id": "home-primary-mall",
+            "background": "rgb(255, 255, 255)",
+            "borderRadius": "16px",
+            "height": 116
+          }
+        ],
+        "serviceProgress": true
+      }
+    }
+  ]
+}

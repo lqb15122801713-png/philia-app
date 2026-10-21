@@ -56,6 +56,11 @@
   font-size: 12px; font-weight: 600; color: var(--wsk-khaki); text-decoration: underline;
   text-underline-offset: 3px; background: none; border: 0; cursor: pointer; font-family: inherit; padding: 0;
 }
+.wsk-alert .go {
+  display: inline-flex; align-items: center; justify-content: center; min-block-size: 44px;
+  padding: 8px 12px; border: 1px solid var(--wsk-hairline); border-radius: 8px;
+  background: var(--wsk-card); text-decoration: none;
+}
 .wsk-alert .empty { padding: 12px 16px; font-size: 12px; color: var(--wsk-muted); }
 
 /* ---- M4 合计条 wtotal（深棕渐变 135° 圆角 18+深件影：mono 30/700 大数字+竖分隔+tb-cell+spark 槽） ---- */
