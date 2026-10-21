@@ -1,0 +1,77 @@
+PD-58 tRPC 404 回包证据
+基线：main@43ce81c3d01b894efd8762766dc6999c60c309fb
+分支：feat/pd58-trpc-404-stack
+
+[基线补充探测]
+命令：NODE_ENV=production node node_modules/tsx/dist/cli.mjs src/__tests__/trpc404.ts
+结果：exit 0。tRPC 11 默认在 NODE_ENV=production 时已不输出 stack。
+说明：部署模板 .env.example 使用 NODE_ENV=staging；tRPC 默认 isDev 为 NODE_ENV !== 'production'，故实际 staging 回包仍可泄露 stack。
+
+[RED／修复前]
+工作目录：server
+命令：NODE_ENV=staging node node_modules/tsx/dist/cli.mjs src/__tests__/trpc404.ts
+结果：exit 1；断言 Object.hasOwn(error.data, 'stack') === false 失败（actual true）。
+
+HTTP status：404
+响应体：
+{
+  "error": {
+    "json": {
+      "message": "No procedure found on path \"__pd58_missing__\"",
+      "code": -32004,
+      "data": {
+        "code": "NOT_FOUND",
+        "httpStatus": 404,
+        "stack": "TRPCError: No procedure found on path \"__pd58_missing__\"\n    at <anonymous> (E:\\KIMI code\\pd58-trpc-404-stack\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\http\\resolveResponse.ts:342:17)\n    at Array.map (<anonymous>)\n    at resolveResponse (E:\\KIMI code\\pd58-trpc-404-stack\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\http\\resolveResponse.ts:333:33)\n    at async fetchRequestHandler (E:\\KIMI code\\pd58-trpc-404-stack\\server\\node_modules\\@trpc\\server\\src\\adapters\\fetch\\fetchRequestHandler.ts:41:10)\n    at async <anonymous> (E:\\KIMI code\\pd58-trpc-404-stack\\server\\node_modules\\@hono\\trpc-server\\src\\index.ts:43:17)\n    at async dispatch (file:///E:/KIMI%20code/pd58-trpc-404-stack/server/node_modules/hono/dist/compose.js:22:17)\n    at async <anonymous> (E:\\KIMI code\\pd58-trpc-404-stack\\server\\src\\auth\\middleware.ts:110:5)\n    at async dispatch (file:///E:/KIMI%20code/pd58-trpc-404-stack/server/node_modules/hono/dist/compose.js:22:17)\n    at async cors2 (file:///E:/KIMI%20code/pd58-trpc-404-stack/server/node_modules/hono/dist/middleware/cors/index.js:79:5)\n        at async dispatch (file:///E:/KIMI%20code/pd58-trpc-404-stack/server/node_modules/hono/dist/compose.js:22:17)",
+        "path": "__pd58_missing__"
+      }
+    }
+  }
+}
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+true !== false
+at server/src/__tests__/trpc404.ts:34:10
+
+[GREEN／修复后／staging]
+命令：NODE_ENV=staging node node_modules/tsx/dist/cli.mjs src/__tests__/trpc404.ts
+结果：exit 0
+{
+  "status": 404,
+  "body": {
+    "error": {
+      "json": {
+        "message": "No procedure found on path \"__pd58_missing__\"",
+        "code": -32004,
+        "data": {
+          "code": "NOT_FOUND",
+          "httpStatus": 404,
+          "path": "__pd58_missing__"
+        }
+      }
+    }
+  }
+}
+✓ NODE_ENV=staging 不存在 tRPC 路径：404，无 stack，保留 code + message + httpStatus
+
+[GREEN／修复后／production]
+命令：NODE_ENV=production node node_modules/tsx/dist/cli.mjs src/__tests__/trpc404.ts
+结果：exit 0
+{
+  "status": 404,
+  "body": {
+    "error": {
+      "json": {
+        "message": "No procedure found on path \"__pd58_missing__\"",
+        "code": -32004,
+        "data": {
+          "code": "NOT_FOUND",
+          "httpStatus": 404,
+          "path": "__pd58_missing__"
+        }
+      }
+    }
+  }
+}
+✓ NODE_ENV=production 不存在 tRPC 路径：404，无 stack，保留 code + message + httpStatus
+
+共同断言：HTTP 404；message 非空；data.code=NOT_FOUND；data.httpStatus=404；data 无自有 stack 属性；原始响应无 "stack" 键或 /app/server 字符串。

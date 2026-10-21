@@ -1,0 +1,8 @@
+工作目录：server
+命令：npm run typecheck
+结果：exit 0
+
+> @philia/server@0.1.0 typecheck
+> tsc --noEmit
+
+补充：根目录 npm run build 已完成 customer／merchant／staff 三端构建，原始输出见 02_三端构建.txt。

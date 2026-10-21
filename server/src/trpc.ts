@@ -45,6 +45,11 @@ export interface Context {
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
+  errorFormatter({ shape }) {
+    const data = { ...shape.data };
+    delete data.stack;
+    return { ...shape, data };
+  },
 });
 
 export const router = t.router;
