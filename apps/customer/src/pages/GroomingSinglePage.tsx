@@ -8,7 +8,7 @@ import TimeGridBlock from '@/components/booking/single/TimeGridBlock';
 import ConfirmBar from '@/components/booking/single/ConfirmBar';
 import BottomSheet from '@/components/booking/single/BottomSheet';
 import StaffHalfSheet from '@/components/booking/single/StaffHalfSheet';
-import { availableSetOf, buildWeekGrid, isSameDay } from '@/components/booking/single/slotGrid';
+import { availableSetOf, buildWeekGrid, isSameDay, isSlotSelectable, retainSelectedSlot } from '@/components/booking/single/slotGrid';
 import { fenToYuan, fmtHM } from '@/components/booking/format';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 import { createAppointmentExp2 } from '@/lib/exp2Api';
@@ -111,10 +111,13 @@ export default function GroomingSinglePage() {
   const nextAvailableSlot = useMemo(() => {
     let next: Date | null = null;
     for (const time of selectedDayGrid?.grid ?? []) {
-      if (availableTimes.has(time.getTime()) && (!next || time.getTime() < next.getTime())) next = time;
+      if (isSlotSelectable(time, availableTimes) && (!next || time.getTime() < next.getTime())) next = time;
     }
     return next;
   }, [selectedDayGrid, availableTimes]);
+  // PD-64（M-1）：已选槽保留口径——仍处可约集且越出 +1h 缓冲才算已选，
+  // 否则（滞留槽过期临近／拒约·409 后出集）底栏「已选」不残留
+  const effSlot = retainSelectedSlot(slot, availableTimes);
 
   const pickStore = (id: string) => {
     if (id === effStoreId) return;
@@ -131,6 +134,16 @@ export default function GroomingSinglePage() {
   const pickDay = (nextDay: Date) => {
     if (!selectedDay || !isSameDay(nextDay, selectedDay)) setSlot(null);
     setDay(nextDay);
+  };
+  // PD-64（M-1）：点选时刻前置校验——可约集滞留致 <1h 临近槽被点时，
+  // 拦截并清空「已选」态（文案与 server assertBookableTime 同口径，不误导约满）
+  const pickSlot = (t: Date) => {
+    if (!isSlotSelectable(t, availableTimes)) {
+      showToast('仅可预约 1 小时之后的时段，请改约稍晚时间', 'error');
+      setSlot(null);
+      return;
+    }
+    setSlot(t);
   };
 
   const service = groomingServices.find((item) => item.id === serviceId) ?? null;
@@ -155,7 +168,7 @@ export default function GroomingSinglePage() {
         petId: petId!,
         serviceId: serviceId!,
         type: 'grooming',
-        scheduledStart: slot!,
+        scheduledStart: effSlot!,
         paymentMode: 'pay_at_store',
         ...(note ? { note } : {}),
       });
@@ -167,6 +180,8 @@ export default function GroomingSinglePage() {
     },
     onError: (error) => {
       showToast(friendlyError(error, '预约失败，请稍后再试'), 'error');
+      // PD-64（M-1）：拒约／409 后底栏「已选」立即清零，不得残留
+      setSlot(null);
       void servicesQ.refetch();
     },
   });
@@ -180,7 +195,7 @@ export default function GroomingSinglePage() {
         ? bkc('booking.chooseStore')
         : serviceId === null
           ? bkc('booking.chooseService')
-          : slot === null
+          : effSlot === null
             ? '请先选择时段'
             : null;
 
@@ -229,8 +244,8 @@ export default function GroomingSinglePage() {
           <TimeGridBlock
             day={selectedDayGrid}
             slots={slots}
-            selected={slot}
-            onSelect={setSlot}
+            selected={effSlot}
+            onSelect={pickSlot}
             loading={servicesQ.isPending || servicesQ.isFetching}
           />
         </div>
@@ -244,7 +259,7 @@ export default function GroomingSinglePage() {
         missingLabel={missingLabel}
         submitting={createM.isPending}
         onConfirm={() => createM.mutate()}
-        slot={slot}
+        slot={effSlot}
         nextSlotLabel={nextAvailableSlot ? fmtHM(nextAvailableSlot) : null}
       />
     ),

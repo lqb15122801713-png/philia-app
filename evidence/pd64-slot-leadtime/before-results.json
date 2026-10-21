@@ -1,0 +1,84 @@
+{
+  "at": "2026-10-21T11:09:47.819Z",
+  "base": "http://localhost:7163",
+  "nearMs": 1792582200000,
+  "tMs": 1792598400000,
+  "results": [
+    {
+      "id": "A1 不足1h时段不可选／拦截后无已选",
+      "ok": false,
+      "detail": "cell(19:30) disabled=false available=true 点击后底栏=「已选 今天 19:30 · 约 150 分钟 · ¥88」",
+      "extra": {
+        "aState": {
+          "disabled": false,
+          "available": "true",
+          "text": "19:30",
+          "aria": "19:30"
+        },
+        "aAfter": {
+          "summaryAfterClick": "已选 今天 19:30 · 约 150 分钟 · ¥88",
+          "legend": "●已选时段灰 = 已满",
+          "cellDisabledAfter": false
+        }
+      }
+    },
+    {
+      "id": "A2 临近格不误导约满（时刻明文＋图例）",
+      "ok": false,
+      "detail": "text=「19:30」 aria=「19:30」 legend=「●已选时段灰 = 已满」",
+      "extra": {
+        "aState": {
+          "disabled": false,
+          "available": "true",
+          "text": "19:30",
+          "aria": "19:30"
+        },
+        "aAfter": {
+          "summaryAfterClick": "已选 今天 19:30 · 约 150 分钟 · ¥88",
+          "legend": "●已选时段灰 = 已满",
+          "cellDisabledAfter": false
+        }
+      }
+    },
+    {
+      "id": "C 可约槽照常可选（不过拦）",
+      "ok": true,
+      "detail": "点选 20:30 后底栏=「已选 今天 20:30 · 约 150 分钟 · ¥88」"
+    },
+    {
+      "id": "B0 接口证：appointment.create 真回 409",
+      "ok": true,
+      "detail": "create 响应状态集=[204,409]",
+      "extra": [
+        {
+          "url": "http://localhost:7264/trpc/appointment.create?batch=1",
+          "status": 204
+        },
+        {
+          "url": "http://localhost:7264/trpc/appointment.create?batch=1",
+          "status": 409
+        }
+      ]
+    },
+    {
+      "id": "B1 409 后底栏无已选",
+      "ok": false,
+      "detail": "409 后底栏=「已选 明天 00:00 · 约 150 分钟 · ¥88」",
+      "extra": {
+        "summary": "已选 明天 00:00 · 约 150 分钟 · ¥88",
+        "cellAvailable": "false",
+        "cellText": "已满"
+      }
+    },
+    {
+      "id": "B2 409 后该槽置灰（不可约即不可选）",
+      "ok": true,
+      "detail": "cell(00:00) available=false text=「已满」",
+      "extra": {
+        "summary": "已选 明天 00:00 · 约 150 分钟 · ¥88",
+        "cellAvailable": "false",
+        "cellText": "已满"
+      }
+    }
+  ]
+}
