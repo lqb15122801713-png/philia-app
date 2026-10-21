@@ -144,11 +144,13 @@ const EMPTY_STATE: Partial<Record<PortKey, { title: string; body: string }>> = {
 /* 仅分区+标签+慎办卡其左条铬架；卡数/口序/留痕数据源/端口逻辑全不动          */
 /* ------------------------------------------------------------------ */
 
-/** PD-55：办事卡三层分区表（层序=常办→慎办→占位；层内序=CONSOLE_PORT_META 原序） */
+/** PD-55：办事卡三层分区表（层内序=CONSOLE_PORT_META 原序）；
+ *  PD-62：层序 常办→占位→慎办（占位层原列末位，1280×800 首屏外；仅换层序把两张占位卡拉进首屏，
+ *  15 卡等权/卡面工艺/层签/口序/数据源全不动） */
 const HOME_TIERS: ReadonlyArray<{ tier: ConsolePortTier; labelKey: ConsoleAdminCopyKey; noteKey: ConsoleAdminCopyKey }> = [
   { tier: 'daily', labelKey: 'cadm.homeTierDaily', noteKey: 'cadm.homeTierDailyNote' },
-  { tier: 'careful', labelKey: 'cadm.homeTierCareful', noteKey: 'cadm.homeTierCarefulNote' },
   { tier: 'pending', labelKey: 'cadm.homeTierPending', noteKey: 'cadm.homeTierPendingNote' },
+  { tier: 'careful', labelKey: 'cadm.homeTierCareful', noteKey: 'cadm.homeTierCarefulNote' },
 ];
 
 /** 留痕行数据源（全部既有读口，零新建）：config.versions 五域+slotPort.list+canvas.getLayout(home)+correction.list */
