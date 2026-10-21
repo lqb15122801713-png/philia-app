@@ -185,11 +185,15 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
         </div>
         ))}
       </div>
-      {/* foot=开发者管理端（owner-only 三端口收编为其子行；clerk 经 groupsFor 分流不见） */}
+      {/* foot=开发者管理端（owner-only 三端口收编为其子行；clerk 经 groupsFor 分流不见）。
+          PD-55 意见轨③：foot 顶分隔线+分区注+壳入口描边=与日常经营链拉开层级；IA/路由/钉底全不动 */}
       {!role.isClerk ? (
         <div className="ft" data-testid="rail-foot">
-          <div className="gp">{cc('wnav.footConsole')}</div>
-          <NavLink to="/console" end data-testid="rail-console" title={cc('wnav.footConsole')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
+          <div className="gp">
+            {cc('wnav.footConsole')}
+            <span className="nt">{cc('wnav.footConsoleNote')}</span>
+          </div>
+          <NavLink to="/console" end data-testid="rail-console" title={cc('wnav.footConsole')} className={({ isActive }) => `it shell${isActive ? ' on' : ''}`}>
             <SquareTerminal strokeWidth={1.6} aria-hidden />
             <span>{cc('wnav.footConsole')}</span>
           </NavLink>

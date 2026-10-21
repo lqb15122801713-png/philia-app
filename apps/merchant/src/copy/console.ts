@@ -40,6 +40,8 @@ const CONSOLE_COPY_TABLE = {
 
   /* ---- wnav foot 运营后台端（owner-only 三端口收编为其子行；PD-25 D-56 展示改名，CJ-1014-01） ---- */
   'wnav.footConsole': '运营后台端',
+  /* PD-55 意见轨③（CONSOLE-RETAKE §4）：foot 分区注——独立运营壳，与日常经营链分栏 */
+  'wnav.footConsoleNote': '独立运营壳 · 与日常经营分栏',
   'wnav.footRules': '规则配置',
 
   /* ---- wnav dock 五槽（片0 回归 Ready §1.D：总览/门店/收银/报表/我的） ---- */

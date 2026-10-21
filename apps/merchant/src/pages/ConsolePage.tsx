@@ -43,9 +43,9 @@ import RoleGuidePage from '../components/RoleGuidePage';
 import { WAlert, WDanger, WcLog, WcPorts, WcPub, type WcPubStage } from '../components/skeleton';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Btn, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
-import { cadm } from '../copy/consoleAdmin';
+import { cadm, type ConsoleAdminCopyKey } from '../copy/consoleAdmin';
 import { cp } from '../copy/copyPort';
-import { CONSOLE_PORT_META, type ConsolePortKey } from './consolePortsMeta';
+import { CONSOLE_PORT_META, type ConsolePortKey, type ConsolePortTier } from './consolePortsMeta';
 import { ConsoleSearch } from './ConsoleSearch';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
@@ -140,7 +140,16 @@ const EMPTY_STATE: Partial<Record<PortKey, { title: string; body: string }>> = {
 /* 控制台改版批 片 1（产品-1012 · 刀 1）：办事导向首页——卡面+留痕行数据件     */
 /* 视觉零改动纪律：全用既有 wsk-card/wsk-hd/Btn 件与既有色板字号，只动 IA    */
 /* 卡面元数据=./consolePortsMeta 单源件（片 2 全局搜索复用同表，防双表漂移）   */
+/* PD-55 意见轨①（CONSOLE-RETAKE §2）：15 卡等权→「常办/慎办/占位」三层分区， */
+/* 仅分区+标签+慎办卡其左条铬架；卡数/口序/留痕数据源/端口逻辑全不动          */
 /* ------------------------------------------------------------------ */
+
+/** PD-55：办事卡三层分区表（层序=常办→慎办→占位；层内序=CONSOLE_PORT_META 原序） */
+const HOME_TIERS: ReadonlyArray<{ tier: ConsolePortTier; labelKey: ConsoleAdminCopyKey; noteKey: ConsoleAdminCopyKey }> = [
+  { tier: 'daily', labelKey: 'cadm.homeTierDaily', noteKey: 'cadm.homeTierDailyNote' },
+  { tier: 'careful', labelKey: 'cadm.homeTierCareful', noteKey: 'cadm.homeTierCarefulNote' },
+  { tier: 'pending', labelKey: 'cadm.homeTierPending', noteKey: 'cadm.homeTierPendingNote' },
+];
 
 /** 留痕行数据源（全部既有读口，零新建）：config.versions 五域+slotPort.list+canvas.getLayout(home)+correction.list */
 function useHomeLastChanges(enabled: boolean) {
@@ -346,18 +355,24 @@ function KillSwitchStrip() {
     );
   }
 
+  /* PD-55 意见轨②（CONSOLE-RETAKE §3）：关停条收进既有 WDanger 危险区容器
+     （赭红题带+暖底区隔，不再像普通工具钮）；闸/端点/双确认行为零改动，不真触发 */
   return (
-    <div className="mb-3.5 flex items-center gap-3 px-1">
-      <span className="min-w-0 flex-1 text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.killArmNote')}</span>
-      <Btn
-        variant="danger"
-        size="sm"
-        data-testid="console-kill-arm"
-        disabled={busy}
-        onClick={() => void toggle(true)}
-      >
-        {cadm('cadm.killArm')}
-      </Btn>
+    <div className="mb-3.5">
+      <WDanger testId="console-kill-danger" title={cadm('cadm.killDangerTitle')}>
+        <div className="flex items-center gap-3">
+          <span className="min-w-0 flex-1 text-caption-xs text-[rgba(44,40,34,.62)]">{cadm('cadm.killArmNote')}</span>
+          <Btn
+            variant="danger"
+            size="sm"
+            data-testid="console-kill-arm"
+            disabled={busy}
+            onClick={() => void toggle(true)}
+          >
+            {cadm('cadm.killArm')}
+          </Btn>
+        </div>
+      </WDanger>
     </div>
   );
 }
@@ -415,31 +430,40 @@ function OwnerConsole() {
                 <span className="t">{cadm('cadm.homeTitle')}</span>
                 <span className="a">{cadm('cadm.homeSub')}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-                {CONSOLE_PORT_META.map((card) => {
-                  const last = card.lastKey ? (lastChanges[card.lastKey] ?? null) : null;
-                  const inner = (
-                    <>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-body font-semibold text-ink">{cadm(card.titleKey)}</span>
-                        <span className="text-caption-xs text-[rgba(44,40,34,.42)]">
-                          {cadm('cadm.homePortBadge')} · {card.port}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-caption-xs text-[rgba(44,40,34,.62)]">{cadm(card.hintKey)}</p>
-                      <p className="mt-2 border-t border-[rgba(44,40,34,.06)] pt-1.5 text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
-                        {last ?? cadm('cadm.homeLastNone')}
-                      </p>
-                    </>
-                  );
-                  const cls = `rounded-panel bg-card px-4 py-3.5 text-left shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]${card.pending ? ' opacity-60' : ''}`;
-                  return card.to ? (
-                    <Link key={card.port} to={card.to} className={cls} data-testid={`console-card-${card.port}`}>{inner}</Link>
-                  ) : (
-                    <button key={card.port} type="button" className={cls} data-testid={`console-card-${card.port}`} onClick={() => setView(card.port)}>{inner}</button>
-                  );
-                })}
-              </div>
+              {/* PD-55 意见轨①：15 卡分「常办/慎办/占位」三层——分区签+慎办左条+占位降透（既有件既有色板） */}
+              {HOME_TIERS.map(({ tier, labelKey, noteKey }, ti) => (
+                <div key={tier} className={ti === 0 ? undefined : 'mt-4'} data-testid={`console-tier-${tier}`}>
+                  <div className="mb-2 flex items-baseline gap-2 px-0.5">
+                    <span className="text-caption-xs font-bold text-[rgba(44,40,34,.78)]">{cadm(labelKey)}</span>
+                    <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{cadm(noteKey)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+                    {CONSOLE_PORT_META.filter((c) => c.tier === tier).map((card) => {
+                      const last = card.lastKey ? (lastChanges[card.lastKey] ?? null) : null;
+                      const inner = (
+                        <>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-body font-semibold text-ink">{cadm(card.titleKey)}</span>
+                            <span className="text-caption-xs text-[rgba(44,40,34,.42)]">
+                              {cadm('cadm.homePortBadge')} · {card.port}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 text-caption-xs text-[rgba(44,40,34,.62)]">{cadm(card.hintKey)}</p>
+                          <p className="mt-2 border-t border-[rgba(44,40,34,.06)] pt-1.5 text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
+                            {last ?? cadm('cadm.homeLastNone')}
+                          </p>
+                        </>
+                      );
+                      const cls = `rounded-panel bg-card px-4 py-3.5 text-left shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]${card.pending ? ' opacity-60' : ''}${card.tier === 'careful' ? ' console-card-careful' : ''}`;
+                      return card.to ? (
+                        <Link key={card.port} to={card.to} className={cls} data-testid={`console-card-${card.port}`}>{inner}</Link>
+                      ) : (
+                        <button key={card.port} type="button" className={cls} data-testid={`console-card-${card.port}`} onClick={() => setView(card.port)}>{inner}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </section>
 
             {/* 参数表形态降级=高级层（折叠收排；全量端口目录点即达，不再是门面） */}
