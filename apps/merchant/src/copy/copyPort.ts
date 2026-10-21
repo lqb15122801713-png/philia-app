@@ -60,6 +60,7 @@ const COPYPORT_COPY_TABLE = {
   'slotport.pageTitle': '槽位端口',
   'slotport.pageSub': '展示素材后台可换 · 新素材默认待审 · 点上线即生效（新渲染）',
   'slotport.liveBadge': '上线中',
+  'slotport.liveSrcLabel': 'live 图',
   'slotport.pendingBadge': '待审',
   'slotport.pendingCount': '{n} 个待审',
   'slotport.versionInfo': 'v{version} · 共 {total} 版',

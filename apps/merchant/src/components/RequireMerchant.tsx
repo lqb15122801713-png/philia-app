@@ -4,8 +4,8 @@
  * 包在主内容外（/dev-login 本身除外）：
  * - useMe 加载中显示等待态；
  * - 未登录（user=null）跳 /dev-login，并带 from 以便登录后回跳；
- * - 已登录但 roles 不含 merchant_owner / merchant_manager → 商家身份引导页
- *   （提示换用商家账号登录，非报错页）。
+ * - 已登录但 roles 不含 merchant_owner / merchant_manager / merchant_clerk → 商家身份引导页
+ *   （提示换用商家账号登录；店员引导去员工端，非报错页）。
  *
  * 注意：守卫只是体验层，接口归属校验全部由服务端强制（merchantProcedure，见 server/src/trpc.ts）。
  */
@@ -48,7 +48,7 @@ export default function RequireMerchant({ children }: { children: ReactNode }) {
         <p className="mt-2 text-body-sm text-ink-secondary">
           当前账号「{user.nickname ?? user.id}」不是商家身份。
           <br />
-          商家端仅供门店店主 / 店长 / 店员使用，请改用商家账号登录。
+          商家端仅供门店店主 / 店长使用；店员请使用员工端 :7203。
         </p>
         <button
           type="button"

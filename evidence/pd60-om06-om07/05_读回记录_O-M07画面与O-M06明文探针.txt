@@ -1,0 +1,30 @@
+PD-60 读回记录 · 2026-10-21 · 本窗栈 server@7241（独立证据库 tmp/pd60-evidence.db）＋merchant preview@7144（VITE_API_BASE 钉 7241，CORS 白名单 7144）
+
+== A. O-M07 拒访页 DOM/画面（staff 小美会话，无头 Edge 独立 profile 不抢前台） ==
+- 登录：POST /api/auth/dev-login {userId: 小美 01M5EHTBV9T86BCM58MBBGPQ0X} → 200（philia_session 落 localhost 全域）
+- 访 http://localhost:7144/dashboard → RequireMerchant 拦（roles=[staff]，无 merchant_*）→ 引导页
+- 画面原文（图 01）：
+  「需要商家账号」
+  「当前账号「小美」不是商家身份。」
+  「商家端仅供门店店主 / 店长使用；店员请使用员工端 :7203。」   ← 新文案，「店员」已出 permitted 列表
+  [去切换账号]
+- 对照旧词：「商家端仅供门店店主 / 店长 / 店员使用，请改用商家账号登录。」（店长后「/ 店员」已删；店员行改指 :7203）
+- 闸逻辑零改动：isMerchant 判定行（owner/manager/clerk 放行）未碰，小美仍被拦＝闸口径不变，仅文案对齐
+
+== B. O-M06 槽位卡 live 明文（owner 菲丽亚店主会话） ==
+- 登录：POST /api/auth/dev-login {userId: 店主 01M5EHTBV91RYNPVRRFBNEH6WP} → 200
+- 访 http://localhost:7144/settings/slots → 槽位端口页
+- DOM 探针（puppeteer-core 无头 Edge，tmp/pd60-shots.js）：
+  [data-testid="slotport-live-src-home.banner"] textContent =
+  「live 图：/brand/banner-home-1200.png · alt=首页品牌横幅」   ← 与令包期望逐字一致
+  同帧 login.hero.staff 卡：「live 图：/brand/banner-home-1200.png · alt=员工端登录页主视觉」
+- 画面：图 02（home.banner 卡 live 明文行在 alt 中文名下、状态签上，只读不可编）
+
+== C. 接口证（owner 会话 cookie，curl） ==
+- GET /trpc/slotPort.list → 03_接口证 JSON：
+  home.banner live v1 contentJson = {"url":"/brand/banner-home-1200.png","alt":"首页品牌横幅"}
+  login.hero.staff live v1 url 同上 / alt=员工端登录页主视觉
+  mall.hero live v1 url=null（渐变占位口径，卡侧显占位注记，明文行 url 显「—」）——既有行为未动
+
+== D. 无 live 槽位行为 ==
+- slot.live=null 时明文行整行不渲染（占位卡口径不变），仅「暂无上线版本」签＋占位注记，符合「有 live 才出」
