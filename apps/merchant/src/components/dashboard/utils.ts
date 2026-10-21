@@ -40,8 +40,8 @@ export type ChainDashboardData = RouterOutputs['store']['chainDashboard']
 /** chainDashboard 六项合计行（total 非空形） */
 export type ChainSix = NonNullable<ChainDashboardData['total']>
 
-/** 待办合计（四项待办 + 异常超期寄养；TabBar 红点与「待办合计」卡同口径） */
-export const todoGrandTotal = (s: DashboardStats): number => s.todo.total + s.overdueBoardingCount
+/** 晨报待办合计（四项待办；与 chainDashboard 同口径，超期寄养单列不双计） */
+export const todoGrandTotal = (s: DashboardStats): number => s.todo.total
 
 export const pad2 = (n: number): string => String(n).padStart(2, '0')
 
