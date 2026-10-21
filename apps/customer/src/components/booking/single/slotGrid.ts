@@ -52,6 +52,37 @@ export function buildWeekGrid(store: StoreWithHours, slots: SlotItem[], dayCount
 /** 可约槽起始时刻集合（ms epoch） */
 export const availableSetOf = (slots: SlotItem[]) => new Set(slots.map((s) => s.slotStart.getTime()));
 
+/**
+ * PD-64（M-1 时段提前量）：「当前时间 +1h 缓冲」下限——与 server
+ * BOOKING_LEAD_BUFFER_MS / assertBookableTime / getWithServices 同一条线
+ * （服务端剔除口径为 t < now+1h，故 t == now+1h 边界可约，前后端同帧）。
+ * 客户端栅格凭查询时刻的可约集置灰，数据滞留（时间流逝未 refetch）时
+ * <1h 槽会被误放可选——本谓词在渲染与点选两处按新鲜 now 再卡一道。
+ */
+export const LEAD_BUFFER_MS = 60 * 60 * 1000;
+
+/** 调用时刻的墙钟（与 buildWeekGrid 缺省 now 同式；组件渲染中取时刻统一走模块助手） */
+export const freshNow = (): number => Date.now();
+
+/** 槽是否可选：在可约集内且越出 +1h 缓冲（now 缺省取调用时刻） */
+export const isSlotSelectable = (  t: Date | number,
+  available: ReadonlySet<number>,
+  now = Date.now(),
+): boolean => {
+  const ms = typeof t === 'number' ? t : t.getTime();
+  return available.has(ms) && ms >= now + LEAD_BUFFER_MS;
+};
+
+/**
+ * 已选槽保留口径：已选槽必须仍处可约集且越出 +1h 缓冲，否则视为未选——
+ * 拒约／409（CONFLICT＝不可约语义）后槽位随 refetch 出集，底栏「已选」随之清零不残留。
+ */
+export const retainSelectedSlot = (
+  selected: Date | null,
+  available: ReadonlySet<number>,
+  now = Date.now(),
+): Date | null => (selected && isSlotSelectable(selected, available, now) ? selected : null);
+
 export type DayPart = 'morning' | 'afternoon' | 'evening';
 
 export const DAY_PART_LABEL: Record<DayPart, string> = {
