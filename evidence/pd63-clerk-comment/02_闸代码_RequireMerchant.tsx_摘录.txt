@@ -1,0 +1,74 @@
+来源：apps/merchant/src/components/RequireMerchant.tsx @ ad9dd539d7fb49a3cbbfc2abe5bad838beaf8d40
+blob sha（本地＝远端）：0e3796c8ceb8ce7337bdc53c98e1f2229ec2268d
+—— 全文 65 行逐字摘录 ——
+
+  1	/**
+  2	 * 商家端路由守卫（契约 docs/MERCHANT-CONTRACTS.md · T4.1，照搬 apps/staff RequireStaff 改造）
+  3	 *
+  4	 * 包在主内容外（/dev-login 本身除外）：
+  5	 * - useMe 加载中显示等待态；
+  6	 * - 未登录（user=null）跳 /dev-login，并带 from 以便登录后回跳；
+  7	 * - 已登录但 roles 不含 merchant_owner / merchant_manager / merchant_clerk → 商家身份引导页
+  8	 *   （提示换用商家账号登录；店员引导去员工端，非报错页）。
+  9	 *
+ 10	 * 注意：守卫只是体验层，接口归属校验全部由服务端强制（merchantProcedure，见 server/src/trpc.ts）。
+ 11	 */
+ 12	
+ 13	import { useMe } from '@philia/shared'
+ 14	import { IdCard } from 'lucide-react'
+ 15	import type { ReactNode } from 'react'
+ 16	import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+ 17	
+ 18	export default function RequireMerchant({ children }: { children: ReactNode }) {
+ 19	  const { user, loading } = useMe()
+ 20	  const location = useLocation()
+ 21	  const navigate = useNavigate()
+ 22	
+ 23	  if (loading) {
+ 24	    return (
+ 25	      <div className="flex min-h-[60vh] items-center justify-center">
+ 26	        <p className="text-body-sm text-ink-secondary">加载中…</p>
+ 27	      </div>
+ 28	    )
+ 29	  }
+ 30	
+ 31	  if (!user) {
+ 32	    return <Navigate to="/dev-login" replace state={{ from: location.pathname }} />
+ 33	  }
+ 34	
+ 35	  const isMerchant =
+ 36	    user.roles.includes('merchant_owner') ||
+ 37	    user.roles.includes('merchant_manager') ||
+ 38	    user.roles.includes('merchant_clerk')
+ 39	
+ 40	  if (!isMerchant) {
+ 41	    return (
+ 42	      <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+ 43	        {/* 禁爪印占位口径（Ready §4，员工端片2 RequireStaff 先例）：IdCard 线性 icon + 沉底暖圆 */}
+ 44	        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light">
+ 45	          <IdCard className="h-7 w-7 text-ink" strokeWidth={1.5} />
+ 46	        </span>
+ 47	        <h1 className="mt-4 text-title-lg">需要商家账号</h1>
+ 48	        <p className="mt-2 text-body-sm text-ink-secondary">
+ 49	          当前账号「{user.nickname ?? user.id}」不是商家身份。
+ 50	          <br />
+ 51	          商家端仅供门店店主 / 店长使用；店员请使用员工端 :7203。
+ 52	        </p>
+ 53	        <button
+ 54	          type="button"
+ 55	          onClick={() => navigate('/dev-login', { replace: true })}
+ 56	          className="mt-6 h-12 min-w-[200px] rounded-full bg-brand-primary px-8 text-body-sm font-semibold text-ink transition active:scale-92 duration-120"
+ 57	        >
+ 58	          去切换账号
+ 59	        </button>
+ 60	      </div>
+ 61	    )
+ 62	  }
+ 63	
+ 64	  return <>{children}</>
+ 65	}
+
+—— 要点 ——
+· L35-38 闸代码放行集＝{merchant_owner, merchant_manager, merchant_clerk}：含 clerk
+· L7 头注释与 L35-38 逐字对应：同口径
+· L51 拒访文案「商家端仅供门店店主 / 店长使用；店员请使用员工端 :7203」：唯一暗示拒店员处

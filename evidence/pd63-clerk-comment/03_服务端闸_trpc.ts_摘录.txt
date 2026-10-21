@@ -1,0 +1,29 @@
+来源：server/src/trpc.ts @ ad9dd539d7fb49a3cbbfc2abe5bad838beaf8d40
+—— L100-121 逐字摘录 ——
+
+100	/**
+101	 * 商家三级（M1-补2 R2 · 补丁①/矩阵会签稿冻结表）：
+102	 * - merchantProcedure        = owner | manager | clerk（收银执行层：开单/挂单/取单/结账/撤未支付单）
+103	 * - merchantManagerProcedure = owner | manager（审批/管理层：改价·折扣/财务流水/看板/日结闸门预留）
+104	 * - merchantOwnerProcedure   = owner（反结账/导出/CSV 储值导入闸门预留）
+105	 * 归属校验全部在服务端 procedure 内强制，前端置灰只是体验层（双闸口径）。
+106	 */
+107	
+108	/** 商家（收银执行层）：publicProcedure + roles 含 owner|manager|clerk + storeId 存在 */
+109	export const merchantProcedure = publicProcedure.use(({ ctx, next }) => {
+110	  const isMerchant =
+111	    ctx.user.roles.includes('merchant_owner') ||
+112	    ctx.user.roles.includes('merchant_manager') ||
+113	    ctx.user.roles.includes('merchant_clerk');
+114	  if (!isMerchant || !ctx.user.storeId) {
+115	    throw new TRPCError({
+116	      code: 'FORBIDDEN',
+117	      message: '需要商家身份（merchant_owner / merchant_manager / merchant_clerk）且已绑定门店',
+118	    });
+119	  }
+120	  return next();
+121	});
+
+—— 要点 ——
+· 服务端硬闸 merchantProcedure 放行集＝{owner, manager, clerk}＋storeId：含 clerk
+· 报错明文自身亦写「merchant_owner / merchant_manager / merchant_clerk」三级

@@ -1,0 +1,33 @@
+来源：apps/merchant/src/lib/roles.ts @ ad9dd539d7fb49a3cbbfc2abe5bad838beaf8d40
+—— L1-14（矩阵冻结口径）逐字摘录 ——
+
+  1	/**
+  2	 * 商家端三级账号角色分流（批次 M1-补2 · R2 + 补丁① + 权限矩阵会签稿）
+  3	 *
+  4	 * 三角色（服务端 merchantProcedure 分层硬闸门，前端只是体验层）：
+  5	 * - merchant_owner   店主：全域（反结账/导出/CSV 储值导入仅店主）；
+  6	 * - merchant_manager 店长：本店+审批（改价/折扣/日结/流水/看板/财务；无反结账/导出/导入）；
+  7	 * - merchant_clerk   店员：收银执行层（开单/挂单/取单/结账/撤未支付单）——
+  8	 *   总规则② 店员不看营业额（不见流水与看板；todayTenderStats 服务端硬遮罩
+  9	 *   restricted=true），路由层只见收银台，直达其他页给引导页（非 403 白屏）。
+ 10	 *
+ 11	 * 矩阵冻结口径：改价/折扣 owner|manager（M1 的 owner-only 已放宽一档）；
+ 12	 * 撤单（仅未支付单）三级全开（补丁①1）；日结/交接班 owner|manager；
+ 13	 * 反结账（收银单冲正/日结拆箱）/导出/储值台账导入 仅 owner。
+ 14	 */
+
+—— L61-69（clerk 白名单路由）逐字摘录 ——
+
+ 61	/**
+ 62	 * clerk 白名单路由（矩阵总规则②：店员只见收银台主屏工作面）；
+ 63	 * 其余一律给引导页（非 403 白屏）。
+ 64	 * 「/」放行给 RoleLanding 按角色分流（clerk → /cashier）。
+ 65	 */
+ 66	export const CLERK_ALLOWED_PATHS: ReadonlyArray<string> = ['/', '/cashier']
+ 67	
+ 68	/** clerk 白名单动态前缀（片 3：小票版式页带单号参数，收银执行层打印/补打直达） */
+ 69	export const CLERK_ALLOWED_PREFIXES: ReadonlyArray<string> = ['/cashier/receipt/']
+
+—— 要点 ——
+· 权限矩阵会签稿冻结口径：clerk＝收银执行层，本就放行进入商家端，受白名单路由约束
+· 「店员被拒」的实测表象更可能来自白名单引导页／营业额硬遮罩，而非 RequireMerchant 闸

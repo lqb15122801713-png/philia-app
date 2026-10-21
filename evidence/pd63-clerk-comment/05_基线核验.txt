@@ -1,0 +1,30 @@
+PD-63 基线与一致性核验 · A窗 · 2026-10-21 Asia/Shanghai
+
+[WORKTREE]
+E:\KIMI code\pd63-clerk-comment
+
+[BRANCH]
+feat/pd63-clerk-comment（建于 main@ad9dd53，一令一树一支）
+
+[HEAD]
+$ git rev-parse HEAD
+ad9dd539d7fb49a3cbbfc2abe5bad838beaf8d40
+
+[施工前工作区]
+$ git status --short
+（空＝干净）
+
+[闸文件 blob 双侧一致]
+$ git rev-parse HEAD:apps/merchant/src/components/RequireMerchant.tsx
+0e3796c8ceb8ce7337bdc53c98e1f2229ec2268d
+$ gh api repos/lqb15122801713-png/philia-app/contents/apps/merchant/src/components/RequireMerchant.tsx?ref=ad9dd539d7fb49a3cbbfc2abe5bad838beaf8d40 --jq .sha
+0e3796c8ceb8ce7337bdc53c98e1f2229ec2268d
+→ 本地检出与远端基线逐字节一致
+
+[迁移号]
+本令核查结论为分支②（停手不改闸），零代码改动、未动 drizzle／_journal.json，
+未占用任何迁移号（独占号 0104 未使用；未触 0093／0095–0101／0102／0103）。
+
+[网络备注]
+github.com:443 本机被阻断；基线对象经 GitHub REST API（api.github.com／codeload）逐 sha 校验重构落本地
+（blob/tree/commit 全部 sha 比对一致，含 GitHub 签名提交的 gpgsig 头复原）。
