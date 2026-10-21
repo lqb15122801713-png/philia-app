@@ -7,7 +7,8 @@
  * - 数据源：slotPort.list（全槽注册表：live 行 + pending 行 + 版本计数 + 操作人昵称）；
  * - 展示：每槽一卡=槽名（slotKey mono + alt 中文名）+ 当前内容预览（live url 有值 → img，
  *   resolveSlotUrl 归一化：/api 前缀拼 getApiBase()，其余原样；url=null → 渐变占位块+「占位中」
- *   签，R10 不画假件）+ 状态签（上线中 / 待审数）+ 版本计数（v{live.version} · 共 N 版）；
+ *   签，R10 不画假件）+ live url／alt 只读明文行（PD-60 O-M06，有 live 才出）+ 状态签（上线中 /
+ *   待审数）+ 版本计数（v{live.version} · 共 N 版）；
  * - 上传替换：hidden file input（accept 图片）→ shared uploadImage（relDir=slots/<slotKey>，
  *   落盘签名 URL）→ slotPort.upload 登记 pending 版（新素材默认待审不上线 D-6）→ toast
  *   「已上传，待审中」；上传中按钮 loading 态；
@@ -119,6 +120,15 @@ function SlotCard({
           />
           <div className="min-w-0 flex-1">
             <div className="text-caption text-ink">{alt}</div>
+            {/* PD-60 O-M06：live 图 url＋alt 只读明文透出（对照截图/排查用；不可编辑，编辑走上传替换流） */}
+            {slot.live ? (
+              <div
+                className="mt-1 break-all font-mono text-caption-xs text-[rgba(44,40,34,.42)]"
+                data-testid={`slotport-live-src-${slot.slotKey}`}
+              >
+                {cp('slotport.liveSrcLabel')}：{slot.live.contentJson.url ?? '—'} · alt={slot.live.contentJson.alt}
+              </div>
+            ) : null}
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {slot.live ? (
                 <Badge tone="success">{cp('slotport.liveBadge')}</Badge>
