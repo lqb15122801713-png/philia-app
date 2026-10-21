@@ -1,0 +1,27 @@
+PD-53 e2e 全量回归 vs 基线（main@4313b1c 既有卷宗 pd51-clock-copy/04_e2e_全量回归.txt）✗ 集合对照
+
+== 基线 ✗（8 项）
+  ✗ 56.1 copy 域种子全量落库（4279 键/72 域；refund.submitCta=提交申请 与码内默认同值）
+  ✗ 56.1 公共读口透出 active 行全量（4279 行 key→text，客户端覆盖层数据源） 4300
+  ✗ 57.1 种子六槽 live 注册（home.banner 等）+ liveMap 透出（url/alt 齐）
+  ✗ 74.11 N2：到期 cohort 前后值（到期 +3=两夹具+预警户同窗口 / 顺延续费 +1）+ 预警名单含 15 天后到期户 + 回本率结构在
+  ✗ 76.3 activeCopyTexts 形状不变（4279 行 key→text，不透 screen/position 元数据） 4300
+  ✗ 77.2 dock 第五槽「设置」转正（wnav.dockMe 键值逐字）+ 注记键 wnav.dockMeNote 撤除 + 商家端 wnav 域「我的」零残留（员工端 sk.* 不动）
+  ✗ 81.4 批次：效期自动=生产+保质 300 天（expiry 精确）+ 临期分级（≤30 天=warn 徽）+ 效期看板含行
+  ✗ 98.2 索引数据源读口全通（copy 4279 键（active 去重面）+dictionary 参数域+canvas.blocks 46 屏+slotPort.list）
+
+== PD-53 本批 ✗（8 项）
+  ✗ 56.1 copy 域种子全量落库（4279 键/72 域；refund.submitCta=提交申请 与码内默认同值）
+  ✗ 56.1 公共读口透出 active 行全量（4279 行 key→text，客户端覆盖层数据源） 4300
+  ✗ 57.1 种子六槽 live 注册（home.banner 等）+ liveMap 透出（url/alt 齐）
+  ✗ 74.11 N2：到期 cohort 前后值（到期 +3=两夹具+预警户同窗口 / 顺延续费 +1）+ 预警名单含 15 天后到期户 + 回本率结构在
+  ✗ 76.3 activeCopyTexts 形状不变（4279 行 key→text，不透 screen/position 元数据） 4300
+  ✗ 77.2 dock 第五槽「设置」转正（wnav.dockMe 键值逐字）+ 注记键 wnav.dockMeNote 撤除 + 商家端 wnav 域「我的」零残留（员工端 sk.* 不动）
+  ✗ 81.4 批次：效期自动=生产+保质 300 天（expiry 精确）+ 临期分级（≤30 天=warn 徽）+ 效期看板含行
+  ✗ 98.2 索引数据源读口全通（copy 4279 键（active 去重面）+dictionary 参数域+canvas.blocks 46 屏+slotPort.list）
+
+== 差异（检查号级，空=全同）
+（无差异：8 项失败全为基线既有，与 PD-53 diff 无关）
+
+注：81.4 daysLeft 6→7 为钉时刻随自然日漂移（基线卷宗=10-20 跑批，本批=10-21），同族日期敏感断言；
+57.1 断言传 6 槽实 10 槽 / 56.1·76.3·98.2 传 4279 键实 4300 键＝0085/0086 批后计数断言未随批更新（基线既有，非本令目标，不修不扩）。
