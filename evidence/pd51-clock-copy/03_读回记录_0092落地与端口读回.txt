@@ -1,0 +1,33 @@
+PD-51 L-CLOCK-COPY（O-OVERRIDE-WINS）读回记录 · 2026-10-20 · A窗 K3 MAX
+证据库＝evidence/pd51-clock-copy/tmp/pd51-evidence.db（一次性，测完即清）；栈＝server@7241＋staff preview@7143（本分支构建产物，VITE_API_BASE 构建期钉 7241）
+
+== A. 现网旧覆盖态复现（ FAIL 态）==
+0091 初落库后直读：
+  copy_overrides today.todo.boardingCareCta active=1 => {"text":"寄养打卡 ›"}
+模拟合部后生产库旧覆盖（手工回写旧词＋抹 __drizzle_migrations 里 0091 记录 hash=cf0b10fdb42a）：
+  copy_overrides today.todo.boardingCareCta active=1 => {"text":"去打卡 ›"}   ← 旧覆盖压住码内默认/dist
+
+== B. 重跑 db:migrate → 0091 真落地 ==
+[migrate] 重放仅应用 0091（hash=cf0b10fdb42a 重新登记），直读：
+  copy_overrides today.todo.boardingCareCta active=1 => {"text":"寄养打卡 ›"}   ← 旧覆盖被改写，端口值归正
+（已对齐库重放零副作用：UPDATE 命中行写同值，行数不变、键保留）
+
+== C. 端口读口（丽丽会话，dev-login seed_kimi_staff3）==
+GET /trpc/config.activeCopyTexts：
+  active 行总数 = 4300
+  boardingCareCta => [{"key":"today.todo.boardingCareCta","text":"寄养打卡 ›"}]
+  全表「去打卡」命中 = 0
+GET /trpc/staffTask.listMy（丽丽）：
+  kind=boarding refId=01M5CXJGG7SN2TK9YZ50YHB6YR title=「旺财 · 今日寄养照护」
+  sub=「在住 · 今日照护未打卡」 link=/boarding/01M5CXJGG2Z87B1R34E988XH77/checkin alert=true
+
+== D. 页面探针（staff preview@7143 /today，390×844，headless Edge CDP 独立 profile 不抢前台）==
+  待办区 frontdesk-todos 渲染 = true
+  「寄养打卡」×1（工位 CTA 可见文案）／「去打卡」×0（DOM/文案层零残留）
+  Dock 四槽：工位→/today、预约→/schedule、打卡→/attendance（考勤，含「打卡\n上下班打卡」卡）、我的→/me —— 不变
+  工位 CTA：「寄养打卡 ›」→ /boarding/01M5CXJGG2Z87B1R34E988XH77/checkin —— 不变
+  CTA 落页只读导航：/boarding/:id/checkin 页含「寄养打卡」标题（未打卡、未写库）
+
+== E. 结论 ==
+①工位 CTA 可见文案＝「寄养打卡 ›」✅ ②DOM/文案层无「去打卡」✅
+③Dock「打卡」→考勤、工位→寄养打卡路由均不变 ✅ ④0091 把 live copy_overrides 旧覆盖改写归正，非只改 dist ✅
