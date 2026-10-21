@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-21T06:29:17.375Z",
+  "health": {
+    "ok": true,
+    "ts": 1792564157363
+  },
+  "appointmentListMine": {
+    "fixture": {
+      "id": "pd59_b720_opinion_appointment",
+      "status": "in_service",
+      "type": "grooming"
+    },
+    "inServiceCount": 1
+  },
+  "dashboardStats": {
+    "todayCount": 1,
+    "inServiceCount": 1,
+    "todo": {
+      "pending": 0,
+      "unassigned": 0,
+      "cancelRequested": 0,
+      "unpaid": 0,
+      "total": 0
+    }
+  }
+}

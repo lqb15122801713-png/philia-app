@@ -1,0 +1,71 @@
+{
+  "at": "2026-10-21T06:18:15.333Z",
+  "customer": "http://127.0.0.1:7260",
+  "merchant": "http://127.0.0.1:7261",
+  "results": [
+    {
+      "id": "B-7202 待办去处理为 ≥44px 按钮",
+      "ok": false,
+      "detail": "去处理:18px/underline",
+      "measurements": [
+        {
+          "text": "去处理",
+          "tag": "A",
+          "height": 18,
+          "width": 36,
+          "decoration": "underline",
+          "display": "block",
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "id": "B-7201 无进行中预约时 hero 单一主操作",
+      "ok": true,
+      "detail": "primary=home-banner-cta",
+      "measurements": {
+        "primaryIds": [
+          "home-banner-cta"
+        ],
+        "actions": [
+          {
+            "id": "home-banner-cta",
+            "background": "rgb(250, 247, 240)",
+            "color": "rgb(92, 80, 64)",
+            "height": 44,
+            "filled": true
+          }
+        ],
+        "serviceProgress": false
+      }
+    },
+    {
+      "id": "B-7201 有进行中预约时状态卡单一主操作",
+      "ok": false,
+      "detail": "primary=home-banner-cta,home-service-pickup",
+      "measurements": {
+        "primaryIds": [
+          "home-banner-cta",
+          "home-service-pickup"
+        ],
+        "actions": [
+          {
+            "id": "home-banner-cta",
+            "background": "rgb(250, 247, 240)",
+            "color": "rgb(92, 80, 64)",
+            "height": 44,
+            "filled": true
+          },
+          {
+            "id": "home-service-pickup",
+            "background": "rgb(44, 40, 34)",
+            "color": "rgb(250, 247, 240)",
+            "height": 44,
+            "filled": true
+          }
+        ],
+        "serviceProgress": true
+      }
+    }
+  ]
+}
