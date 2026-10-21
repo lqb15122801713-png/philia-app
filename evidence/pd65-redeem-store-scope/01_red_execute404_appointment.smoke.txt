@@ -1,0 +1,78 @@
+
+[1] create：占槽 / 防超卖 / 各类校验
+  ✓ create 成功：批次 S4 落库即 confirmed + 6 位去混淆人工码 + payment_mode 快照 + 价格快照
+  ✓ S4：appointment.confirmed 随 create 落 user+store 双频道
+  ✓ 事务占槽：booked_count 0→1
+  ✓ S4：未指定 staffId → 自动派单唯一空闲 groomer（staff_id=st-e，assignSource=auto）
+  ✓ appointment.created → store 频道落 outbox
+  ✓ S4：自动派单 assigned 事件（staff+user 双频道，payload.by=auto）
+  ✓ S4：唯一 groomer（st-e）同时段已占 → 第二单 CONFLICT「该时段已约满」（B/C 同根双保险，不超卖）
+  ✓ 宠物非本人 → FORBIDDEN
+  ✓ type 与服务项不一致 → BAD_REQUEST
+  ✓ pass_deduct 无可用次卡 → BAD_REQUEST「暂无可用次卡」
+  ✓ 非营业时间（23:00）→ BAD_REQUEST
+  ✓ 过去时间 → BAD_REQUEST
+
+[2] getCode 签名与 verifyCode 窗口/过期规则
+  ✓ S4：confirm 幂等——confirmed 单连调两次均成功（状态不变）
+  ✓ S4：confirm 幂等零副作用（无新增 outbox 事件）
+  ✓ appointment.confirmed → user 频道（仍 1 条：create 所发，confirm 幂等不增发）
+  ✓ S4 兼容：历史 pending 单 confirm → confirmed + confirmed 事件（user 频道累计 2 条）
+  ✓ payload 结构 {v:2, aid, tw, exp, sig} 正确
+  ✓ exp = scheduled_start + 4h
+  ✓ verifyCode：原样 payload 验签通过
+  ✓ verifyCode：篡改 aid → 拒绝
+  ✓ verifyCode：篡改 exp → 拒绝
+  ✓ verifyCode：tw-1 上一窗口接受
+  ✓ verifyCode：tw-2 窗口拒绝
+  ✓ verifyCode：过期 exp 拒绝（即便签名自洽）
+
+[3] checkin：到店登记（S1-R1 豁免归属/不认领）/ 幂等 / 防爆破限流
+  ✓ S1-R1：自动派单单（st-e）被 B 扫码核销 → in_service 且原指派保留（staff_id 仍 st-e，claimed=false）
+  ✓ grooming 核销 → nextRoute=/execute/:id
+  ✓ S1-R1 断言②：未指派单 B 核销成功 → staff_id 仍 NULL（不认领，claimed=false）
+  ✓ S1-R1 断言②：未指派核销不补发 appointment.assigned（该单 assigned 事件前后均 0 条）
+  ✓ appointment.checkedin → appointment 频道
+  ✓ S1-R1：已指派 A 的单被 B 核销成功 → in_service 且 staff_id 仍为 st-a（原指派保留）
+  ✓ 非同店员工核销 → FORBIDDEN
+  ✓ 批次 S1：groomer 核销 → FORBIDDEN「核销需前台账号操作」
+  ✓ 重复扫码幂等：返回当前进度（in_service + 6 步）
+  ✓ 幂等不产生新事件 / 新记录
+  ✓ 连续 5 次核销失败均按 NOT_FOUND 正常报错
+  ✓ 第 6 次（即便持有效码）→ TOO_MANY_REQUESTS（锁 10 分钟）
+
+[3b] PD-65：同店前台核销他人 grooming 单 → 真进服务（toast 与 execute 一致）
+  ✓ PD-65 失败路径：groomer 核销 → FORBIDDEN「核销需前台账号操作」（无成功 toast 前提）
+  ✓ PD-65 失败路径无脏状态：status 仍 confirmed / checked_in_at NULL / 六步 0 行
+  ✓ PD-65 成功路径：同店前台核销他人单 → in_service（状态真变更）且原指派保留 staff_id=st-e
+
+[smoke] 未捕获异常： TRPCError: 预约不存在
+    at assertAppointmentAccess (E:\KIMI code\pd65-redeem-store-scope\server\src\trpc.ts:268:9)
+    at async <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routers\appointment.ts:1321:18)
+    at async resolveMiddleware (E:\KIMI code\pd65-redeem-store-scope\server\node_modules\@trpc\server\src\unstable-core-do-not-import\procedureBuilder.ts:576:22)
+    at async callRecursive (E:\KIMI code\pd65-redeem-store-scope\server\node_modules\@trpc\server\src\unstable-core-do-not-import\procedureBuilder.ts:642:20)
+    at async callRecursive (E:\KIMI code\pd65-redeem-store-scope\server\node_modules\@trpc\server\src\unstable-core-do-not-import\procedureBuilder.ts:642:20)
+    at async callRecursive (E:\KIMI code\pd65-redeem-store-scope\server\node_modules\@trpc\server\src\unstable-core-do-not-import\procedureBuilder.ts:642:20)
+    at async procedure (E:\KIMI code\pd65-redeem-store-scope\server\node_modules\@trpc\server\src\unstable-core-do-not-import\procedureBuilder.ts:682:20)
+    at async <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\node_modules\@trpc\server\src\unstable-core-do-not-import\router.ts:474:20)
+    at async <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routers\__tests__\appointment.smoke.ts:616:17) {
+  cause: undefined,
+  code: 'NOT_FOUND'
+}
+[smoke] 临时目录清理失败（不影响验证结果，系统临时目录会自行回收）: C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-MzTFR5 Error: EBUSY: resource busy or locked, unlink 'C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-MzTFR5\smoke.db'
+    at unlinkSync (node:fs:1889:11)
+    at _unlinkSync (node:internal/fs/rimraf:216:14)
+    at rimrafSync (node:internal/fs/rimraf:197:7)
+    at node:internal/fs/rimraf:255:9
+    at Array.forEach (<anonymous>)
+    at _rmdirSync (node:internal/fs/rimraf:252:7)
+    at rimrafSync (node:internal/fs/rimraf:195:7)
+    at rmSync (node:fs:1263:10)
+    at <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routers\__tests__\appointment.smoke.ts:1880:5) {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'unlink',
+  path: 'C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-appt-smoke-MzTFR5\\smoke.db'
+}
+
+1 项验证失败 ❌

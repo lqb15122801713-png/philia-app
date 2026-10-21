@@ -1,0 +1,100 @@
+
+[1] 商品目录：过滤/搜索/分页/上下架 + 商家编辑归属
+  ✓ keyword 搜索命中 pd-a
+  ✓ category 过滤命中 pd-b
+  ✓ 仅上架可见（pd-off 不出现，共 3 件）
+  ✓ 分页：pageSize=2 → 2+1，total=3
+  ✓ storeId 过滤仅他店商品
+  ✓ getProduct 详情（含门店名）
+  ✓ 下架商品 getProduct → NOT_FOUND
+  ✓ upsertProduct 新增（本店 storeId）
+  ✓ upsertProduct 编辑/下架/库存编辑
+  ✓ 越店编辑商品 → FORBIDDEN
+
+[2] createOrder：合并行/扣库存/服务端金额/快照/事件
+  ✓ 下单成功：pending + 订单号 P+日期+随机（人类可读）
+  ✓ total_fen 服务端口径（3×10000=30000，不信任前端金额）
+  ✓ items 快照合并（qty=3）且含 name/priceFen/image
+  ✓ 地址快照（receiver/phone/detail）
+  ✓ pd-a 库存 5 → 2 正确扣减
+  ✓ order.created 事件落 store:s-1
+  ✓ 含下架商品下单 → BAD_REQUEST
+  ✓ 超库存下单（pd-a 剩 2 买 3）→ CONFLICT 库存不足
+  ✓ 跨店商品一单 → BAD_REQUEST
+  ✓ 校验失败后 pd-a 库存未被误扣（仍 2）
+
+[3] 防超卖：库存 1 件，两人并发 createOrder → 仅一单成功
+  ✓ 恰好一单成功、一单 CONFLICT「库存不足」（不超卖）
+  ✓ pd-b 库存扣到 0（不为负）
+
+[4] pay.createOrder(mall) → 篡改签名/金额不符被拒 → orders/mock-callback → paid + 流水 + 事件
+  ✓ 他人订单 pay.createOrder → FORBIDDEN
+  ✓ pay.createOrder（mock）：mock_ 通道单号 + payParams 标记 + 金额=订单实算
+  ✓ 越权 orders/mock-callback（他人支付单）→ 403
+  ✓ 未登录 orders/mock-callback → 401
+[pay] ALERT 支付单回调验签失败 provider=mock: Error: mock 回调验签失败（签名不符）
+    at MockPayProvider.verifyCallback (E:\KIMI code\pd65-redeem-store-scope\server\src\payments\mockPay.ts:148:13)
+    at processPayOrderCallback (E:\KIMI code\pd65-redeem-store-scope\server\src\routes\payOrdersCallback.ts:84:31)
+    at <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routes\payOrdersCallback.ts:154:28)
+    at async dispatch (file:///E:/KIMI%20code/pd65-redeem-store-scope/server/node_modules/hono/dist/compose.js:22:17)
+    at async <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routers\__tests__\mall.smoke.ts:124:5)
+    at async dispatch (file:///E:/KIMI%20code/pd65-redeem-store-scope/server/node_modules/hono/dist/compose.js:22:17)
+    at async file:///E:/KIMI%20code/pd65-redeem-store-scope/server/node_modules/hono/dist/hono-base.js:307:25
+    at async <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routers\__tests__\mall.smoke.ts:307:21)
+  ✓ 篡改签名回调被拒（400 INVALID_SIGNATURE）
+  ✓ 拒签后订单仍 pending 且无流水
+[pay] ALERT callback 金额不符：payOrder=PO-20261021-001 应付=30000fen 实报=999fen paymentId=mock_01M5F26PH6TVNHT5RCZKKQ2VCY
+  ✓ 金额不符回调被拒（400 AMOUNT_MISMATCH）
+  ✓ 拒额后订单仍 pending 且无流水
+  ✓ orders/mock-callback 成功（code=SUCCESS）
+  ✓ 订单 pending → paid
+  ✓ payments 流水 1 条（mock/30000/paid/paymentId 对齐/含回调原文）
+  ✓ order.paid 事件落 user:u-c1
+  ✓ u-c1 收到 order.paid 站内通知（支付成功文案）
+
+[5] 幂等：回调重复投递 → 成功且无重复流水/事件
+  ✓ 演示端点重复投递 → 200 且 idempotent=true
+  ✓ 平台回调端点重复投递 → 200 且 idempotent=true
+  ✓ 无重复流水（仍 1 条）
+  ✓ 无重复 order.paid 事件（仍 1 条）
+  ✓ 已支付订单 pay.createOrder → BAD_REQUEST
+
+[6] shipOrder → receiveOrder 状态机与事件
+  ✓ 越店发货（u-m2 发 s-1 订单）→ FORBIDDEN
+  ✓ pending 订单不可发货（orderB 未支付）→ BAD_REQUEST
+  ✓ 发货成功：shipped + tracking_no
+  ✓ order.shipped 事件落 user:u-c1
+  ✓ 重复发货 → BAD_REQUEST
+  ✓ 他人收货 → FORBIDDEN
+  ✓ 确认收货：shipped → received
+  ✓ order.received 事件落 store:s-1
+  ✓ 重复收货 → BAD_REQUEST
+
+[7] listMyOrders 分组 / listStoreOrders 队列
+  ✓ listMyOrders：六态分组齐全，received 含 order1（带门店名）
+  ✓ 未抢到库存者无 pd-b 订单（groups 全空）
+  ✓ 队列夹具：c2 下单并 mock 支付成功
+  ✓ listStoreOrders：paid/shipped/refunding 三队列；新支付单在 paid 队列（待发货，含客户昵称）
+  ✓ 越店商家看不到他店队列（m2 的 s-2 队列为空）
+
+[8] assertPaymentConfig：生产禁 mock / wechat 缺配置报错（不静默降级）
+  ✓ 生产构建 + PAYMENT_PROVIDER=mock → 启动报错
+  ✓ PAYMENT_PROVIDER=wechat 缺 WECHAT_* → 启动报错（列出缺失项）
+  ✓ 开发态 mock 配置 → 校验通过
+[smoke] 临时目录清理失败（不影响验证结果，系统临时目录会自行回收）: C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-4UuIbo Error: EBUSY: resource busy or locked, unlink 'C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-4UuIbo\smoke.db'
+    at unlinkSync (node:fs:1889:11)
+    at _unlinkSync (node:internal/fs/rimraf:216:14)
+    at rimrafSync (node:internal/fs/rimraf:197:7)
+    at node:internal/fs/rimraf:255:9
+    at Array.forEach (<anonymous>)
+    at _rmdirSync (node:internal/fs/rimraf:252:7)
+    at rimrafSync (node:internal/fs/rimraf:195:7)
+    at rmSync (node:fs:1263:10)
+    at <anonymous> (E:\KIMI code\pd65-redeem-store-scope\server\src\routers\__tests__\mall.smoke.ts:463:5) {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'unlink',
+  path: 'C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-mall-smoke-4UuIbo\\smoke.db'
+}
+
+全部冒烟验证通过 ✅
