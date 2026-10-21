@@ -26,6 +26,8 @@ const DASH_COPY_TABLE = {
   'dash.todoCancelHint': '客户申请取消，待审批',
   'dash.todoUnpaidLabel': '待收款',
   'dash.todoUnpaidHint': '服务已完成，未登记收款',
+  /* PD-61：todo 四件一一对应补齐「待派单」行（confirmed 且无 staff_id 的 grooming 单） */
+  'dash.todoUnassignedLabel': '待派单',
   'dash.todoOverdueLabel': '超期寄养',
   'dash.todoOverdueHint': '超过预计退房时间仍在店',
   'dash.todoPendingLabel': '历史待确认单',

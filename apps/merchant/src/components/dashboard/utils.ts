@@ -43,6 +43,61 @@ export type ChainSix = NonNullable<ChainDashboardData['total']>
 /** 晨报待办合计（四项待办；与 chainDashboard 同口径，超期寄养单列不双计） */
 export const todoGrandTotal = (s: DashboardStats): number => s.todo.total
 
+/* ------------------------------------------------------------------ */
+/* PD-61：首页顶部待办行与「待办合计」同源同构                              */
+/* ------------------------------------------------------------------ */
+
+/** 首页顶部待办/异常行键 */
+export type TodoAlertRowKey =
+  /* todo 四件：计入「待办合计」（与 dashboardStats.todo.total 同一构成） */
+  | 'cancelRequested'
+  | 'unassigned'
+  | 'unpaid'
+  | 'pending'
+  /* 超期寄养：单列显示、不计入待办合计（PD-56「超期单列不双计」） */
+  | 'overdue'
+  /* 独立域行（各有专属待办块/页面）：不计入待办合计 */
+  | 'refund'
+  | 'ticket'
+  | 'invoice'
+  | 'phoneAppeal'
+
+export interface TodoAlertRow {
+  key: TodoAlertRowKey
+  count: number
+  /** true＝计入「待办合计」（todo 四件，与 todo.total 同源同构）；false＝单列/独立域不计入 */
+  countsTowardTodoTotal: boolean
+}
+
+/**
+ * 首页顶部待办行唯一取数口（PD-61）：
+ * - todo 四件一一对应成行：cancelRequested / unassigned / unpaid / pending ——计入待办合计，
+ *   其和经 todoAlertCountedTotal 派生，任意种子下等于 dashboardStats.todo.total；
+ * - 超期寄养单列显示、不计入待办合计（PD-56 口径不双计）；
+ * - 退款申请 / 客服工单 / 发票申请 / 换绑申诉为独立域行，不混入待办合计。
+ * 渲染层按 count>0 过滤展示；行序即首页顶部行序。
+ */
+export function buildTodoAlertRows(
+  stats: DashboardStats,
+  extras: { refund?: number; ticket?: number; invoice?: number; phoneAppeal?: number } = {},
+): TodoAlertRow[] {
+  return [
+    { key: 'cancelRequested', count: stats.todo.cancelRequested, countsTowardTodoTotal: true },
+    { key: 'refund', count: extras.refund ?? 0, countsTowardTodoTotal: false },
+    { key: 'unpaid', count: stats.todo.unpaid, countsTowardTodoTotal: true },
+    { key: 'unassigned', count: stats.todo.unassigned, countsTowardTodoTotal: true },
+    { key: 'overdue', count: stats.overdueBoardingCount, countsTowardTodoTotal: false },
+    { key: 'pending', count: stats.todo.pending, countsTowardTodoTotal: true },
+    { key: 'ticket', count: extras.ticket ?? 0, countsTowardTodoTotal: false },
+    { key: 'invoice', count: extras.invoice ?? 0, countsTowardTodoTotal: false },
+    { key: 'phoneAppeal', count: extras.phoneAppeal ?? 0, countsTowardTodoTotal: false },
+  ]
+}
+
+/** 待办行计入合计之和（＝todo 四件合计；任意种子下等于 todo.total，超期寄养不双计） */
+export const todoAlertCountedTotal = (rows: TodoAlertRow[]): number =>
+  rows.reduce((n, r) => (r.countsTowardTodoTotal ? n + r.count : n), 0)
+
 export const pad2 = (n: number): string => String(n).padStart(2, '0')
 
 /** HH:mm（24 小时制） */

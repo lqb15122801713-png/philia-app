@@ -1,0 +1,5 @@
+旧可见五行= {"refund":1,"unpaid":74,"overdue":3,"pending":3,"ticket":1} 朴素和= 82
+todo.total= 82 （= pending3+unassigned5+cancel0+unpaid74）
+巧合相等? true
+旧行集 todo 来源行合计= 77 ≠ todo.total 82（缺 unassigned 行）
+旧行集混入超期寄养 3 （PD-56 口径=单列不双计）→ 构成不同、和值巧合
