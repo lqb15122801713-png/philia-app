@@ -215,10 +215,13 @@
  * foot=开发者管理端）。<xl 藏形（dock 顶替，双形态互斥），≥xl 236px 常驻。
  * ========================================================================== */
 .wrail {
-  width: 236px; flex: none; height: 100%; overflow-y: auto;
+  width: 236px; flex: none; height: 100%; overflow: hidden;
   background: var(--wsk-grad-rail); color: hsl(var(--background) / .72);
   display: flex; flex-direction: column; padding: 18px 12px;
 }
+/* PD-54 NAV_CHROME_CLIP：口组区独立滚动，foot（运营后台端活动项+店主身份卡）钉住轨底
+   常驻视口——800px 高视口进页不再裁没关键铬；口组 IA／44px 触件／断点互斥全不动 */
+.wrail .wrail-body { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -12px; padding: 0 12px; }
 @media (max-width: 1279.5px) { .wrail { display: none; } }
 .wrail .wm { padding: 2px 10px 16px; font-family: var(--wsk-serif); font-size: 17px; font-weight: 700; letter-spacing: .05em; color: hsl(var(--background)); }
 .wrail .gp { padding: 14px 10px 6px; font-family: var(--wsk-mono); font-size: 12px; letter-spacing: .18em; color: hsl(var(--background) / .35); }
@@ -238,7 +241,7 @@
   background: var(--wsk-danger); color: hsl(var(--destructive-foreground));
   font-family: var(--wsk-mono); font-size: 12px; font-weight: 700; line-height: 17px; text-align: center;
 }
-.wrail .ft { margin-top: auto; padding-top: 14px; }
+.wrail .ft { flex: none; margin-top: auto; padding-top: 14px; }
 .wrail .ft .card { padding: 10px; font-size: 12px; line-height: 1.7; color: hsl(var(--background) / .4); }
 .wrail .ft .gp { padding-top: 6px; }
 
