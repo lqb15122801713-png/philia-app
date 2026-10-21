@@ -1,0 +1,74 @@
+{
+  "gate": "PD-62 占位层首屏可视（1280×800 boundingBox）",
+  "viewport": {
+    "w": 1280,
+    "h": 800
+  },
+  "minVisible": 32,
+  "measured": {
+    "innerW": 1280,
+    "innerH": 800,
+    "scrollY": 0,
+    "killStrip": {
+      "x": 254,
+      "y": 80,
+      "w": 993,
+      "h": 94
+    },
+    "homeCard": {
+      "x": 254,
+      "y": 188,
+      "w": 993,
+      "h": 814
+    },
+    "tierDaily": {
+      "x": 270,
+      "y": 230,
+      "w": 961,
+      "h": 242
+    },
+    "tierCareful": {
+      "x": 270,
+      "y": 631,
+      "w": 961,
+      "h": 357
+    },
+    "tierPending": {
+      "x": 270,
+      "y": 488,
+      "w": 961,
+      "h": 127
+    },
+    "cardStored": {
+      "x": 270,
+      "y": 512,
+      "w": 312,
+      "h": 103
+    },
+    "cardReportSpec": {
+      "x": 594,
+      "y": 512,
+      "w": 312,
+      "h": 103
+    },
+    "pendingHint": null,
+    "advanced": {
+      "x": 254,
+      "y": 1016,
+      "w": 993,
+      "h": 84
+    },
+    "docH": 800,
+    "tierCounts": {
+      "daily": 5,
+      "careful": 8,
+      "pending": 2
+    }
+  },
+  "assert": {
+    "target": "console-tier-pending",
+    "pass": true,
+    "why": "console-tier-pending.y=488 h=127 → y+32=520 ≤ 800"
+  },
+  "at": "2026-10-21T09:54:55.568Z"
+}
