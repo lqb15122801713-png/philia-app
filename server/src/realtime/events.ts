@@ -11,6 +11,7 @@ export const EventType = {
   AppointmentConfirmed:  'appointment.confirmed',    // → customer user 频道
   AppointmentAssigned:   'appointment.assigned',     // → staff + customer
   AppointmentCheckedIn:  'appointment.checkedin',    // → appointment 频道（三端）+ store 频道（B2-8）
+  AppointmentCheckinVoided: 'appointment.checkinVoided', // PD-66 撤核销（回 confirmed 可再核销）→ appointment + store 双频道
   StepUpdated:           'step_updated',             // → appointment 频道（照片+状态）
   StepFlagged:           'step_flagged',             // 商家打标重拍 → staff + appointment
   AppointmentCompleted:  'appointment.completed',    // → appointment 频道（三端）+ store 频道（B2-8）
