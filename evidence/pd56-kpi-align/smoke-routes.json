@@ -1,0 +1,21 @@
+{
+  "summary": {
+    "passed": 113,
+    "total": 119,
+    "merchantFailures": 0,
+    "customerFailures": 6
+  },
+  "environment": {
+    "nodeWebSocketFlag": "--experimental-websocket",
+    "urls": "disposable local API and three app servers"
+  },
+  "failures": [
+    { "app": "customer", "path": "/booking", "reason": "anchor not matched: 预约洗护" },
+    { "app": "customer", "path": "/booking/success?aid=<smoke-appointment-id>", "reason": "success-page anchors not matched" },
+    { "app": "customer", "path": "/booking/success/?aid=<smoke-appointment-id>", "reason": "success-page anchors not matched" },
+    { "app": "customer", "path": "/booking/grooming", "reason": "anchor not matched: 预约洗护" },
+    { "app": "customer", "path": "/booking/grooming/", "reason": "anchor not matched: 预约洗护" },
+    { "app": "customer", "path": "/me/card", "reason": "anchor not matched: 会员码" }
+  ],
+  "scopeNote": "All six failures are existing customer copy-anchor assertions outside PD-56; no customer code was changed."
+}

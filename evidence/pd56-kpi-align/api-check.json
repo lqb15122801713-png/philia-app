@@ -1,0 +1,23 @@
+{
+  "fixture": {
+    "pending": 82,
+    "overdueBoarding": 3,
+    "database": "disposable local verification database"
+  },
+  "dashboardStats": {
+    "todoTotal": 82,
+    "todo": {
+      "pending": 82,
+      "unassigned": 0,
+      "cancelRequested": 0,
+      "unpaid": 0,
+      "total": 82
+    },
+    "overdueBoardingCount": 3
+  },
+  "chainDashboard": {
+    "storeTodoTotals": [82],
+    "totalTodoTotal": 82
+  },
+  "sameTodoTotal": true
+}

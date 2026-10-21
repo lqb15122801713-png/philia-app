@@ -1,0 +1,10 @@
+PD-56 browser verification: http://127.0.0.1:7156/dashboard
+Role: merchant_owner (dev seed login)
+
+Rendered DOM evidence:
+- 连锁视图 / 合计: 待办合计 82; 超期寄养 3
+- 菲丽亚宠物·示例店: 待办合计 82; 超期寄养 3
+- MORNING POST / 晨报: 待办合计 82; 超期寄养 3
+- 异常卡: 超期寄养 3; 历史待确认单 82
+
+The morning postcard and chain dashboard render the same todo total; overdue boarding remains a separate KPI.
