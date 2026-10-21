@@ -1,0 +1,40 @@
+
+[段①] 新库全迁移（含 0094）
+  ✓ 全迁移应用条数=journal 条数（含 0094）
+  ✓ 重放零新增（__drizzle_migrations 不变）
+  ✓ 新库 home.banner 仅种子 v1 live 一行
+  ✓ 新库全表零 pending
+
+[段②] 复刻现场（pre-0094）→ 应用 0094
+  ✓ 现场库迁到 0092 封顶（无 0094）
+  ✓ 现场就位：home.banner pending=3
+  ✓ 0094 经 drizzle migrator 应用（+1）
+  ✓ 01M5CW2HP3F4ASD64R03GQ1ZFF pending→archived
+  ✓ 01M5CW2HP3F4ASD64R03GQ1ZFF 留痕：content_json 原文不动
+  ✓ 01M5CW2HP3F4ASD64R03GQ1ZFF version 不改
+  ✓ 01M5CW2J26H0C69EV8X9ZPP1GB pending→archived
+  ✓ 01M5CW2J26H0C69EV8X9ZPP1GB 留痕：content_json 原文不动
+  ✓ 01M5CW2J26H0C69EV8X9ZPP1GB version 不改
+  ✓ 01M5CJ1VSGY044WYZAQM6J3V6B pending→archived
+  ✓ 01M5CJ1VSGY044WYZAQM6J3V6B 留痕：content_json 原文不动
+  ✓ 01M5CJ1VSGY044WYZAQM6J3V6B version 不改
+  ✓ live 行 01M5CJ3… 仍 live 且全字段零改动
+  ✓ 清理后 home.banner pending=0
+  ✓ 它槽 decoy pending 不误伤
+  ✓ 行数守恒（归档留痕不物理删）
+  ✓ 0094 重放 rowsAffected=0（幂等）
+  ✓ migrator 重放零新增
+
+[段③] 运行时链路：liveMap/list
+  ✓ server 启动健康
+  ✓ owner dev-login 签 cookie
+  ✓ liveMap home.banner=live 件（/brand/banner-home-1200.png）
+  ✓ liveMap 全槽无探测 alt（PD48/探测）
+  ✓ liveMap 不含 pending 三 id 内容痕迹
+  ✓ list home.banner pending=[]（待审清零）
+  ✓ list home.banner live=01M5CJ3…
+  ✓ list archived 含三行留痕
+  ✓ 匿名 list 硬拒（401/403）
+
+ALL PASS
+  [清理] 临时目录稍后自清: EBUSY
