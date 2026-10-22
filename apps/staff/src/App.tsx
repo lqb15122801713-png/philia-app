@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import RequireStaff from './components/RequireStaff'
 import StaffDock, { type StaffDockActive } from './components/StaffDock'
 import BoardingCheckinPage from './pages/BoardingCheckinPage'
+import AgreementsPage from './pages/AgreementsPage'
 import DevLoginPage from './pages/DevLoginPage'
 import ExecutePage from './pages/ExecutePage'
 import MePage from './pages/MePage'
@@ -73,6 +74,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<DevLoginPage />} />
           <Route path="/dev-login" element={<Navigate to="/login" replace />} />
+          {/* PD-80：协议真页未登录可访（登录前须可读；不占鉴权路由表） */}
+          <Route path="/agreements" element={<AgreementsPage />} />
           <Route
             path="/*"
             element={

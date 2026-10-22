@@ -10,6 +10,10 @@ const LOGIN_COPY_TABLE = {
   'login.manifesto.line2': '被托付的小生命',
   'login.storeLine': '菲丽亚宠物·示例店 · 员工内测通道',
   'login.agreement': '登录即同意《员工内测协议》与《服务影像记录规范》',
+  'login.agreement.lead': '登录即同意',
+  'login.agreement.and': '与',
+  'login.agreement.staff': '《员工内测协议》',
+  'login.agreement.privacy': '《服务影像记录规范》',
 
   'login.gate.title': '内测口令',
   'login.gate.hint': '如门店提供内测口令，请与员工账号一并输入。',

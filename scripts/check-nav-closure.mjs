@@ -183,6 +183,7 @@ const ROUTES = [
   { app: 'staff', path: `/execute/${APPT_ID}`, expect: 'sub', note: '异常态守卫页亦须出口' },
   { app: 'staff', path: `/boarding/${STAY_ID}/checkin`, expect: 'sub', note: '异常态守卫页（W1 弱出口已按钮化）' },
   { app: 'staff', path: '/dev-login', expect: 'gate' },
+  { app: 'staff', path: '/agreements', expect: 'sub', note: 'PD-80：协议与规范真页（未登录可访，SkBackBar fallback=/login）' },
   { app: 'staff', path: '/', expect: 'sub', note: '重定向→/today' },
   /* 批次 staff-2（R7~R10）：/me 列表进入的子页，统一 PageHeader 返回条（aria-label 返回，backTo=/me） */
   { app: 'staff', path: '/attendance', expect: 'sub', note: '批次 staff-2 R7~R10' },

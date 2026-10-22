@@ -391,6 +391,13 @@ export default function AttendancePage() {
       showToast(ATTENDANCE_COPY['attendance.makeup.needReason']);
       return;
     }
+    /* PD-80 去美式 locale 外露：原生 date/time 输入改文本输入（中文格式提示），提交前码内校验兜底（原 min/max 口径保留） */
+    const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(mkDate) && !Number.isNaN(new Date(`${mkDate}T00:00:00`).getTime());
+    const timeOk = /^([01]\d|2[0-3]):[0-5]\d$/.test(mkTime);
+    if (!dateOk || !timeOk || mkDate < `${monthStr}-01` || mkDate > todayStr) {
+      showToast(ATTENDANCE_COPY['attendance.makeup.invalid']);
+      return;
+    }
     const [h, m] = mkTime.split(':').map((s) => parseInt(s, 10));
     const ts = new Date(`${mkDate}T00:00:00`);
     ts.setHours(h || 0, m || 0, 0, 0);
@@ -723,10 +730,10 @@ export default function AttendancePage() {
           </label>
           <input
             id="mk-date"
-            type="date"
+            type="text"
+            inputMode="numeric"
             value={mkDate}
-            min={`${monthStr}-01`}
-            max={todayStr}
+            placeholder={ATTENDANCE_COPY['attendance.makeup.datePh']}
             onChange={(e) => setMkDate(e.target.value)}
             className="sk-input"
           />
@@ -747,8 +754,10 @@ export default function AttendancePage() {
           </label>
           <input
             id="mk-time"
-            type="time"
+            type="text"
+            inputMode="numeric"
             value={mkTime}
+            placeholder={ATTENDANCE_COPY['attendance.makeup.timePh']}
             onChange={(e) => setMkTime(e.target.value)}
             className="sk-input"
           />
