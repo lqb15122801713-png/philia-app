@@ -440,7 +440,7 @@ export default function CashierClosePage() {
       ) : null}
 
       {/* 详情 / 原因弹层 */}
-      <DayCloseDetailDialog row={detailRow} onClose={() => setDetailRow(null)} />
+      <DayCloseDetailDialog row={detailRow} isOwner={role.isOwner} onClose={() => setDetailRow(null)} />
       <CloseReasonDialog
         target={reasonTarget?.row ?? null}
         mode={reasonTarget?.mode ?? 'reverse'}

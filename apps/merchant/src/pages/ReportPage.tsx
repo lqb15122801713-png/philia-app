@@ -9,6 +9,8 @@
  * 页骨架=MainScaffold（title=报表名）+ 月份选择器（input type=month，默认当月，
  * 预埋页不渲染）+「导出 CSV」钮（**仅店主可见**——useMerchantRole().isOwner；
  * report.exportCsv+Blob 下载工艺照 CashierRefundsPage 先例；非店主不渲染）+
+ * 「打印」钮（PD-81 EXPORT_ENTRY_MISSING 补缺 · 仅店主同导出闸；window.print
+ * + @media print 隔离 #report-print-area，屏外全隐、打印头亮出表名+月份）+
  * 数据区（u3-tbl 表/u3-stat 卡照 FinancePage 惯例）+ 口径注记行（server note 透出）。
  * 大批片 2 · 三视图（owner 页头切换）：单店=门店下拉（listMine，选中店传 storeId）/
  * 分店=逐店并列（逐店传 storeId 调同一端点）/ 合计=scope:'chain'；manager 不出现切换
@@ -1826,13 +1828,37 @@ export default function ReportPage() {
               {exporting ? rpt('rpt.page.exporting') : rpt('rpt.page.exportCta')}
             </QuietButton>
           ) : null}
+          {/* PD-81：打印入口（EXPORT_ENTRY_MISSING 补缺 · 仅店主同导出闸口径不动；
+              window.print + @media print 隔离 #report-print-area，屏外全隐） */}
+          {role.isOwner && isSheet ? (
+            <QuietButton testid="report-print" onClick={() => window.print()}>
+              {rpt('rpt.page.printCta')}
+            </QuietButton>
+          ) : null}
         </div>
       }
       testid={`report-page-${key}`}
     >
-      {/* 大批片 5：周报卡（切换点亮时置于月报体上方） */}
-      {isSheet && weeklyOn ? <div className="mb-6">{renderWeekly()}</div> : null}
-      {isSheet ? renderSheet() : <EmbedBody />}
+      {/* PD-81 打印隔离锚：@media print 屏外全隐、仅报表体可见；
+          打印头（表名+月份）屏上 display:none、打印时亮出 */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #report-print-area, #report-print-area * { visibility: visible; }
+          #report-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          #report-print-area .report-print-head { display: block; }
+        }
+        .report-print-head { display: none; }
+      `}</style>
+      <div id="report-print-area">
+        <div className="report-print-head">
+          <h2>{rpt(TITLE_COPY[key])}</h2>
+          <p>{isSheet ? month : ''}</p>
+        </div>
+        {/* 大批片 5：周报卡（切换点亮时置于月报体上方） */}
+        {isSheet && weeklyOn ? <div className="mb-6">{renderWeekly()}</div> : null}
+        {isSheet ? renderSheet() : <EmbedBody />}
+      </div>
       {toastEl}
     </MainScaffold>
   );

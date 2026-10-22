@@ -1,0 +1,85 @@
+{
+  "window": "PD-81-merchant-dead-order-dayclose",
+  "base": {
+    "server": "http://localhost:7210",
+    "merchant": "http://localhost:7111",
+    "db": "file:E:/KIMI code/pd81-merchant-dead-order-dayclose/.runtime/pd81-1792678290558/philia.db"
+  },
+  "fixtures": {
+    "deadOrder": {
+      "id": "01M5H1E1PD81DEAD0RDER00000",
+      "orderNo": "P261022YKNXD2"
+    },
+    "controlOrder": {
+      "id": "01M9PD81CTRL00000000000000",
+      "orderNo": "P261022PD81C"
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：死单＋对照单已入临时库（¥19 发声橡胶球 ×2，status=paid）",
+      "detail": "P261022YKNXD2／P261022PD81C"
+    },
+    {
+      "ok": true,
+      "name": "server 就绪",
+      "detail": "http://localhost:7210"
+    },
+    {
+      "ok": true,
+      "name": "merchant dev 就绪",
+      "detail": "http://localhost:7111"
+    },
+    {
+      "ok": true,
+      "name": "日结正例：cashier.dayClose(actualCashFen=0) 冻结今日",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店主·敏慧人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "死单前台不可见（/orders 行＋全文双缺席）",
+      "detail": "{\"deadRow\":false,\"ctrlRow\":true,\"deadText\":false,\"ctrlText\":true,\"paidChip\":\"待发货 1\"}"
+    },
+    {
+      "ok": true,
+      "name": "对照单正常可见（不误伤）",
+      "detail": "待发货 1"
+    },
+    {
+      "ok": true,
+      "name": "待发货计数同源剔除死单（=1 非 2）",
+      "detail": "待发货 1"
+    },
+    {
+      "ok": true,
+      "name": "日结留痕列表出今日冻结单＋导出可达",
+      "detail": "{\"rows\":1,\"hasExport\":true}"
+    },
+    {
+      "ok": true,
+      "name": "日结单详情「打印日结单」入口可达（R18-01 可 RECAPTURED）",
+      "detail": "{\"dialog\":true,\"printBtn\":true,\"printText\":\"打印日结单\"}"
+    },
+    {
+      "ok": true,
+      "name": "报表 D1「导出 CSV」＋「打印」双入口可达",
+      "detail": "{\"exportBtn\":true,\"printBtn\":true,\"printArea\":true}"
+    },
+    {
+      "ok": true,
+      "name": "打印隔离生效（打印头亮出／钮区隐藏）",
+      "detail": "{\"headDisplay\":\"block\",\"printBtnHidden\":true}"
+    },
+    {
+      "ok": true,
+      "name": "死单库内仍在（status=paid · 零库写）",
+      "detail": "{\"id\":\"01M5H1E1PD81DEAD0RDER00000\",\"order_no\":\"P261022YKNXD2\",\"status\":\"paid\",\"total_fen\":1900}"
+    }
+  ]
+}
