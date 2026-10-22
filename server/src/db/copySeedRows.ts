@@ -28938,7 +28938,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "sk.apptHistoryNote",
   "domain": "staff:skeleton",
-  "text": "切到过去=历史单回看（唯一入口）",
+  "text": "选择过去的日期，可回看当天的服务单",
   "screen": "员工·预约",
   "position": "SchedulePage 页面内文案"
  },
@@ -29379,7 +29379,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "today.frontdesk.empty",
   "domain": "staff:today",
-  "text": "今天全店无预约——等自动接单，或把预约页分享给老客",
+  "text": "现在没有要你接待的预约——本店新单会自动派到队列",
   "screen": "员工·工位",
   "position": "TodayPage 页面内文案"
  },

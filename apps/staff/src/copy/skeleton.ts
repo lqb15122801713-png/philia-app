@@ -49,7 +49,7 @@ const SKELETON_COPY_TABLE = {
   'sk.apptEmpty': '这一天没有预约',
   'sk.apptTomorrowNote': '明日 {n} 单 · 早点休息',
   'sk.apptGap': '空档 {n} 分钟',
-  'sk.apptHistoryNote': '切到过去=历史单回看（唯一入口）',
+  'sk.apptHistoryNote': '选择过去的日期，可回看当天的服务单',
 
   /* ---- S-03 打卡 ---- */
   'sk.punchTitle': '打卡',
