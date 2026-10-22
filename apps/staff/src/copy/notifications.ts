@@ -10,6 +10,7 @@ const NOTIFICATIONS_COPY_TABLE = {
   'snt.title': '通知',
   'snt.no': 'NOTIFICATIONS',
   'snt.unreadLead': '未读 {n} 条',
+  'snt.unreadCapNote': '底栏「我的」角标最多显示 99+，此处为实际未读数',
   'snt.markAll': '全部已读',
   'snt.markAllDone': '已全部标记为已读',
   'snt.empty': '没有通知',

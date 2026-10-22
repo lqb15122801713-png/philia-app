@@ -23,11 +23,18 @@
  * - 片 3 B5-2（拍照只许现场拍，前端半）：upload 响应可携 exifTakenAt（server 从原图 EXIF
  *   DateTimeOriginal 解析；秒 epoch 或 ISO 串，原样透传不解释），flushRound 冲一条时把它
  *   放进 register 的 photo.clientTakenAt（addPhotos 入参透传，契约类型不变的可选扩展）。
+ * - PD-76（R6-02/R7-01 上传状态机）：记录可带 rejected 原因串（服务端拒收文案原样透传）。
+ *   register(addPhotos) 被服务端拒收（FORBIDDEN / 任意 BAD_REQUEST）→ 记录标 rejected 留在
+ *   队列（不再删除），flusher 之后跳过该条（不自动重试、不堵后续记录）；UI 在缩略图位单处
+ *   显示拒收态＋原因＋「重拍/重试」。retryQueuedPhoto(id) 清标记并立即补冲；removePhoto(id)
+ *   即「重拍」的丢弃语义。网络/瞬态错误（无 data.code）仍走 2s/5s/15s/60s 退避自动重试。
+ *   addPhotos 判定规则（服务端何时拒收）不在本文件、本令也不改。
  *
  * 不丢照片证明链（冲一条的顺序）：upload 成功 → register(addPhotos 落库) 成功 → 才删队列记录。
  * 任一步失败记录保留：瞬态失败按 2s/5s/15s/60s 退避重试同一条（不跳过、保序）；
- * 永久拒绝（步骤已 done/locked、超 max 上限等）重试永远不会成功，删记录防队列毒化并通知 UI。
- * 唯一会"丢"的情形是服务端永久拒绝——此时服务端已有等效数据或状态机已推进，本地副本无登记意义。
+ * 服务端永久拒绝（步骤已 done/locked、超 max 上限、拍摄时刻不在服务窗口等）重试无意义——
+ * PD-76 起不再静默删除：记录标 rejected＋原因文案留队（跳过不堵队），由 UI 单处显示并给人
+ * 「重拍/重试」选择；唯用户主动「重拍」（removePhoto）才丢本地副本。
  */
 
 import { safeUuid } from '@philia/shared/lib/safeUuid.ts'
@@ -42,15 +49,22 @@ export interface QueuedPhoto { id: string; aid: string; stepKey: string; blob: B
 export type PhotoTag = 'normal' | 'before' | 'after'
 
 /**
- * 队列记录的内部完整形态：契约 QueuedPhoto + 可选 tag。
- * pendingPhotos 按契约返回 QueuedPhoto[]，运行时记录携带 tag，
- * 用 photoTagOf() 读取（before_after 双卡槽按 tag 归位）。
+ * 队列记录的内部完整形态：契约 QueuedPhoto + 可选 tag + 可选 rejected。
+ * pendingPhotos 按契约返回 QueuedPhoto[]，运行时记录携带 tag/rejected，
+ * 用 photoTagOf() / photoRejectionOf() 读取（before_after 双卡槽按 tag 归位；
+ * PD-76：rejected=服务端拒收原因原文，非空即拒收态——flusher 跳过、UI 单处显示）。
  */
-export type QueuedPhotoRecord = QueuedPhoto & { tag?: PhotoTag }
+export type QueuedPhotoRecord = QueuedPhoto & { tag?: PhotoTag; rejected?: string }
 
 /** 读记录的 tag（缺省 normal） */
 export function photoTagOf(rec: QueuedPhoto): PhotoTag {
   return (rec as QueuedPhotoRecord).tag ?? 'normal'
+}
+
+/** PD-76：读记录的拒收原因（无/空串 → null=未拒收） */
+export function photoRejectionOf(rec: QueuedPhoto): string | null {
+  const r = (rec as QueuedPhotoRecord).rejected
+  return typeof r === 'string' && r ? r : null
 }
 
 /* ------------------------------------------------------------------ */
@@ -71,21 +85,25 @@ export function flushBackoffDelay(failures: number): number {
 }
 
 /**
- * 判断 register(addPhotos) 的失败是否为「永久拒绝」（重试永远不会成功）：
+ * 判断 register(addPhotos) 的失败是否为「服务端永久拒收」（自动重试无意义）：
  * - FORBIDDEN：步骤状态已变（如已被他人 confirm 成 done / 被打标回退）或归属已变；
- * - BAD_REQUEST 且文案为状态闸门 / 超上限 / 缺 tag：服务端校验硬拒绝。
- * 这类错误继续退避重试只会毒化队列（卡在后面所有记录前面），必须丢弃并通知 UI。
+ * - BAD_REQUEST（addPhotos 400 全口径）：状态闸门 / 超上限 / 缺 tag / 拍摄时刻不在服务窗口等
+ *   服务端校验硬拒绝——PD-76 起一律转拒收态，message 原文透传给 UI（判定规则不在本文件、不改）。
+ * 瞬态错误（网络抖动、5xx、无 data.code 的普通 Error）返回 false，继续退避自动重试。
  */
 export function isPermanentRegisterError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
   const e = err as { data?: { code?: string }; message?: string }
   const code = e.data?.code
-  const msg = typeof e.message === 'string' ? e.message : ''
   if (code === 'FORBIDDEN') return true
-  if (code === 'BAD_REQUEST') {
-    return msg.includes('仅进行中') || msg.includes('超出上限') || msg.includes('标记 before / after')
-  }
+  if (code === 'BAD_REQUEST') return true
   return false
+}
+
+/** 拒收原因文案：服务端 message 原样透传（取不到给兜底口语） */
+export function rejectionReasonOf(err: unknown): string {
+  const msg = (err as { message?: unknown } | null)?.message
+  return typeof msg === 'string' && msg ? msg : '服务端未接收这张照片，请重拍或重试'
 }
 
 /** 上传存储目录（server storage/images.ts 约定形如 `appointment/<aid>/<stepKey>`） */
@@ -143,6 +161,13 @@ async function idbDelete(id: string): Promise<void> {
   await reqResult(db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id))
 }
 
+/** PD-76：读单条（retryQueuedPhoto / markRejected 用） */
+async function idbGet(id: string): Promise<QueuedPhotoRecord | undefined> {
+  const db = await openDb()
+  const rec = await reqResult(db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(id))
+  return rec as QueuedPhotoRecord | undefined
+}
+
 /* ------------------------------------------------------------------ */
 /* 队列读写 API（契约 2）                                                 */
 /* ------------------------------------------------------------------ */
@@ -186,9 +211,23 @@ export async function pendingPhotos(aid: string, stepKey?: string): Promise<Queu
     .sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : 1))
 }
 
-/** 删队列记录（契约签名，逐字）；不存在不报错（幂等） */
+/** 删队列记录（契约签名，逐字）；不存在不报错（幂等）。PD-76：「重拍」= 弃掉本地副本走此 */
 export async function removePhoto(id: string): Promise<void> {
   await idbDelete(id)
+}
+
+/**
+ * PD-76 状态机 retry 边：清拒收标记并立即通知在冲的 flusher 补冲（在线即重传）。
+ * 记录不存在/未拒收 → false；清成功 → true。
+ */
+export async function retryQueuedPhoto(id: string): Promise<boolean> {
+  const rec = await idbGet(id)
+  if (!rec || !photoRejectionOf(rec)) return false
+  const next = { ...rec }
+  delete next.rejected
+  await idbPut(next)
+  notifyEnqueued()
+  return true
 }
 
 /* ------------------------------------------------------------------ */
@@ -207,6 +246,8 @@ export interface FlushEngineDeps {
   ): Promise<void>
   onChange?: () => void
   onDropped?: (rec: QueuedPhoto, err: unknown) => void
+  /** PD-76：永久拒收时标 rejected＋原因留队（提供则不再删记录；缺省回落旧径=删记录） */
+  markRejected?: (id: string, reason: string) => Promise<void>
   isOnline(): boolean
   setTimeoutFn: (fn: () => void, ms: number) => unknown
   clearTimeoutFn: (handle: unknown) => void
@@ -227,7 +268,9 @@ export interface FlushEngine {
  * - 串行保序：按 createdAt 升序逐条 upload → register → remove，一条失败本轮中止，
  *   下轮从同一条重试（绝不跳过乱序）；
  * - 退避：连续失败按 2s/5s/15s/60s 调度下一轮；任意一条成功即清零；
- * - 永久拒绝：删记录 + onDropped + onChange（见 isPermanentRegisterError 注释）。
+ * - PD-76：已标 rejected 的记录跳过（不自动重试、不堵队；由 retryQueuedPhoto 手动复活）；
+ * - 永久拒绝：有 markRejected 则标 rejected＋原因留队（UI 单处显示，可重拍/重试），
+ *   否则回落旧径删记录；两径均 onDropped + onChange（见 isPermanentRegisterError 注释）。
  */
 export function createFlushEngine(deps: FlushEngineDeps): FlushEngine {
   let stopped = false
@@ -267,6 +310,7 @@ export function createFlushEngine(deps: FlushEngineDeps): FlushEngine {
       for (const rec of records) {
         if (stopped) return
         if (!deps.isOnline()) return // 冲到一半掉线：停下等 online
+        if (photoRejectionOf(rec) !== null) continue // PD-76：拒收态不自动重试，跳过不堵队
         try {
           // —— 冲一条 = upload → register(addPhotos 落库) → 才删记录（不丢照片证明链）——
           const up = await deps.upload(rec.blob, relDirOf(rec.aid, rec.stepKey))
@@ -283,13 +327,21 @@ export function createFlushEngine(deps: FlushEngineDeps): FlushEngine {
           deps.onChange?.()
         } catch (err) {
           if (isPermanentRegisterError(err)) {
-            // 步骤状态被拒（如该步已被他人 confirm 成 done、已超 max 上限）：
-            // 重试永远不会成功。服务端状态机已推进（等效数据在服务端或已无登记意义），
-            // 删记录防队列毒化，onChange 通知 UI 刷新（以 list 服务端真图为准）。
-            try {
-              await deps.remove(rec.id)
-            } catch {
-              // 删除失败不阻断主流程，下轮再处理
+            // 服务端永久拒收（步骤已被他人 confirm 成 done、超 max 上限、拍摄时刻不在服务窗口等）：
+            // 自动重试永远不会成功。PD-76：标 rejected＋原因原文留队（flusher 跳过不毒化队列），
+            // UI 在缩略图位单处显示拒收态＋「重拍/重试」；无 markRejected 的旧调用方回落删记录。
+            if (deps.markRejected) {
+              try {
+                await deps.markRejected(rec.id, rejectionReasonOf(err))
+              } catch {
+                // 标记失败不阻断主流程，下轮再处理
+              }
+            } else {
+              try {
+                await deps.remove(rec.id)
+              } catch {
+                // 删除失败不阻断主流程，下轮再处理
+              }
             }
             deps.onDropped?.(rec, err)
             deps.onChange?.()
@@ -356,6 +408,12 @@ export function startQueueFlusher(opts: {
     register: (aid, stepKey, photo) => opts.register(aid, stepKey, photo),
     onChange: opts.onChange,
     onDropped: opts.onDropped,
+    // PD-76：浏览器装配恒走「标 rejected 留队」新径（UI 拒收态＋重拍/重试）
+    markRejected: async (id, reason) => {
+      const rec = await idbGet(id)
+      if (!rec) return
+      await idbPut({ ...rec, rejected: reason })
+    },
     isOnline: () => (typeof navigator === 'undefined' ? true : navigator.onLine !== false),
     setTimeoutFn: (fn, ms) => window.setTimeout(fn, ms),
     clearTimeoutFn: (h) => window.clearTimeout(h as number),

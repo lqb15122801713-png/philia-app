@@ -25,6 +25,10 @@ export interface StepPhotoItem {
   tagLabel?: string;
   /** 服务端照片 id（active 步可删） */
   serverId?: string;
+  /** PD-76 状态机：本地队列记录 id（拒收态重试/重拍用） */
+  queueId?: string;
+  /** PD-76 状态机 rejected：服务端拒收原因原文（非空即拒收态，缩略图标红＋单处显示） */
+  rejectedReason?: string;
 }
 
 export interface ExecuteStepRow {
@@ -44,7 +48,9 @@ export interface ExecuteStepRow {
 
 const fmtHM = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
-/** 缩略图 64×48（点击看大图；active 步服务端照片右上 × 可删；圆角试样 8 越四档→chip 6，客户端 D2-9 同口径） */
+/** 缩略图 64×48（点击看大图；active 步服务端照片右上 × 可删；圆角缩略 6/操作区 14，客户端 D2-9 同口径）。
+ *  PD-76 状态机单处显示：uploading=「上传中」角标＋脉冲；rejected=红圈＋「未通过」角标
+ * （原因与「重拍/重试」钮挂在照片行正下方同区一行，头卡/底钮不再重复状态）。 */
 function Thumb({
   photo,
   onTap,
@@ -54,15 +60,20 @@ function Thumb({
   onTap: (url: string) => void;
   onDelete?: (serverId: string) => void;
 }) {
+  const rejected = !!photo.rejectedReason;
   return (
-    <span className="relative inline-block h-12 w-16 shrink-0">
+    <span
+      className="relative inline-block h-12 w-16 shrink-0 rounded-chip"
+      style={rejected ? { boxShadow: '0 0 0 2px var(--danger)' } : undefined}
+      data-rejected={rejected || undefined}
+    >
       <button
         type="button"
         onClick={() => onTap(photo.url)}
         className="block h-12 w-16 overflow-hidden rounded-chip bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
-        aria-label="查看大图"
+        aria-label={rejected ? `照片未通过：${photo.rejectedReason}` : '查看大图'}
       >
-        <img src={photo.url} alt={photo.tagLabel ?? '过程照'} loading="lazy" className={`h-full w-full object-cover ${photo.uploading ? 'animate-pulse opacity-80' : ''}`} />
+        <img src={photo.url} alt={photo.tagLabel ?? '过程照'} loading="lazy" className={`h-full w-full object-cover ${photo.uploading && !rejected ? 'animate-pulse opacity-80' : ''}`} />
       </button>
       {photo.tagLabel ? (
         <span
@@ -72,7 +83,7 @@ function Thumb({
           {photo.tagLabel}
         </span>
       ) : null}
-      {photo.uploading ? (
+      {photo.uploading && !rejected ? (
         <span
           className="pointer-events-none absolute right-0.5 top-0.5 rounded-chip px-1 py-px text-[12px]"
           style={{ background: 'var(--ink)', color: 'var(--paper)' }}
@@ -80,7 +91,15 @@ function Thumb({
           上传中
         </span>
       ) : null}
-      {onDelete && photo.serverId && !photo.uploading ? (
+      {rejected ? (
+        <span
+          className="pointer-events-none absolute right-0.5 top-0.5 rounded-chip px-1 py-px text-[12px]"
+          style={{ background: 'var(--danger)', color: 'var(--card)' }}
+        >
+          未通过
+        </span>
+      ) : null}
+      {onDelete && photo.serverId && !photo.uploading && !rejected ? (
         <button
           type="button"
           aria-label="删除这张照片"
@@ -92,6 +111,42 @@ function Thumb({
         </button>
       ) : null}
     </span>
+  );
+}
+
+/** PD-76 拒收行（状态机 rejected 态唯一显示位的文字＋动作半）：原因透传＋「重试／重拍」 */
+function RejectedLine({
+  photo,
+  onRetry,
+  onDiscard,
+}: {
+  photo: StepPhotoItem;
+  onRetry: (queueId: string) => void;
+  onDiscard: (queueId: string) => void;
+}) {
+  if (!photo.rejectedReason || !photo.queueId) return null;
+  const qid = photo.queueId;
+  return (
+    <div className="mt-1.5 flex items-center gap-2" data-testid={`rejected-${qid}`}>
+      <p className="min-w-0 flex-1 text-caption leading-snug text-danger-deep">未通过：{photo.rejectedReason}</p>
+      <button
+        type="button"
+        data-testid={`rejected-retry-${qid}`}
+        onClick={() => onRetry(qid)}
+        className="shrink-0 rounded-chip bg-ink px-2.5 py-1 text-caption font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
+      >
+        重试
+      </button>
+      <button
+        type="button"
+        data-testid={`rejected-discard-${qid}`}
+        onClick={() => onDiscard(qid)}
+        className="shrink-0 rounded-chip px-2.5 py-1 text-caption font-bold text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
+        style={{ border: '1px solid var(--hairline)' }}
+      >
+        重拍
+      </button>
+    </div>
   );
 }
 
@@ -118,6 +173,9 @@ function AddSlot({ onFiles, disabled }: { onFiles: (files: FileList) => void; di
         capture="environment"
         multiple
         className="hidden"
+        style={{ display: 'none' }}
+        tabIndex={-1}
+        aria-label="拍照或从相册选择照片"
         onChange={(e) => {
           if (e.target.files?.length) onFiles(e.target.files);
           e.target.value = '';
@@ -152,20 +210,31 @@ function DualSlot({
           data-testid={testid}
           onClick={() => onTap(slot.url)}
           className="relative block h-16 w-full overflow-hidden rounded-chip bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
+          style={slot.rejectedReason ? { boxShadow: '0 0 0 2px var(--danger)' } : undefined}
+          data-rejected={slot.rejectedReason ? true : undefined}
+          aria-label={slot.rejectedReason ? `${label} 照片未通过：${slot.rejectedReason}` : undefined}
         >
-          <img src={slot.url} alt={label} className={`h-full w-full object-cover ${slot.uploading ? 'animate-pulse opacity-80' : ''}`} />
+          <img src={slot.url} alt={label} className={`h-full w-full object-cover ${slot.uploading && !slot.rejectedReason ? 'animate-pulse opacity-80' : ''}`} />
           <span
             className="absolute left-1 top-1 rounded-chip px-1.5 py-px text-[12px]"
             style={{ background: 'var(--ink)', color: 'var(--paper)' }}
           >
             {label}
           </span>
-          {slot.uploading ? (
+          {slot.uploading && !slot.rejectedReason ? (
             <span
               className="absolute right-1 top-1 rounded-chip px-1.5 py-px text-[12px]"
               style={{ background: 'var(--ink)', color: 'var(--paper)' }}
             >
               上传中
+            </span>
+          ) : null}
+          {slot.rejectedReason ? (
+            <span
+              className="absolute right-1 top-1 rounded-chip px-1.5 py-px text-[12px]"
+              style={{ background: 'var(--danger)', color: 'var(--card)' }}
+            >
+              未通过
             </span>
           ) : null}
         </button>
@@ -187,6 +256,9 @@ function DualSlot({
         accept="image/*"
         capture="environment"
         className="hidden"
+        style={{ display: 'none' }}
+        tabIndex={-1}
+        aria-label={`${label} 照片：拍照或从相册选择`}
         onChange={(e) => {
           if (e.target.files?.length) onFiles(e.target.files);
           e.target.value = '';
@@ -202,12 +274,17 @@ export default function ExecuteStepper({
   onSlotFiles,
   onDeletePhoto,
   onPhotoTap,
+  onRetryPhoto,
+  onDiscardPhoto,
 }: {
   rows: ExecuteStepRow[];
   onFiles: (stepKey: string, files: FileList) => void;
   onSlotFiles: (stepKey: string, tag: 'before' | 'after', files: FileList) => void;
   onDeletePhoto: (stepKey: string, serverId: string) => void;
   onPhotoTap: (url: string) => void;
+  /** PD-76 状态机：拒收态「重试」（清标记补冲）/「重拍」（弃本地副本） */
+  onRetryPhoto: (queueId: string) => void;
+  onDiscardPhoto: (queueId: string) => void;
 }) {
   return (
     <ol className="flex flex-col px-[22px] pb-5 pt-4" data-testid="execute-stepper">
@@ -297,19 +374,33 @@ export default function ExecuteStepper({
                   {!isConfirm ? (
                     <div className="mt-2.5 rounded-control bg-canvas p-3">
                       {isBA ? (
-                        <div className="flex gap-1.5">
-                          <DualSlot label="before" testid="slot-before" slot={row.beforeSlot} onFiles={(f) => onSlotFiles(def.stepKey, 'before', f)} onTap={onPhotoTap} readOnly={false} />
-                          <DualSlot label="after" testid="slot-after" slot={row.afterSlot} onFiles={(f) => onSlotFiles(def.stepKey, 'after', f)} onTap={onPhotoTap} readOnly={false} />
-                        </div>
+                        <>
+                          <div className="flex gap-1.5">
+                            <DualSlot label="before" testid="slot-before" slot={row.beforeSlot} onFiles={(f) => onSlotFiles(def.stepKey, 'before', f)} onTap={onPhotoTap} readOnly={false} />
+                            <DualSlot label="after" testid="slot-after" slot={row.afterSlot} onFiles={(f) => onSlotFiles(def.stepKey, 'after', f)} onTap={onPhotoTap} readOnly={false} />
+                          </div>
+                          {[row.beforeSlot, row.afterSlot]
+                            .filter((s): s is StepPhotoItem => !!s?.rejectedReason)
+                            .map((s) => (
+                              <RejectedLine key={s.key} photo={s} onRetry={onRetryPhoto} onDiscard={onDiscardPhoto} />
+                            ))}
+                        </>
                       ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {row.photos.map((p) => (
-                            <Thumb key={p.key} photo={p} onTap={onPhotoTap} onDelete={(sid) => onDeletePhoto(def.stepKey, sid)} />
-                          ))}
-                          {row.serverCount + row.photos.filter((p) => p.uploading).length < def.maxPhotos ? (
-                            <AddSlot onFiles={(f) => onFiles(def.stepKey, f)} />
-                          ) : null}
-                        </div>
+                        <>
+                          <div className="flex flex-wrap gap-1.5">
+                            {row.photos.map((p) => (
+                              <Thumb key={p.key} photo={p} onTap={onPhotoTap} onDelete={(sid) => onDeletePhoto(def.stepKey, sid)} />
+                            ))}
+                            {row.serverCount + row.photos.filter((p) => p.uploading && !p.rejectedReason).length < def.maxPhotos ? (
+                              <AddSlot onFiles={(f) => onFiles(def.stepKey, f)} />
+                            ) : null}
+                          </div>
+                          {row.photos
+                            .filter((p) => p.rejectedReason)
+                            .map((p) => (
+                              <RejectedLine key={p.key} photo={p} onRetry={onRetryPhoto} onDiscard={onDiscardPhoto} />
+                            ))}
+                        </>
                       )}
                       <p className="mt-2 text-caption text-ink-secondary">过程照实时同步给家长（服务中全程页）</p>
                       {/* 片 3 B5-2：拍照只许现场拍（诚实口径注记：服务端校验拍摄时刻，不吹「防住」） */}

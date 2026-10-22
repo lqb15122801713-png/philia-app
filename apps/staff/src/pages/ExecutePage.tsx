@@ -43,7 +43,10 @@ import {
 import {
   enqueuePhotoWithTag,
   pendingPhotos,
+  photoRejectionOf,
   photoTagOf,
+  removePhoto,
+  retryQueuedPhoto,
   startQueueFlusher,
   type PhotoTag,
   type QueuedPhoto,
@@ -215,12 +218,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         void refreshPending()
         void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] })
       },
-      onDropped: (_rec, err) => {
-        showToast(
-          `有照片未上传：${err instanceof Error ? err.message : '步骤状态已变化，被服务端拒绝'}`,
-        )
-        invalidateAll()
-      },
+      // PD-76 状态机：拒收原因单处显示在缩略图位（ExecuteStepper RejectedLine），不再叠 toast
     })
     void refreshPending()
     return stop
@@ -337,6 +335,22 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       }
     },
     [aid, refreshPending, showToast],
+  )
+
+  /* ---- PD-76 状态机 rejected 边：重试（清标记→flusher 立即补冲）/ 重拍（弃本地副本） ---- */
+  const retryPhoto = useCallback(
+    async (queueId: string) => {
+      await retryQueuedPhoto(queueId)
+      await refreshPending()
+    },
+    [refreshPending],
+  )
+  const discardPhoto = useCallback(
+    async (queueId: string) => {
+      await removePhoto(queueId)
+      await refreshPending()
+    },
+    [refreshPending],
   )
 
   /* ---------------- confirm ---------------- */
@@ -505,11 +519,24 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     if (arr) arr.push(p)
     else pendingByStep.set(p.stepKey, [p])
   }
-  const pendingAllCount = pending.length
 
   const rows: ExecuteStepRow[] = SERVICE_STEPS.map((def) => {
     const row = steps.find((s) => s.stepKey === def.stepKey)
     const queued = pendingByStep.get(def.stepKey) ?? []
+    // PD-76 状态机：队列记录 → 缩略图单处三态（rejected 拒收原因透传 / uploading / 无标=成功在服务端）
+    const queuedToItem = (p: QueuedPhoto): StepPhotoItem | null => {
+      const url = previewUrls[p.id]
+      if (!url) return null
+      const rejectedReason = photoRejectionOf(p) ?? undefined
+      return {
+        key: `q-${p.id}`,
+        queueId: p.id,
+        url,
+        uploading: !rejectedReason,
+        rejectedReason,
+        tagLabel: photoTagOf(p) === 'before' ? '服务前' : photoTagOf(p) === 'after' ? '服务后' : undefined,
+      }
+    }
     const photos: StepPhotoItem[] = [
       ...(row?.photos ?? []).map((p) => ({
         key: p.id,
@@ -517,14 +544,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         url: p.thumbUrl ?? p.url,
         tagLabel: p.tag === 'before' ? '服务前' : p.tag === 'after' ? '服务后' : undefined,
       })),
-      ...queued
-        .filter((p) => previewUrls[p.id])
-        .map((p) => ({
-          key: `q-${p.id}`,
-          url: previewUrls[p.id]!,
-          uploading: true,
-          tagLabel: photoTagOf(p) === 'before' ? '服务前' : photoTagOf(p) === 'after' ? '服务后' : undefined,
-        })),
+      ...queued.map(queuedToItem).filter((p): p is StepPhotoItem => p !== null),
     ]
     const serverBefore = (row?.photos ?? []).find((p) => p.tag === 'before')
     const serverAfter = (row?.photos ?? []).find((p) => p.tag === 'after')
@@ -532,13 +552,13 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     const queuedAfter = queued.find((p) => photoTagOf(p) === 'after')
     const beforeSlot: StepPhotoItem | null = serverBefore
       ? { key: serverBefore.id, url: serverBefore.thumbUrl ?? serverBefore.url }
-      : queuedBefore && previewUrls[queuedBefore.id]
-        ? { key: `q-${queuedBefore.id}`, url: previewUrls[queuedBefore.id]!, uploading: true }
+      : queuedBefore
+        ? queuedToItem(queuedBefore)
         : null
     const afterSlot: StepPhotoItem | null = serverAfter
       ? { key: serverAfter.id, url: serverAfter.thumbUrl ?? serverAfter.url }
-      : queuedAfter && previewUrls[queuedAfter.id]
-        ? { key: `q-${queuedAfter.id}`, url: previewUrls[queuedAfter.id]!, uploading: true }
+      : queuedAfter
+        ? queuedToItem(queuedAfter)
         : null
     return {
       def,
@@ -568,10 +588,9 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     const lack = Math.max(0, activeRow.def.minPhotos - activeRow.serverCount)
     const baLack = isBA ? (activeRow.beforeCount < 1 ? 1 : 0) + (activeRow.afterCount < 1 ? 1 : 0) : 0
     const nextOrder = activeRow.def.stepOrder + 1
-    if (pendingAllCount > 0) {
-      primaryText = '照片上传中…'
-      primaryDisabled = true
-    } else if (confirmMutation.isPending) {
+    // PD-76 状态机：上传中态只在缩略图位单处显示，底钮不再改文案/禁用——按真实成功张数
+    // （serverCount/beforeCount/afterCount）解禁；未满点击由 onPrimary 给「还差 N 张」真回响
+    if (confirmMutation.isPending) {
       primaryText = '确认中…'
       primaryDisabled = true
     } else if (isConfirm) {
@@ -675,11 +694,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
           <p className="mt-0.5 text-caption text-ink-secondary">
             归属员工：{assignedStaffName} · 当前操作：{operatorName}
           </p>
-          {pendingAllCount > 0 ? (
-            <p className="mt-0.5 text-caption text-ink-secondary">
-              <span className="u1-num">{pendingAllCount}</span> 张照片上传中…
-            </p>
-          ) : null}
+          {/* PD-76：头卡不再重复「N 张照片上传中…」——上传中/拒收态只在缩略图位单处显示 */}
         </div>
         <div className="shrink-0 text-center">
           <p className="u1-num text-title font-bold">
@@ -736,6 +751,8 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
           onFiles={(stepKey, files) => void enqueueFiles(stepKey, undefined, files)}
           onSlotFiles={(stepKey, tag, files) => void enqueueFiles(stepKey, tag, files)}
           onDeletePhoto={(stepKey, serverId) => setDeleteTarget({ photoId: serverId, stepKey })}
+          onRetryPhoto={(queueId) => void retryPhoto(queueId)}
+          onDiscardPhoto={(queueId) => void discardPhoto(queueId)}
           onPhotoTap={(url) => {
             const all = rows.flatMap((r) => r.photos.map((p) => ({ id: p.key, url: p.url, tag: p.tagLabel })))
             const idx = all.findIndex((p) => p.url === url)
