@@ -7,11 +7,13 @@
  * - 非目标照令：不做履约物流真链路（trackingNote 半程注记照卡口径）、不判美。
  */
 
-import { CK, Skeleton, usePhiliaClient } from '@philia/shared';
-import { useQuery } from '@tanstack/react-query';
+import { CK, Skeleton, friendlyError, usePhiliaClient, useToast } from '@philia/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BadgeCheck, Package, Truck } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
+import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { fenToYuan, fmtOrderTime } from '../components/mall/format';
 import ProductImage from '../components/mall/ProductImage';
 import { mlc, type MallCopyKey } from '../copy/mall';
@@ -44,6 +46,9 @@ interface DetailItemRow {
 export default function MallOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { trpc } = usePhiliaClient();
+  const queryClient = useQueryClient();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
+  const [cancelAsk, setCancelAsk] = useState(false);
   const detailQ = useQuery({
     queryKey: ['mall', 'orderDetail', id],
     queryFn: () => trpc.mall.orderDetail.query({ orderId: id! }),
@@ -51,11 +56,24 @@ export default function MallOrderDetailPage() {
     retry: 1,
   });
 
+  /* PD-75（HP-CLIENT-01）：详情页取消入口与列表卡同口径（pending 可取消，服务端回补库存） */
+  const cancelM = useMutation({
+    mutationFn: () => trpc.mall.cancelOrder.mutate({ orderId: id! }),
+    onSuccess: () => {
+      showToast(mlc('mall.cancelOk'), 'info');
+      void queryClient.invalidateQueries({ queryKey: ['mall', 'orderDetail', id] });
+      void queryClient.invalidateQueries({ queryKey: ['mall', 'listMyOrders'] });
+    },
+    onError: (err) => showToast(friendlyError(err, mlc('mall.cancelFail'), 80), 'error'),
+    onSettled: () => setCancelAsk(false),
+  });
+
   const order = detailQ.data?.order ?? null;
   const storeName = detailQ.data?.storeName ?? null;
 
   return (
     <div className="px-4 pb-10 pt-4" data-testid="mall-order-detail-page">
+      {toastEl}
       <PageHeader title={mlc('mall.orderDetailTitle')} fallback="/mall/orders" />
 
       {detailQ.isPending ? (
@@ -85,8 +103,13 @@ export default function MallOrderDetailPage() {
                 {storeName ?? mlc('mall.storeFallback')}
               </p>
               <span className="rounded-chip bg-sunken px-[7px] py-0.5 text-caption-xs font-semibold text-ink" data-testid="mall-order-detail-status">
-                <CK k={STATUS_LABEL_KEY[order.status] ?? 'mall.tabAll'}>
-                  {STATUS_LABEL_KEY[order.status] ? mlc(STATUS_LABEL_KEY[order.status]!) : order.status}
+                {/* PD-75（P-CLIENT-03）：自提单 paid 态不写「待发货」 */}
+                <CK k={order.status === 'paid' && order.deliveryMethod === 'pickup' ? 'mall.statusWaitPickup' : (STATUS_LABEL_KEY[order.status] ?? 'mall.tabAll')}>
+                  {order.status === 'paid' && order.deliveryMethod === 'pickup'
+                    ? mlc('mall.statusWaitPickup')
+                    : STATUS_LABEL_KEY[order.status]
+                      ? mlc(STATUS_LABEL_KEY[order.status]!)
+                      : order.status}
                 </CK>
               </span>
             </div>
@@ -151,6 +174,21 @@ export default function MallOrderDetailPage() {
             ) : null}
           </section>
 
+          {/* 取消入口（PD-75 HP-CLIENT-01：与列表卡同口径，pending→取消订单二次确认） */}
+          {order.status === 'pending' ? (
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                data-testid="mall-order-detail-cancel"
+                disabled={cancelM.isPending}
+                onClick={() => setCancelAsk(true)}
+                className="text-body-sm font-semibold text-ink"
+              >
+                {mlc('mall.cancelCta')}
+              </button>
+            </div>
+          ) : null}
+
           {/* 退款入口（与列表卡同口径：shipped/received→申请页；refunding→进度列表） */}
           {order.status === 'shipped' || order.status === 'received' ? (
             <div className="mt-4 flex justify-end">
@@ -172,6 +210,17 @@ export default function MallOrderDetailPage() {
           ) : null}
         </>
       )}
+
+      {/* 取消订单二次确认（复用列表页 ConfirmSheet 口径文案） */}
+      <ConfirmSheet
+        open={cancelAsk}
+        title={mlc('mall.cancelConfirmTitle')}
+        desc={mlc('mall.cancelConfirmBody')}
+        confirmText={mlc('mall.cancelConfirmCta')}
+        danger
+        onCancel={() => setCancelAsk(false)}
+        onConfirm={() => cancelM.mutate()}
+      />
     </div>
   );
 }

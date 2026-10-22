@@ -438,6 +438,20 @@ export function boardingNightDates(start: Date, end: Date): string[] {
 }
 
 /**
+ * PD-75（AE-CLIENT-R3-01 · 头子冻令同簇）：寄养疫苗闸服务端硬闸——无苗/临期
+ * （vaccineValidUntil 空或早于退房本地日）一律 BAD_REQUEST 拒确认，不再仅前端置灰
+ * （0038「仅留证不改寄养硬闸」旧口径就此作废，行为变更随 PD-75 令在案）。
+ * 口径与客户端 PetPicker 同帧：ISO 日串字典序比较，退房日按门店规范时区（+8）取日。
+ */
+function assertBoardingVaccine(pet: { vaccineValidUntil: string | null }, checkout: Date): void {
+  const w = storeWallclock(checkout);
+  const checkoutDay = `${w.y}-${pad2(w.m)}-${pad2(w.day)}`;
+  if (!pet.vaccineValidUntil || pet.vaccineValidUntil < checkoutDay) {
+    badRequest('该宠物疫苗证明缺失或有效期未覆盖寄养退房日，请更新疫苗信息后再预约');
+  }
+}
+
+/**
  * B3-2：寄养占容量——对住宿区间每一晚各占 1 格（调用方保证在同一事务内）。
  * 行按需创建（capacity 快照自 services.room_count，空则默认 1 间）；任一晚满员抛
  * CONFLICT，事务整体回滚（已占晚随之撤销，不产生部分占用）。
@@ -1005,6 +1019,10 @@ export const appointmentRouter = router({
       if (input.type === 'boarding' && input.medicalAuth?.agreed !== true) {
         badRequest('寄养单须先签署医疗授权');
       }
+      /* ---- PD-75（AE-CLIENT-R3-01）：寄养疫苗闸服务端硬闸——无苗/临期拒确认 ---- */
+      if (input.type === 'boarding') {
+        assertBoardingVaccine(pet, end);
+      }
       /* 片 2：遛弯次数仅寄养单可填（grooming 传了 400 明文） */
       if (input.type === 'grooming' && input.walkTimesPerDay !== undefined) {
         badRequest('遛弯次数仅寄养单可填');
@@ -1421,6 +1439,13 @@ export const appointmentRouter = router({
          由入住核销（checkin）强制落定（客户线上创建无员工上下文，受理硬闸在核销侧）。 */
       let boardingLeadId: string | null = null;
       if (appt.type === 'boarding') {
+        /* PD-75（AE-CLIENT-R3-01）：历史 pending 单确认同样过疫苗闸（与 create 同口径） */
+        const pet = await ctx.db
+          .select({ vaccineValidUntil: schema.pets.vaccineValidUntil })
+          .from(schema.pets)
+          .where(eq(schema.pets.id, appt.petId))
+          .get();
+        if (pet) assertBoardingVaccine(pet, appt.scheduledEnd);
         boardingLeadId = input.staffId ?? ctx.user.staffId ?? null;
         if (boardingLeadId) {
           const leadStaff = await ctx.db

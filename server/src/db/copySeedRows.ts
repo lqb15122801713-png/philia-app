@@ -1477,7 +1477,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "agr.docUser",
   "domain": "agreements",
-  "text": "一、服务范围：内测期间，本应用提供宠物洗护、寄养预约与商城下单的线上入口，实际服务由线下门店履约，服务内容、价格与门店公示一致。\n二、账号：内测期使用手机号或门店发放的种子账号登录；请妥善保管登录状态，账号仅限本人使用。\n三、交易：线上支付通道为内测演示通道，不产生真实扣款；真实消费以门店收银与订单记录为准。\n四、变更与终止：内测期功能与规则可能调整，调整以应用内公告与门店公示为准；您可随时停止使用并申请注销账号。\n五、其他：本协议为内测期简版文本，未尽事宜以门店公示规则为准；正式上线版本协议发布后，以新版本为准。",
+  "text": "一、服务范围：内测期间，本应用提供宠物洗护、寄养预约与商城下单的线上入口，实际服务由线下门店履约，服务内容、价格与门店公示一致。\n二、账号：内测期使用手机号或门店发放的演示账号登录；请妥善保管登录状态，账号仅限本人使用。\n三、交易：线上支付通道为内测演示通道，不产生真实扣款；真实消费以门店收银与订单记录为准。\n四、变更与终止：内测期功能与规则可能调整，调整以应用内公告与门店公示为准；您可随时停止使用并申请注销账号。\n五、其他：本协议为内测期简版文本，未尽事宜以门店公示规则为准；正式上线版本协议发布后，以新版本为准。",
   "screen": null,
   "position": "未在页面调用点命中（agreements 域键表，端口运营复核挂载屏）"
  },
@@ -3472,7 +3472,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "devlogin.devOnly",
   "domain": "devlogin",
-  "text": "仅开发环境 · 生产环境请移除",
+  "text": "",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -3528,14 +3528,14 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "devlogin.footerB",
   "domain": "devlogin",
-  "text": "内测期间口令由门店发放",
+  "text": "访问口令由门店发放",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.gateBody",
   "domain": "devlogin",
-  "text": "请输入内测口令后加载可登录账号；无口令或口令错误将无法登录。",
+  "text": "请输入访问口令后加载可登录账号；无口令或口令错误将无法登录。",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -3549,28 +3549,28 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "devlogin.gateLink",
   "domain": "devlogin",
-  "text": "口令入内测 ›",
+  "text": "口令登录 ›",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.gateTitle",
   "domain": "devlogin",
-  "text": "内测环境需要口令",
+  "text": "需要访问口令",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.manualBody",
   "domain": "devlogin",
-  "text": "重跑 server 的 db:seed 后用户 ID 会变化，可在 server 库中查 users 表后粘贴到这里。",
+  "text": "演示环境重建后账号 ID 会变化，可向门店索取最新账号 ID。",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.manualTitle",
   "domain": "devlogin",
-  "text": "手动输入 userId",
+  "text": "账号 ID 登录",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -3598,28 +3598,28 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "devlogin.seedEmpty",
   "domain": "devlogin",
-  "text": "未拉到种子用户，请重跑 server 的 db:seed，或手动输入 userId",
+  "text": "暂无可登录的演示账号，请稍后再试",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.seedFail",
   "domain": "devlogin",
-  "text": "种子用户拉取失败（网络连接失败：{error}）——请检查网络或确认 server 已启动；若是口令问题请用上方口令门",
+  "text": "演示账号拉取失败（{error}），请检查网络后重试；若有口令请先在上方验证",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.seedNote",
   "domain": "devlogin",
-  "text": "提示：种子用户一键登录 + 口令门内手机号自助开户（D-16：新号自动注册 customer）； 会话 cookie 有效期 7 天。",
+  "text": "提示：演示账号一键登录，也可在口令通过后用手机号自助开户；登录状态保留 7 天。",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
  {
   "key": "devlogin.seedTitle",
   "domain": "devlogin",
-  "text": "选择种子用户登录",
+  "text": "选择演示账号登录",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -3633,7 +3633,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "devlogin.wechatNote",
   "domain": "devlogin",
-  "text": "微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测",
+  "text": "微信授权登录属小程序/资质批，PWA 端暂以手机号或演示账号登录",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -5080,6 +5080,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CheckoutPage 页面内文案"
  },
  {
+  "key": "mall.paySuccessSubPickup",
+  "domain": "mall",
+  "text": "备货完成后会通知你到店自取，进度可在订单列表查看",
+  "screen": "客户·商城",
+  "position": "CheckoutPage 支付成功页（自提分支）"
+ },
+ {
+  "key": "mall.cashierItems",
+  "domain": "mall",
+  "text": "共 {count} 件",
+  "screen": "客户·商城",
+  "position": "CashierModal 收银台件数行"
+ },
+ {
+  "key": "mall.statusWaitPickup",
+  "domain": "mall",
+  "text": "待自取",
+  "screen": "客户·商城",
+  "position": "MallOrdersPage/MallOrderDetailPage 状态胶囊（自提 paid 态）"
+ },
+ {
   "key": "mall.paySuccessTitle",
   "domain": "mall",
   "text": "支付成功",
@@ -5313,7 +5334,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "mall.toastPaid",
   "domain": "mall",
-  "text": "支付成功，门店会尽快发货",
+  "text": "支付成功，门店会尽快为你备货",
   "screen": "客户·商品订单",
   "position": "MallOrdersPage 页面内文案"
  },

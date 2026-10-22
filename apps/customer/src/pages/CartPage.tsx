@@ -89,7 +89,10 @@ function CartInner() {
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const balanceFen = myQ.data?.rebate?.balanceFen ?? 0;
   const rebateFen = rebateBp > 0 ? Math.round((cart.checkedTotalFen * rebateBp) / 10000) : 0;
-  const deductionFen = useRebate ? Math.min(balanceFen, cart.checkedTotalFen) : 0;
+  /* PD-75（HP-CLIENT-05）：回馈金余额 0 时开关默认关且禁用（与结算页同口径） */
+  const rebateEmpty = balanceFen <= 0;
+  const useRebateEff = useRebate && !rebateEmpty;
+  const deductionFen = useRebateEff ? Math.min(balanceFen, cart.checkedTotalFen) : 0;
   const payableFen = Math.max(0, cart.checkedTotalFen - deductionFen);
 
   const isCanvasPreview = useMemo(() => new URLSearchParams(window.location.search).get('canvasPreview') === '1', []);
@@ -163,17 +166,19 @@ function CartInner() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={useRebate}
+                aria-checked={useRebateEff}
                 aria-label={mlc('mall.rebateUse')}
                 data-testid="cart-rebate-switch"
+                disabled={rebateEmpty}
                 onClick={() => {
+                  if (rebateEmpty) return;
                   const next = !useRebate;
                   writeRebatePreference(next);
                   setUseRebate(next);
                 }}
-                className={`relative h-8 w-14 shrink-0 rounded-full transition ${useRebate ? 'bg-brand-cta' : 'bg-brand-secondary-light'}`}
+                className={`relative h-8 w-14 shrink-0 rounded-full transition ${useRebateEff ? 'bg-brand-cta' : 'bg-brand-secondary-light'} ${rebateEmpty ? 'opacity-50' : ''}`}
               >
-                <span className={`absolute top-1 h-6 w-6 rounded-full bg-card transition ${useRebate ? 'left-7' : 'left-1'}`} />
+                <span className={`absolute top-1 h-6 w-6 rounded-full bg-card transition ${useRebateEff ? 'left-7' : 'left-1'}`} />
               </button>
             </div>
           </section>

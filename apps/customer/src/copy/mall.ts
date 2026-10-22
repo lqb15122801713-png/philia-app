@@ -100,6 +100,10 @@ const MALL_COPY_TABLE = {
   /* 支付成功页（W1-D1 同构：单据摘要 + 双出口） */
   'mall.paySuccessTitle': '支付成功',
   'mall.paySuccessSub': '门店会尽快为你发货，进度可在订单列表查看',
+  /* PD-75（P-CLIENT-03）：自提单不写「发货」 */
+  'mall.paySuccessSubPickup': '备货完成后会通知你到店自取，进度可在订单列表查看',
+  /* PD-75（HP-CLIENT-04）：收银台件数与确认单同口径 */
+  'mall.cashierItems': '共 {count} 件',
   'mall.viewOrders': '查看订单',
   'mall.backHome': '返回首页',
   'mall.keepShopping': '再逛逛商城 ›',
@@ -200,12 +204,14 @@ const MALL_COPY_TABLE = {
   /* 状态胶囊独有态（售后签组内 cancelled/refunding） */
   'mall.statusCancelled': '已取消',
   'mall.statusRefunding': '售后中',
+  /* PD-75（P-CLIENT-03）：自提单 paid 态不写「待发货」 */
+  'mall.statusWaitPickup': '待自取',
   /* 订单卡物流行前缀 + 待支付取消钮 + 取消二次确认钮 */
   'mall.trackingLabel': '快递单号',
   'mall.cancelCta': '取消',
   'mall.cancelConfirmCta': '确认取消',
-  /* SSE/变更提示条（本片接通） */
-  'mall.toastPaid': '支付成功，门店会尽快发货',
+  /* SSE/变更提示条（本片接通；PD-75 P-CLIENT-03：自提单不写「发货」，统一「备货」中性口径） */
+  'mall.toastPaid': '支付成功，门店会尽快为你备货',
   'mall.toastShipped': '订单已发货{no}',
   'mall.receiveOk': '已确认收货，感谢购买',
   'mall.receiveFail': '确认收货失败',

@@ -17,6 +17,7 @@ import { friendlyError, getApiBase, usePhiliaClient } from '@philia/shared';
 import { BadgeCheck, Loader2, ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { fenToYuan } from './format';
+import { mlc } from '../../copy/mall';
 
 /* ------------------------------------------------------------------ */
 /* 换皮批片 2 弹层三件套核查（§4.5）：本层补抓握手柄 grab 42×4 + 滚动锁 + 可点遮罩   */
@@ -27,6 +28,8 @@ export interface CashierOrder {
   id: string;
   orderNo: string;
   totalFen: number;
+  /** PD-75（HP-CLIENT-04）：件数透出——收银台与确认单同口径（可选，旧调用方不传不渲染） */
+  itemCount?: number;
 }
 
 type Phase = 'preparing' | 'ready' | 'failed' | 'error';
@@ -152,6 +155,11 @@ export default function CashierModal({
         </div>
 
         <p className="mt-4 text-center text-body text-ink-secondary">订单 {order.orderNo}</p>
+        {typeof order.itemCount === 'number' ? (
+          <p className="mt-1 text-center text-caption text-ink-secondary" data-testid="cashier-item-count">
+            {mlc('mall.cashierItems', { count: order.itemCount })}
+          </p>
+        ) : null}
         <p className="mt-1 text-center font-number text-4xl font-semibold text-ink">
           {fenToYuan(order.totalFen)}
         </p>

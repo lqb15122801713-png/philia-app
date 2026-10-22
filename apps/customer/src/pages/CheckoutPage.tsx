@@ -119,7 +119,10 @@ function CheckoutInner() {
   const [pickedCoupon, setPickedCoupon] = useState<AvailableCoupon | null>(null);
   const [useRebate, setUseRebate] = useState(() => readRebatePreference());
   const addressRequired = deliveryMethod === 'express';
-  const deductionFen = useRebate ? Math.min(balanceFen, totalFen) : 0;
+  /* PD-75（HP-CLIENT-05）：回馈金余额 0 时抵扣开关默认关且禁用（余额加载中同按 0 口径） */
+  const rebateEmpty = balanceFen <= 0;
+  const useRebateEff = useRebate && !rebateEmpty;
+  const deductionFen = useRebateEff ? Math.min(balanceFen, totalFen) : 0;
   const payableFen = Math.max(0, totalFen - deductionFen);
   const storesQ = useQuery({
     queryKey: ['store', 'listNearby'],
@@ -165,7 +168,13 @@ function CheckoutInner() {
           { onError: (err) => showToast(friendlyError(err, '券登记失败，请到店出示券码核销', 80), 'error') },
         );
       }
-      setCashierOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen });
+      setCashierOrder({
+        id: order.id,
+        orderNo: order.orderNo,
+        totalFen: order.totalFen,
+        /* PD-75（HP-CLIENT-04）：收银台件数=确认单同口径 */
+        itemCount: lines.reduce((n, l) => n + l.qty, 0),
+      });
     },
     onError: (err) => {
       // CONFLICT「库存不足（剩余 N 件）」/ BAD_REQUEST「已下架 / 仅支持同一门店」等服务端原文
@@ -216,7 +225,10 @@ function CheckoutInner() {
             <BadgeCheck className="h-7 w-7 text-success-deep" strokeWidth={1.5} />
           </span>
           <p className="mt-3 text-title-lg">{mlc('mall.paySuccessTitle')}</p>
-          <p className="mt-1 text-body text-ink-secondary">{mlc('mall.paySuccessSub')}</p>
+          {/* PD-75（P-CLIENT-03）：自提单不写「发货」 */}
+          <p className="mt-1 text-body text-ink-secondary">
+            {mlc(deliveryMethod === 'pickup' ? 'mall.paySuccessSubPickup' : 'mall.paySuccessSub')}
+          </p>
         </div>
 
         {/* 单据摘要卡（订单号 / 实付金额 / 收货信息快照）；金额 mono 深棕（成功不设绿不设金） */}
@@ -230,13 +242,24 @@ function CheckoutInner() {
               <dt className="text-ink-secondary">实付金额</dt>
               <dd className="font-number font-semibold text-ink">{fenToYuan(paidOrder.totalFen)}</dd>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="shrink-0 text-ink-secondary">收货信息</dt>
-              <dd className="text-right">
-                {form.name} <span className="font-number">{form.phone}</span>
-                <span className="mt-0.5 block text-caption text-ink-secondary">{form.detail}</span>
-              </dd>
-            </div>
+            {/* PD-75（P-CLIENT-03）：自提单无收货信息——改示取货门店，不再渲染空行 */}
+            {deliveryMethod === 'pickup' ? (
+              <div className="flex justify-between gap-4">
+                <dt className="shrink-0 text-ink-secondary">{mlc('mall.deliveryPickupU4')}</dt>
+                <dd className="text-right">
+                  {pickupStore?.name ?? ''}
+                  <span className="mt-0.5 block text-caption text-ink-secondary">{pickupStore?.address ?? ''}</span>
+                </dd>
+              </div>
+            ) : (
+              <div className="flex justify-between gap-4">
+                <dt className="shrink-0 text-ink-secondary">收货信息</dt>
+                <dd className="text-right">
+                  {form.name} <span className="font-number">{form.phone}</span>
+                  <span className="mt-0.5 block text-caption text-ink-secondary">{form.detail}</span>
+                </dd>
+              </div>
+            )}
           </dl>
         </section>
 
@@ -412,12 +435,13 @@ function CheckoutInner() {
               {mlc('mall.rebateBalanceLimit', { balance: fenToYuan(balanceFen), amt: fenToYuan(deductionFen) })}
             </p>
           </div>
-          <button type="button" role="switch" aria-checked={useRebate} aria-label={mlc('mall.rebateUse')} data-testid="checkout-rebate-switch" onClick={() => {
+          <button type="button" role="switch" aria-checked={useRebateEff} aria-label={mlc('mall.rebateUse')} data-testid="checkout-rebate-switch" disabled={rebateEmpty} onClick={() => {
+              if (rebateEmpty) return;
               const next = !useRebate;
               writeRebatePreference(next);
               setUseRebate(next);
-            }} className={`relative h-8 w-14 shrink-0 rounded-full transition ${useRebate ? 'bg-brand-cta' : 'bg-brand-secondary-light'}`}>
-            <span className={`absolute top-1 h-6 w-6 rounded-full bg-card transition ${useRebate ? 'left-7' : 'left-1'}`} />
+            }} className={`relative h-8 w-14 shrink-0 rounded-full transition ${useRebateEff ? 'bg-brand-cta' : 'bg-brand-secondary-light'} ${rebateEmpty ? 'opacity-50' : ''}`}>
+            <span className={`absolute top-1 h-6 w-6 rounded-full bg-card transition ${useRebateEff ? 'left-7' : 'left-1'}`} />
           </button>
         </div>
       </section>

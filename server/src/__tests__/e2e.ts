@@ -172,7 +172,7 @@
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
  *      56.1 种子 3955 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）→产品-1011 画布全屏批片 3 末片（0074 三十八屏随屏抽键 179 键增，台账新规=键入码必随迁移，生成件重生成 4133+seed 手补 1=4134，域 72 不变）4134/72）→产品-1012 控制台改版批片 1（0075 办事卡面人话键族 37 键增，键入码必随迁移，生成件重生成 4170+seed 手补 1=4171，域 72 不变）4171/72）→产品-1012 控制台改版批片 2 末片（0076 全局搜索键族 13 键增，生成件重生成 4183+seed 手补 1=4184，域 72 不变）4184/72）→候裁清零批（0077 退会审批闸新表+申请/审批/慎隐三族键 27 键增，生成件重生成 4210+seed 手补 1=4211，域 72 不变）4211/72）→产品-1012 走查修复批（0078 打卡放宽注记+日结已结明示+落端明示卡 10 键增+service_rules 留口键 1 增，生成件重生成 4220+seed 手补 1=4221，域 72 不变）4221/72）→产品-1013 走查P2修复批（0079 班次冻结明示徽 1 键增+寄养不可打卡人话/商城配送注记 4 键改值，生成件重生成 4221+seed 手补 1=4222，域 72 不变）4222/72）→产品-1013 A5 运营三刀（0080 槽位紧急下线/预览/留痕+预览角标 23 键增，生成件重生成 4244+seed 手补 1=4245，域 72 不变）4245/72）→产品-1013 走测修批 P0×4（0081 订单详情页 6 键+监控僵尸出列 4 键增，生成件重生成 4254+seed 手补 1=4255，域 72 不变）4255/72）→产品-1013 监控僵尸 P1（0082 强制完成动作 5 键增，生成件重生成 4259+seed 手补 1=4260，域 72 不变）→ 4266/72（产品-1014 钱域寄养 P1：0083 增 6 改 1[D-50 超期待批人话两件+仪表盘超期注两件+D-54 改期待确认横幅两件，slaOverdue 签改值]，生成件重生成 4265+seed 手补 1=4266，域 72 不变）→ 4266/72（产品-1014 运营后台改名纯 copy：0084 改 7[D-56 展示名 A1/A2/A4+pageSub 写死+C3 kill 支付语义]，生成件重生成 4265+seed 手补 1=4266，域 72 不变数不变）→ 4279/72（CJ-1015-02 安心包／微光修订：0085 增 13 改 4[A2 员工端安心包发放键族 13 增+A1 微光双标 4 改]，生成件重生成 4278+seed 手补 1=4279，域 72 不变）4266/72）；
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）→产品-1011 画布全屏批片 3 末片（0074 三十八屏随屏抽键 179 键增，台账新规=键入码必随迁移，生成件重生成 4133+seed 手补 1=4134，域 72 不变）4134/72）→产品-1012 控制台改版批片 1（0075 办事卡面人话键族 37 键增，键入码必随迁移，生成件重生成 4170+seed 手补 1=4171，域 72 不变）4171/72）→产品-1012 控制台改版批片 2 末片（0076 全局搜索键族 13 键增，生成件重生成 4183+seed 手补 1=4184，域 72 不变）4184/72）→候裁清零批（0077 退会审批闸新表+申请/审批/慎隐三族键 27 键增，生成件重生成 4210+seed 手补 1=4211，域 72 不变）4211/72）→产品-1012 走查修复批（0078 打卡放宽注记+日结已结明示+落端明示卡 10 键增+service_rules 留口键 1 增，生成件重生成 4220+seed 手补 1=4221，域 72 不变）4221/72）→产品-1013 走查P2修复批（0079 班次冻结明示徽 1 键增+寄养不可打卡人话/商城配送注记 4 键改值，生成件重生成 4221+seed 手补 1=4222，域 72 不变）4222/72）→产品-1013 A5 运营三刀（0080 槽位紧急下线/预览/留痕+预览角标 23 键增，生成件重生成 4244+seed 手补 1=4245，域 72 不变）4245/72）→产品-1013 走测修批 P0×4（0081 订单详情页 6 键+监控僵尸出列 4 键增，生成件重生成 4254+seed 手补 1=4255，域 72 不变）4255/72）→产品-1013 监控僵尸 P1（0082 强制完成动作 5 键增，生成件重生成 4259+seed 手补 1=4260，域 72 不变）→ 4266/72（产品-1014 钱域寄养 P1：0083 增 6 改 1[D-50 超期待批人话两件+仪表盘超期注两件+D-54 改期待确认横幅两件，slaOverdue 签改值]，生成件重生成 4265+seed 手补 1=4266，域 72 不变）→ 4266/72（产品-1014 运营后台改名纯 copy：0084 改 7[D-56 展示名 A1/A2/A4+pageSub 写死+C3 kill 支付语义]，生成件重生成 4265+seed 手补 1=4266，域 72 不变数不变）→ 4279/72（CJ-1015-02 安心包／微光修订：0085 增 13 改 4[A2 员工端安心包发放键族 13 增+A1 微光双标 4 改]，生成件重生成 4278+seed 手补 1=4279，域 72 不变）4266/72）→ 4303/73（PD-75 客户端退款入口批：0116 增 3[mall.cashierItems/statusWaitPickup/paySuccessSubPickup]改 14[devlogin 12+mall.toastPaid+agr.docUser]，seed 手补 3（生成件全量重生成拖入他窗未审键故手补），域 72→73 系基线漂移随录[他窗批积]，active 去重面=4302）
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -2591,7 +2591,7 @@ async function main(): Promise<void> {
     const p3Svc = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
     /* PD-21 D-45 适配：同宠重叠拒单闸上线后，族间寄养夹具各用各宠（闸=同宠口径）——
        本族夹具犬「来福」（旺财=PR-2 A5/R12 §32 在册，豆豆=67.2 族，撞撞=103.1 族） */
-    const p3Pet = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '来福', species: 'dog' }).returning())[0]!;
+    const p3Pet = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '来福', species: 'dog', vaccineValidUntil: '2099-12-31' }).returning())[0]!;
     const p3Start = new Date(`${storeDayStr(new Date(Date.now() + 86400_000))}T15:00:00+08:00`);
     const p3End = new Date(p3Start.getTime() + 3 * 86400_000);
     const p3Nights = [0, 1, 2].map((i) => storeDayStr(new Date(p3Start.getTime() + i * 86400_000)));
@@ -4948,13 +4948,13 @@ async function main(): Promise<void> {
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（4279 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 4279 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（4303 键/73 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 4303 && domainSet.size === 73 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（4279 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 4279 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（4302 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 4302 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6880,7 +6880,7 @@ async function main(): Promise<void> {
     noAuth672 instanceof TrpcHttpError && noAuth672.code === 'BAD_REQUEST' && noAuth672.message.includes('寄养单须先签署医疗授权'),
     noAuth672 && noAuth672.message);
   /* PD-21 D-45 适配：本族夹具犬「豆豆」（闸=同宠口径；旺财在册单不挡） */
-  const pet672dog = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '豆豆', species: 'dog' }).returning())[0]!;
+  const pet672dog = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '豆豆', species: 'dog', vaccineValidUntil: '2099-12-31' }).returning())[0]!;
   const appt672 = await trpcMutate<{ id: string; status: string }>('appointment.create', {
     cookie: customerCookie,
     input: {
@@ -7117,7 +7117,7 @@ async function main(): Promise<void> {
   check('67.7 pet.list 回读 vaccineProofUrls 一致',
     petList677.find((p) => p.id === petId)?.vaccineProofUrls[0] === vacBody677.url,
     petList677.find((p) => p.id === petId)?.vaccineProofUrls);
-  // 寄养下单校验口径不变：咪咪（无疫苗证明）+ 已签署医疗授权 → 仍可下单（仅留证不拦）
+  // PD-75（AE-CLIENT-R3-01）前口径：咪咪 vaccineValidUntil=2026-12-01 覆盖住宿期 → 仍可下单
   const mimi677 = petList677.find((p) => p.name === '咪咪')!;
   check('67.7 前置：咪咪无疫苗证明（留证对照组）', mimi677.vaccineProofUrls.length === 0, mimi677.vaccineProofUrls);
   const appt677 = await trpcMutate<{ id: string; status: string }>('appointment.create', {
@@ -7125,11 +7125,27 @@ async function main(): Promise<void> {
     input: {
       storeId, petId: mimi677.id, serviceId: boardingSvc672.id, type: 'boarding',
       scheduledStart: bStart672, scheduledEnd: bEnd672, paymentMode: 'pay_at_store',
-      medicalAuth: { agreed: true }, note: '【测试】e2e 67.7 无疫苗证明寄养单（口径不变实证）',
+      medicalAuth: { agreed: true }, note: '【测试】e2e 67.7 疫苗有效期覆盖寄养期可下单',
     },
   });
-  check('67.7 寄养下单校验口径不变（无疫苗证明不拦，仅留证；行为变更报备在案）',
+  check('67.7 疫苗有效期覆盖退房日 → 可下单（confirmed）',
     appt677.status === 'confirmed', appt677.status);
+  /* PD-75（AE-CLIENT-R3-01）疫苗闸服务端硬闸负向实证：无苗宠寄养 create 拒确认（非仅 UI 灰） */
+  const noVac677 = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '无苗犬', species: 'dog' }).returning())[0]!;
+  let vacGate677: string = '';
+  try {
+    await trpcMutate('appointment.create', {
+      cookie: customerCookie,
+      input: {
+        storeId, petId: noVac677.id, serviceId: boardingSvc672.id, type: 'boarding',
+        scheduledStart: bStart672, scheduledEnd: bEnd672, paymentMode: 'pay_at_store',
+        medicalAuth: { agreed: true }, note: '【测试】e2e 67.7 无苗拒确认实证',
+      },
+    });
+  } catch (err) {
+    vacGate677 = err instanceof TrpcHttpError ? err.code : 'UNKNOWN';
+  }
+  check('67.7 PD-75 疫苗闸 server 拒确认（无苗宠寄养 → BAD_REQUEST）', vacGate677 === 'BAD_REQUEST', vacGate677);
 
   /* ---- 67.8 遛弯次数 + 合笼房型（寄养特殊选项） ---- */
   console.log('\n[体验片2] 67.8 遛弯次数/合笼房型（寄养特殊选项）');
@@ -7146,7 +7162,7 @@ async function main(): Promise<void> {
     !!baStd678 && !!baHl678 && baStd678.remaining.every((r) => r === 0) && baHl678.remaining.every((r) => r === 1),
     { std: baStd678?.remaining, hl: baHl678?.remaining });
   /* PD-21 D-45 适配：本族夹具犬「皮皮」（闸=同宠口径；旺财=PR-2 A5 在册单不挡） */
-  const pet678dog = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '皮皮', species: 'dog' }).returning())[0]!;
+  const pet678dog = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '皮皮', species: 'dog', vaccineValidUntil: '2099-12-31' }).returning())[0]!;
   const appt678 = await trpcMutate<{ id: string; walkTimesPerDay: number | null }>('appointment.create', {
     cookie: customerCookie,
     input: {
@@ -8674,8 +8690,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（4279 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 4279 &&
+    check('76.3 activeCopyTexts 形状不变（4302 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 4302 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -11838,8 +11854,8 @@ async function main(): Promise<void> {
     const slotKeys98 = new Set(blocks98.items.map((b) => b.pageKey));
     /* 口径注：config.list 返回全版本行（族间 config.save 会增生行）——计数=active 键去重面（稳定口径） */
     const activeKeyCount98 = new Set(list98.rules.filter((r) => r.active).map((r) => r.ruleKey)).size;
-    check('98.2 索引数据源读口全通（copy 4279 键（active 去重面）+dictionary 参数域+canvas.blocks 46 屏+slotPort.list）',
-      activeKeyCount98 === 4279 && dict98.items.length > 0 && slotKeys98.size === 46,
+    check('98.2 索引数据源读口全通（copy 4303 键（active 去重面）+dictionary 参数域+canvas.blocks 46 屏+slotPort.list）',
+      activeKeyCount98 === 4303 && dict98.items.length > 0 && slotKeys98.size === 46,
       { copyActive: activeKeyCount98, dict: dict98.items.length, pages: slotKeys98.size });
   }
 
@@ -12021,8 +12037,8 @@ async function main(): Promise<void> {
       { err: blocked100 && blocked100.message });
 
     /* ---- 100.3 D-34：演示店坐标=文三路 100 号同址（seed 落库值，取证=504 行 seedStoreGeo 快照——本库行已被 83 族前置夹具改到围栏点） ---- */
-    check('100.3 D-34 演示店坐标同源（seed 落库=杭州文三路 100 号同址 lat 30.275/lng 120.1315）',
-      (seedStoreGeo?.address ?? '').includes('文三路') && Math.abs((seedStoreGeo?.lat ?? 0) - 30.275) < 0.001 && Math.abs((seedStoreGeo?.lng ?? 0) - 120.1315) < 0.001,
+    check('100.3 D-34 演示店坐标同源（seed 落库=杭州文三路 100 号同址 lat 30.2812/lng 120.1489，PD-75 对齐地址真值）',
+      (seedStoreGeo?.address ?? '').includes('文三路') && Math.abs((seedStoreGeo?.lat ?? 0) - 30.2812) < 0.001 && Math.abs((seedStoreGeo?.lng ?? 0) - 120.1489) < 0.001,
       { address: seedStoreGeo?.address, lat: seedStoreGeo?.lat, lng: seedStoreGeo?.lng });
   }
 
@@ -12145,7 +12161,7 @@ async function main(): Promise<void> {
     /* ---- 103.1 D-45：同宠重叠寄养拒单 ---- */
     /* 隔离夹具：新宠物「撞撞」（同宠闸只认 petId；它宠在册单不挡路） */
     const pet103 = (await db.insert(schema.pets).values({
-      ownerId: customerUser!.id, name: '撞撞', species: 'dog',
+      ownerId: customerUser!.id, name: '撞撞', species: 'dog', vaccineValidUntil: '2099-12-31',
     }).returning())[0]!;
     const boardingSvc103 = (await db.select().from(schema.services).where(
       and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'), eq(schema.services.active, true)),

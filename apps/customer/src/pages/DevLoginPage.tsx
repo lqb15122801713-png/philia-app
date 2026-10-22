@@ -45,6 +45,8 @@ interface SeedUser {
 const ROLE_LABEL: Record<string, string> = {
   merchant_owner: '店主',
   merchant_admin: '店员管理',
+  merchant_manager: '店员管理',
+  merchant_clerk: '收银员',
   staff: '员工',
   customer: '客户',
 }
@@ -101,7 +103,7 @@ export default function DevLoginPage() {
         }
         if (r.status === 403) {
           setGateRequired(true)
-          setGateError('内测口令错误，请重新输入')
+          setGateError('访问口令错误，请重新输入')
           return null
         }
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -287,7 +289,7 @@ export default function DevLoginPage() {
             <p className="text-body-sm">
               当前已登录：<span className="font-semibold">{user.nickname ?? user.id}</span>
             </p>
-            <p className="mt-1 text-caption text-ink-secondary">角色：{user.roles.join(' / ')}</p>
+            <p className="mt-1 text-caption text-ink-secondary">角色：{roleLabel(user.roles)}</p>
             <div className="mt-3 flex gap-2">
               {/* D-36：员工/商家角色在客户端零软绕——不出「进入首页」（进 /home 宠友壳的软口摘除） */}
               {!wrongEnd ? (
@@ -337,7 +339,7 @@ export default function DevLoginPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') submitGate()
                 }}
-                placeholder="内测口令"
+                placeholder="访问口令"
                 className="rounded-control bg-card text-body-sm"
               />
               <Button
@@ -386,7 +388,6 @@ export default function DevLoginPage() {
         <section ref={accountsRef} className="mt-6 scroll-mt-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-title">{dc('devlogin.seedTitle')}</h2>
-            <span className="shrink-0 text-caption-xs text-ink-placeholder">{dc('devlogin.devOnly')}</span>
           </div>
           {seeds === null && seedsError === null && !gateRequired ? (
             <ul className="mt-3 space-y-2">
@@ -437,7 +438,7 @@ export default function DevLoginPage() {
             <Input
               value={manualId}
               onChange={(e) => setManualId(e.target.value)}
-              placeholder="users.id（ULID）"
+              placeholder="账号 ID"
               className="rounded-control bg-card text-body-sm"
             />
             <Button
