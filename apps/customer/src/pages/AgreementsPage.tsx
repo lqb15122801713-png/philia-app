@@ -87,7 +87,12 @@ const AGR_DEFAULT_ORDER = ['agr.head', 'agr.list', 'agr.note', 'agr.doc'] as con
 
 export default function AgreementsPage() {
   const { trpc } = usePhiliaClient()
-  const [open, setOpen] = useState<AgreementEntry | null>(null)
+  /* PD-82 登录协议可点（R17 回归）：支持 ?doc=user|privacy|member_service|boarding
+     直开对应协议全文（登录页页脚真链落点；/agreements 公开路由亦同口径） */
+  const [open, setOpen] = useState<AgreementEntry | null>(() => {
+    const docKey = new URLSearchParams(window.location.search).get('doc')
+    return ENTRIES.find((e) => e.key === docKey) ?? null
+  })
 
   /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
   const isCanvasPreview = useMemo(

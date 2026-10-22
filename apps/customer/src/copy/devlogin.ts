@@ -30,8 +30,11 @@ const DEVLOGIN_COPY_TABLE = {
   'devlogin.manualTitle': '账号 ID 登录',
   'devlogin.manualBody': '演示环境重建后账号 ID 会变化，可向门店索取最新账号 ID。',
   'devlogin.seedNote': '提示：演示账号一键登录，也可在口令通过后用手机号自助开户；登录状态保留 7 天。',
-  /* 底部协议小字 */
-  'devlogin.footerA': '登录即同意《用户协议》与《隐私政策》',
+  /* 底部协议小字（PD-82 登录协议可点·R17 回归修复：协议名=真链 → /agreements 公开页） */
+  'devlogin.footerAgree': '登录即同意',
+  'devlogin.footerUser': '《用户协议》',
+  'devlogin.footerAnd': '与',
+  'devlogin.footerPrivacy': '《隐私政策》',
   'devlogin.footerB': '访问口令由门店发放',
   /* D-33 按角色落端：员工/商家种子账号登录后不迷航——已知拓扑直接跳，未知拓扑出明示卡 */
   'devlogin.endStaffTitle': '该账号是员工账号',

@@ -41,6 +41,7 @@ import MemberRenewPage from './pages/MemberRenewPage'
 import PayReconcilePage from './pages/PayReconcilePage'
 import PayStatePage from './pages/PayStatePage'
 import MemberRebatePage from './pages/MemberRebatePage'
+import LotteryPage from './pages/LotteryPage'
 import MemberUpgradePage from './pages/MemberUpgradePage'
 import MomentsPage from './pages/MomentsPage'
 import NotifyCenterPage from './pages/NotifyCenterPage'
@@ -158,6 +159,9 @@ function ProtectedRoutes() {
       <Route path="/member/open" element={<MemberOpenPage />} />
       {/* R11b 视觉批：回馈金账本拆独立推送页（36 号档 §四 W-01；申报锚点=「回馈金」） */}
       <Route path="/member/rebate" element={<MemberRebatePage />} />
+      {/* PD-82：回馈抽奖真转盘页（首页「回馈抽奖」卡原硬链 /member 无转盘；详情级无 dock，
+          PushBar 返回条；奖品=前端 mock，已申报 check-nav-closure/smoke-routes 双表） */}
+      <Route path="/member/lottery" element={<LotteryPage />} />
       {/* 补缺批片 3 会员域：升档试算 / 到期换档预约（详情级无 dock，返回条兜底 /member；
           申报锚点=「升级会员」/「预约下期档位」） */}
       <Route path="/member/upgrade" element={<MemberUpgradePage />} />
@@ -190,7 +194,8 @@ export default function App() {
   const isHomePath = pathname === '/' || pathname === '/home'
   const isLiveProcessPath = pathname.startsWith('/appointments/') && pathname.endsWith('/live')
   const isMemberCardPath = pathname === '/me/card' || pathname === '/me/card/'
-  const suppressInstallBanner = isBoardingPath || isBookingSuccessPath || isMallPath || isHomePath || isLiveProcessPath || isMemberCardPath
+  const isPublicAgreementsPath = pathname === '/agreements' || pathname === '/agreements/'
+  const suppressInstallBanner = isBoardingPath || isBookingSuccessPath || isMallPath || isHomePath || isLiveProcessPath || isMemberCardPath || isPublicAgreementsPath
   const hasBookingDock = isGroomingPath || isBoardingPath || isBookingSuccessPath
   const isMainPath =
     pathname === '/' ||
@@ -206,6 +211,9 @@ export default function App() {
         <Routes>
           {/* 开发登录页：守卫之外，且不显示 dock（T2.0 新增路由，已向主代理汇报） */}
           <Route path="/dev-login" element={<DevLoginPage />} />
+          {/* PD-82 登录协议可点（R17 回归）：协议中心公开别名——登录页页脚协议链登录前可读；
+              页内仅 publicProcedure 查询（canvas.blocks/store.listNearby），原 /settings/agreements 不动 */}
+          <Route path="/agreements" element={<AgreementsPage />} />
           <Route
             path="/*"
             element={

@@ -29,6 +29,18 @@
   font-size: 12px; backdrop-filter: blur(10px);
 }
 .hv2-store-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* PD-82 消息主入口：banner 右上铃铛（门店 chip 正下方，避 preview-badge 左上位） */
+.hv2-notify-bell {
+  position: absolute; z-index: 2; top: 68px; right: 16px;
+  display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+  border-radius: 999px; background: rgba(250,247,240,.92); color: var(--hv2-brand);
+  backdrop-filter: blur(10px);
+}
+.hv2-notify-badge {
+  position: absolute; top: -3px; right: -3px; min-width: 16px; height: 16px; padding: 0 4px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: #F2DC8C; color: #3B2E24; font-size: 9px; font-weight: 700; line-height: 1;
+}
 .hv2-banner-content { position: absolute; z-index: 2; left: 20px; bottom: 46px; color: #FAF7F0; }
 .hv2-banner-eyebrow { font-size: 12px; letter-spacing: .04em; }
 .hv2-banner-content h1 { margin-top: 2px; font-size: 25px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }

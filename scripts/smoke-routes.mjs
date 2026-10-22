@@ -133,6 +133,8 @@ const ROUTES = [
   { app: 'customer', path: '/notifications/prefs', anchors: ['订阅管理'], serverDep: true, note: '补缺批片 5 站内信（订阅管理）' },
   { app: 'customer', path: '/member/checkout', anchors: ['确认订单'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）' },
   { app: 'customer', path: '/member/renew', anchors: ['续费'], serverDep: true, note: '产品-1010 片 2 线上续费确认页（Mock 通道）' },
+  { app: 'customer', path: '/member/lottery', anchors: ['回馈抽奖'], serverDep: true, note: 'PD-82 回馈抽奖真转盘页（首页活动卡换链；锚点=页题）' },
+  { app: 'customer', path: '/agreements', anchors: ['协议中心'], serverDep: true, note: 'PD-82 登录协议可点（R17 回归）：公开别名路由，锚点=页题' },
   { app: 'customer', path: `/pay/${INVALID_ID}`, anchors: ['付了没开'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态' },
   { app: 'customer', path: '/pay/reconcile', anchors: ['付了没开', '对账补开'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）' },
   /* ---- 商家端 ---- */

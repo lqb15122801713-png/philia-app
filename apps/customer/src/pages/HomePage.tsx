@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  Bell,
   CircleDollarSign,
   Clock3,
   Home,
@@ -17,6 +18,7 @@ import { fenToYuan, fmtHM } from '@/components/booking/format'
 import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
 import { hc } from '@/copy/home'
+import { ntf } from '@/copy/notify'
 
 interface ServiceRow {
   id: string
@@ -109,6 +111,16 @@ export default function HomePage() {
     enabled: !!user,
     staleTime: 60_000,
   })
+  /* PD-82 消息主入口（补缺批片 5 原设计回补）：头部铃铛→/notifications，
+     未读角标=push.unreadCount 30s 轮询（与 /me 同 queryKey 缓存共享） */
+  const unreadQ = useQuery({
+    queryKey: ['push', 'unreadCount'],
+    queryFn: () => trpc.push.unreadCount.query(),
+    enabled: !!user,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  })
+  const unreadTotal = unreadQ.data?.total ?? 0
   const inServiceAppt: AppointmentListItem | null = useMemo(() => {
     const rows = mineQ.data?.groups.in_service ?? []
     /* PD-75（P-CLIENT-01）：预约未开始（提前核销未来单）不出「服务进行中」；
@@ -186,6 +198,16 @@ export default function HomePage() {
         <Link to={storePath} className="hv2-store-chip" data-testid="home-store-chip">
           <MapPin className="h-3.5 w-3.5" strokeWidth={1.7} aria-hidden="true" />
           <span>{storeName}</span>
+        </Link>
+        {/* PD-82 消息主入口（补缺批片 5 原设计回补）：banner 右上铃铛（门店 chip 正下，
+            不占预览角标位）→/notifications；unreadTotal>0 显数字点，>99 显 99+ */}
+        <Link to="/notifications" className="hv2-notify-bell" data-testid="home-notify-entry" aria-label={ntf('ntf.title')}>
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.6} aria-hidden="true" />
+          {unreadTotal > 0 ? (
+            <span className="hv2-notify-badge" data-testid="home-notify-badge">
+              {unreadTotal > 99 ? '99+' : unreadTotal}
+            </span>
+          ) : null}
         </Link>
         <div className="hv2-banner-content" data-testid="home-banner-copy">
           <p className="hv2-banner-eyebrow">PHILIA CARE</p>
@@ -275,7 +297,7 @@ export default function HomePage() {
             <Link to="/me/coupons" className="hv2-activity-card" data-testid="home-activity-card">
               <h3>{hc('home.activityStore')}</h3><p className="hv2-sub">{hc('home.activityStoreSub')}</p><span>{hc('home.activityClaim')}<span aria-hidden="true">→</span></span>
             </Link>
-            <Link to="/member" className="hv2-activity-card" data-testid="home-activity-card">
+            <Link to="/member/lottery" className="hv2-activity-card" data-testid="home-activity-card">
               <h3>{hc('home.activityDraw')}</h3><p className="hv2-sub">{hc('home.activityDrawSub')}</p>
             </Link>
             <Link to="/me/coupons" className="hv2-activity-card" data-testid="home-activity-card">
