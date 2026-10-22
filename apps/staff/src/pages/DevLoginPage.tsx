@@ -4,7 +4,7 @@
 
 import { devLogin, getApiBase, logout, useMe, usePhiliaClient, resolveSlotUrl, slotContentOf } from '@philia/shared'
 import { useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { SkBtnAction } from '@/components/skeleton'
 import { LOGIN_COPY } from '@/copy/login'
@@ -31,6 +31,7 @@ export default function DevLoginPage() {
   const [gateRequired, setGateRequired] = useState(false)
   const [gateOpen, setGateOpen] = useState(false)
   const [gateCode, setGateCode] = useState('')
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
   const accountsRef = useRef<HTMLDivElement>(null)
 
   const doLogin = async (accountId: string) => {
@@ -121,13 +122,35 @@ export default function DevLoginPage() {
             >
               {LOGIN_COPY['login.loggedIn.enter']}
             </button>
-            <button
-              type="button"
-              onClick={doLogout}
-              className="u1-ring h-11 flex-1 rounded-control bg-card text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              {LOGIN_COPY['login.loggedIn.logout']}
-            </button>
+            {confirmingLogout ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingLogout(false)}
+                  className="u1-ring h-11 flex-1 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                  data-testid="login-logout-cancel"
+                >
+                  再想想
+                </button>
+                <button
+                  type="button"
+                  onClick={doLogout}
+                  className="h-11 flex-1 rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
+                  data-testid="login-logout-do"
+                >
+                  确认退出
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingLogout(true)}
+                className="u1-ring h-11 flex-1 rounded-control bg-card text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
+                data-testid="login-logout"
+              >
+                {LOGIN_COPY['login.loggedIn.logout']}
+              </button>
+            )}
           </div>
         </div>
       ) : null}
@@ -208,9 +231,16 @@ export default function DevLoginPage() {
         </div>
       ) : null}
 
-      {/* 6. 协议小字 */}
+      {/* 6. 协议小字（PD-80：协议名=真链进 /agreements 真页，非不可点占位） */}
       <p className="mt-4 text-center text-caption leading-relaxed text-ink-placeholder">
-        {LOGIN_COPY['login.agreement']}
+        {LOGIN_COPY['login.agreement.lead']}
+        <Link to="/agreements?doc=staff" className="mx-0.5 font-semibold text-ink underline underline-offset-2" data-testid="login-agreement-staff">
+          {LOGIN_COPY['login.agreement.staff']}
+        </Link>
+        {LOGIN_COPY['login.agreement.and']}
+        <Link to="/agreements?doc=privacy" className="mx-0.5 font-semibold text-ink underline underline-offset-2" data-testid="login-agreement-privacy">
+          {LOGIN_COPY['login.agreement.privacy']}
+        </Link>
       </p>
     </div>
   )

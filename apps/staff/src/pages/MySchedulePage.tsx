@@ -41,6 +41,9 @@ const minToHours = (m: number): string => {
   return Number.isInteger(h) ? String(h) : h.toFixed(1);
 };
 
+/** YYYY-MM-DD → M月D日（中文日期，pill 区间用） */
+const mdLabel = (d: string): string => `${Number(d.slice(5, 7))}月${Number(d.slice(8, 10))}日`;
+
 export default function MySchedulePage() {
   const { trpc, queryClient } = usePhiliaClient();
   const { showToast, toastEl } = useToast();
@@ -210,11 +213,15 @@ export default function MySchedulePage() {
           <button type="button" className="sk-btn-ghost" onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), 7)))}>
             {sdc('sched.myweek.next')}
           </button>
+          {/* PD-80 R15-01：pill 绑真实区间——周一~周日日期段恒在文内，本周↔下周切换必有状态差（消除 PILL_NO_STATE≡0） */}
           <span
             className={`ml-auto rounded-chip px-1.5 py-0.5 text-caption font-bold ${
               weekPublished ? 'bg-success-light text-success-deep' : 'bg-brand-primary-light text-ink'
             }`}
+            data-testid="mysched-week-pill"
           >
+            {sdc('sched.myweek.range', { start: mdLabel(days[0] ?? weekStart), end: mdLabel(days[6] ?? weekStart) })}
+            {' · '}
             {weekPublished ? sdc('sched.myweek.published') : sdc('sched.myweek.draft')}
           </span>
         </div>

@@ -41,6 +41,7 @@ export default function MePage() {
   const { user } = useMe();
   const { showToast, toastEl } = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const [expandKey, setExpandKey] = useState<'schedule' | 'help' | 'settings' | null>(null);
 
   // 员工详情（staff 行：role/schedule/createdAt；store）
@@ -351,12 +352,38 @@ export default function MePage() {
             <p className="mt-1">{ME_COPY['me.help.flowBody']}</p>
           </div>
         ) : null}
+        {/* PD-80：退出登录二次确认（一击展开确认区，再击确认才真退出） */}
         <SkRow
           testId="me-logout"
-          onClick={() => void doLogout()}
+          onClick={() => setConfirmingLogout((v) => !v)}
           label={loggingOut ? mc('me.row.loggingOut') : mc('me.row.logout')}
-          value=""
+          value={confirmingLogout ? '⌄' : ''}
         />
+        {confirmingLogout ? (
+          <div className="px-1 pb-3" data-testid="me-logout-confirm">
+            <p className="text-caption font-bold text-ink">{mc('me.logout.confirmTitle')}</p>
+            <p className="mt-0.5 text-caption text-ink-secondary">{mc('me.logout.confirmDesc')}</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                data-testid="me-logout-cancel"
+                onClick={() => setConfirmingLogout(false)}
+                className="sk-btn-ghost flex-1"
+              >
+                {mc('me.logout.cancel')}
+              </button>
+              <button
+                type="button"
+                data-testid="me-logout-do"
+                disabled={loggingOut}
+                onClick={() => void doLogout()}
+                className="flex h-12 min-h-[44px] flex-1 items-center justify-center rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              >
+                {loggingOut ? mc('me.row.loggingOut') : mc('me.logout.confirmCta')}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </SkRows>
 
       <SkNote>{mc('me.version')}</SkNote>

@@ -19,6 +19,7 @@ const SCHEDULE_COPY_TABLE = {
   'sched.myweek.next': '下周 ›',
   'sched.myweek.published': '已发布',
   'sched.myweek.draft': '待发布',
+  'sched.myweek.range': '{start}–{end}',
   'sched.myweek.empty': '本周还没有排班',
   'sched.week.mine': '我',
   'sched.week.rest': '休息',
