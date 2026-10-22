@@ -1,0 +1,78 @@
+
+=== dev-login customer ===
+philia_session=eyJ1aWQiO…(cookie 截断)
+
+=== myCardToken 签发 ===
+{
+  "httpStatus": 200,
+  "data": {
+    "token": "mc1.btKWpSAzDzPcH7avjD9Q2w.b079682c21daf349a082e9dc050561bbeeadf32d355ff0e1e32dbc319bc2205d",
+    "planKey": "plan_weiguang",
+    "expiresAt": "2026-10-22T11:19:39.000Z",
+    "ttlSec": 90
+  }
+}
+
+=== 令牌结构 ===
+{
+  "全长": 91,
+  "段数": 3,
+  "前缀": "mc1",
+  "nonce段长度": 22,
+  "签名段长度": 64
+}
+
+=== 逐段 base64url 解码结果 ===
+[
+  "��",
+  "nҖ� 3\u000f3�\u001f���?P�",
+  "oN��͜�WZ~=kO6{�\\ӝ9�V�y�}�ߞ_G�{}�m����6�N]"
+]
+
+=== 解码含 userId? ===
+false
+
+=== 解码含 plan 明文? ===
+false
+
+=== 验收5 核销链通（首扫） ===
+{
+  "httpStatus": 200,
+  "data": {
+    "userId": "01M5HN49SB7A95KTZ674N091JR",
+    "planKey": "plan_weiguang",
+    "planLabel": "会员档·注册用户：免费档（手机号即在册）；宠物建档不限；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，注册用户不设钩子）",
+    "membershipStatus": "active",
+    "expiresAt": "2026-10-22T11:19:39.000Z"
+  }
+}
+
+=== 验收4 同一令牌二次核销（重放） ===
+{
+  "httpStatus": 400,
+  "error": "会员码无效或已被使用，请客户重新出示",
+  "code": "BAD_REQUEST"
+}
+
+=== 篡改签名 ===
+{
+  "httpStatus": 400,
+  "error": "会员码无效或已被使用，请客户重新出示",
+  "code": "BAD_REQUEST"
+}
+
+=== 验收6 旧明文码（合法旧式签名） ===
+{
+  "httpStatus": 400,
+  "error": "会员码无效或已被使用，请客户重新出示",
+  "code": "BAD_REQUEST"
+}
+
+=== 未知 nonce（合法签名未落表） ===
+{
+  "httpStatus": 400,
+  "error": "会员码无效或已被使用，请客户重新出示",
+  "code": "BAD_REQUEST"
+}
+
+[pd78-probe] done

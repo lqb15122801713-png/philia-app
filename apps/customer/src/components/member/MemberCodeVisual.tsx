@@ -45,11 +45,11 @@ export function MemberBarcode({
 }) {
   const encoded = useMemo(() => code128Bars(token), [token])
   if (!encoded) return null
+  /* PD-78：DOM 不留可抽完整令牌——只渲染条码图形，不落 data-token 等任何含原串属性 */
   return (
     <svg
       className={className}
       data-testid={testId}
-      data-token={token}
       viewBox={`0 0 ${encoded.width} 40`}
       role="img"
       aria-label="会员码条形码"
@@ -85,11 +85,11 @@ export function MemberQrCode({ token, size }: { token: string; size: number }) {
   }, [token, size])
 
   if (url) {
+    /* PD-78：DOM 不留可抽完整令牌——img 只挂 dataURL 图形，不落 data-token 等含原串属性 */
     return (
       <img
         src={url}
         data-testid="membercard-qr-image"
-        data-token={token}
         width={size}
         height={size}
         alt="会员码二维码"

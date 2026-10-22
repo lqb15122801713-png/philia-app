@@ -659,6 +659,13 @@
       "when": 1792654045587,
       "tag": "0116_pd75_client_refund_entry",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "6",
+      "when": 1792725600000,
+      "tag": "0118_member_card_token",
+      "breakpoints": true
     }
   ]
 }

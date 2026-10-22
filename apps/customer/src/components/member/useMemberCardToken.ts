@@ -29,13 +29,20 @@ export function useMemberCardToken(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return
     issue()
-    const timer = window.setInterval(issue, 5 * 60_000)
-    return () => window.clearInterval(timer)
   }, [enabled, issue])
+
+  /* PD-78：TTL=90s——每张令牌到期前 15s 排下一次签发（expiresAt 随签发更新 → 链式续期） */
+  const expMs = tokenM.data?.expiresAt ? new Date(tokenM.data.expiresAt).getTime() : 0
+  useEffect(() => {
+    if (!enabled || !expMs) return
+    const lead = Math.max(expMs - 15_000 - Date.now(), 5_000)
+    const timer = window.setTimeout(issue, lead)
+    return () => window.clearTimeout(timer)
+  }, [enabled, expMs, issue])
 
   const countdown = useCountdown(tokenM.data?.expiresAt)
   useEffect(() => {
-    if (enabled && countdown.expired) issue()
+    if (enabled && countdown.expired) issue() // 到期兜底（链式漏网即补刷）
   }, [countdown.expired, enabled, issue])
 
   return {
