@@ -1,0 +1,6 @@
+{
+  "httpStatus": 400,
+  "error": "会员码无效或已被使用，请客户重新出示",
+  "code": "BAD_REQUEST",
+  "jti": "-uYra7_r"
+}

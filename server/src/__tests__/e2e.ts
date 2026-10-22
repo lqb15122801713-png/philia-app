@@ -248,8 +248,8 @@
  *        → grants 双行（year/pet_id 入锚）+notifications marketing 行；同年重扫零新增
  *   68.4 新人礼包：新注册 → welcome_pack 行+营销通知；重复注册零重复；
  *        首单 paid 翻转（mock-callback 真链）→ upgrade_gift 行；重复回调+次单零重复
- *   68.5 会员码：openFree→myCardToken 签发→verifyCardToken 通过+planKey 透出；
- *        篡改签名/过期（signMemberCardPayload 合法签名伪造过期件）400 明文
+ *   68.5 会员码（PD-78 不透明引用）：openFree→myCardToken 签发（90s/.mc1 格式）→verifyCardToken
+ *        通过+planKey 透出；解码无 uid/plan；重放/篡改/过期/旧明文格式/错店归属一律 400 统一拒
  *   69.1 券：领取 claimed+uq 幂等；availableCoupons 门槛过滤；couponUse 核销=
  *        orders.total_fen/payments 前后零变动仅 grant 翻 used；配额满 400
  *   69.2 收藏：toggle 幂等（在=删/不在=插）+favList+favCheck 同帧
@@ -263,6 +263,7 @@
  *        pay_orders 计数前后相等
  */
 
+import { createHmac, randomBytes } from 'node:crypto';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -7408,7 +7409,7 @@ async function main(): Promise<void> {
     .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
   check('68.4 重复回调 + 次单 paid 零重复（upgrade_gift 仍 1 行）', gifts684b.length === 1, gifts684b.length);
 
-  /* ---------- 68.5 会员码（签发/核验/篡改/过期） ---------- */
+  /* ---------- 68.5 会员码（PD-78 不透明引用：签发/核验/解码/重放/篡改/过期/旧格式失效/错店归属） ---------- */
   console.log('\n[片3] 68.5 会员码');
   /* 端口批收尾片 4（OP-03 P1-1 注册即会员裁定）注记：devLoginPhone 注册路径新用户今起
      开户连带落注册用户档——原「非会员」前提改为「直插库用户（未经 HTTP 注册）」守错误路径，
@@ -7422,25 +7423,64 @@ async function main(): Promise<void> {
   await trpcMutate('membership.openFree', { cookie: cookie684 });
   const card685 = await trpcMutate<{ token: string; planKey: string; ttlSec: number }>(
     'membership.myCardToken', { cookie: cookie684 });
-  const verify685 = await trpcMutate<{ userId: string; planKey: string; planLabel: string; membershipStatus: string | null }>(
+  const verify685 = await trpcMutate<{ userId: string; planKey: string | null; planLabel: string | null; membershipStatus: string | null }>(
     'membership.verifyCardToken', { cookie: ownerCookie, input: { token: card685.token } });
-  check('68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（注册用户）',
-    card685.planKey === 'plan_weiguang' && card685.ttlSec === 300 &&
+  check('68.5 myCardToken 签发（90s 时效·不透明引用 mc1 格式）→ verifyCardToken 收银台核验通过 + planKey/档名透出（注册用户）',
+    card685.planKey === 'plan_weiguang' && card685.ttlSec === 90 &&
+      /^mc1\.[A-Za-z0-9_-]{22}\.[0-9a-f]{64}$/.test(card685.token) &&
       verify685.userId === user684Id && verify685.planKey === 'plan_weiguang' &&
-      verify685.planLabel.includes('注册用户') && verify685.membershipStatus === 'active',
+      (verify685.planLabel ?? '').includes('注册用户') && verify685.membershipStatus === 'active',
     verify685);
-  const tampered685 = card685.token.slice(0, -1) + (card685.token.endsWith('0') ? '1' : '0');
+  /* 解码断言（H-R4-2 回炉）：令牌整串与各段 base64url 解码均不得含 userId/plan（无可解明文载荷） */
+  const decoded685 = card685.token
+    .split('.')
+    .map((seg) => {
+      try { return Buffer.from(seg, 'base64url').toString('utf8'); } catch { return ''; }
+    })
+    .join('|');
+  check('68.5 解码不得 userId/plan（逐段 base64url 解，无明文载荷）',
+    !card685.token.includes(user684Id) && !decoded685.includes(user684Id) && !decoded685.includes('plan_'),
+    decoded685.slice(0, 80));
+  /* 重放：同一令牌二次核销 → 统一拒（首次核验已原子置 used） */
+  const replay685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: card685.token } }));
+  check('68.5 同一令牌二次核销 → 400 统一拒（重放）',
+    replay685 instanceof TrpcHttpError && replay685.httpStatus === 400 && replay685.message.includes('会员码无效或已被使用'),
+    replay685 && replay685.message);
+  /* 篡改：签名位翻改 → 统一拒（须新签一件，勿复用已核销令牌） */
+  const card685b = await trpcMutate<{ token: string }>('membership.myCardToken', { cookie: cookie684 });
+  const tampered685 = card685b.token.slice(0, -1) + (card685b.token.endsWith('0') ? '1' : '0');
   const verTamper685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: tampered685 } }));
-  check('68.5 篡改签名 → 400 明文「签名不符」',
-    verTamper685 instanceof TrpcHttpError && verTamper685.httpStatus === 400 && verTamper685.message.includes('签名不符'),
+  check('68.5 篡改签名 → 400 统一拒',
+    verTamper685 instanceof TrpcHttpError && verTamper685.httpStatus === 400 && verTamper685.message.includes('会员码无效或已被使用'),
     verTamper685 && verTamper685.message);
-  /* 过期件：合法签名+过期 exp（signMemberCardPayload export 复用，仿预约码 signCode 冒烟先例） */
-  const { signMemberCardPayload } = await import('../routers/membership');
-  const expired685 = signMemberCardPayload(user684Id, 'plan_weiguang', Math.floor(Date.now() / 1000) - 10);
-  const verExpired685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: expired685 } }));
-  check('68.5 过期 token（合法签名）→ 400 明文「已过期」',
-    verExpired685 instanceof TrpcHttpError && verExpired685.httpStatus === 400 && verExpired685.message.includes('已过期'),
+  /* 过期件：合法签名+表内 exp 已过（signMemberCardNonce export 复用，直插库伪造，仿预约码 signCode 冒烟先例） */
+  const { signMemberCardNonce } = await import('../routers/membership');
+  const nowSec685 = Math.floor(Date.now() / 1000);
+  const expiredNonce685 = randomBytes(16).toString('base64url');
+  await db.insert(schema.memberCardTokens).values({
+    nonce: expiredNonce685, userId: user684Id, storeScope: null, exp: nowSec685 - 10, iat: nowSec685 - 100,
+  });
+  const verExpired685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: `mc1.${expiredNonce685}.${signMemberCardNonce(expiredNonce685)}` } }));
+  check('68.5 过期令牌（合法签名+表内 exp 已过）→ 400 统一拒',
+    verExpired685 instanceof TrpcHttpError && verExpired685.httpStatus === 400 && verExpired685.message.includes('会员码无效或已被使用'),
     verExpired685 && verExpired685.message);
+  /* 旧明文码立即失效：旧格式 base64(uid|plan|exp)+合法旧式签名（密钥同域）亦拒（格式闸不收旧件） */
+  const legacyPayload685 = Buffer.from(`${user684Id}|plan_weiguang|${nowSec685 + 600}`, 'utf8').toString('base64url');
+  const legacySig685 = createHmac('sha256', process.env.MEMBER_CARD_SECRET ?? 'philia-dev-member-card-secret-do-not-use-in-prod').update(legacyPayload685).digest('hex');
+  const verLegacy685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: `${legacyPayload685}.${legacySig685}` } }));
+  check('68.5 旧明文码立即失效（合法旧式签名亦 400 统一拒）',
+    verLegacy685 instanceof TrpcHttpError && verLegacy685.httpStatus === 400 && verLegacy685.message.includes('会员码无效或已被使用'),
+    verLegacy685 && verLegacy685.message);
+  /* 归属校验：store_scope=他店（直插库伪造件，单店种子不跨店造种）→ 本店核销统一拒，且令牌不烧（used 仍 0） */
+  const scopedNonce685 = randomBytes(16).toString('base64url');
+  await db.insert(schema.memberCardTokens).values({
+    nonce: scopedNonce685, userId: user684Id, storeScope: 'store_pd78_not_this_store', exp: nowSec685 + 90, iat: nowSec685,
+  });
+  const verScope685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: `mc1.${scopedNonce685}.${signMemberCardNonce(scopedNonce685)}` } }));
+  const scopeRow685 = await db.select().from(schema.memberCardTokens).where(eq(schema.memberCardTokens.nonce, scopedNonce685)).then((r) => r[0]);
+  check('68.5 错店归属（store_scope≠核销店）→ 400 统一拒且令牌不烧',
+    verScope685 instanceof TrpcHttpError && verScope685.httpStatus === 400 && verScope685.message.includes('会员码无效或已被使用') && scopeRow685?.used === 0,
+    { err: verScope685 && verScope685.message, used: scopeRow685?.used });
 
   /* ================================================================== */
   console.log('\n[片3] 69. 商城族（券/收藏/晒单/配送/超时收货/叠加公示/涉钱零通道）');

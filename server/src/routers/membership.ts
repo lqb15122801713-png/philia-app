@@ -40,7 +40,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { and, desc, eq, gte, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
@@ -439,45 +439,30 @@ async function quoteUpgrade(
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 /* ------------------------------------------------------------------ */
-/* 片 3：会员码签发/核验（HMAC token，时效 5min）                            */
+/* 片 3：会员码签发/核验（PD-78 不透明引用令牌：nonce 表 + HMAC，TTL 90s）    */
 /* ------------------------------------------------------------------ */
 
 /** 会员码签名密钥（内测口径：仓内常量缺省，生产经环境变量覆盖——仿 IMG_SECRET /
- *  BOOKING_CODE_SECRET 纪律；哈希不留明文同 verificationCodes 哈希纪律） */
+ *  BOOKING_CODE_SECRET 纪律；令牌本体=不透明引用，密钥只签 nonce 不落库） */
 const MEMBER_CARD_SECRET = process.env.MEMBER_CARD_SECRET ?? 'philia-dev-member-card-secret-do-not-use-in-prod';
-/** 会员码时效：5 分钟（超时须客户重新出示） */
-export const MEMBER_CARD_TTL_SEC = 300;
+/** 会员码时效：90 秒（PD-78 钉死口径；前端到期自动刷新） */
+export const MEMBER_CARD_TTL_SEC = 90;
 
-/** 会员码签发（纯函数，供 myCardToken 与 e2e 过期件伪造复用）：
- *  token = base64url(`${uid}|${planKey}|${exp}`) + '.' + hmac_sha256_hex(payload) */
-export function signMemberCardPayload(uid: string, planKey: string, expSec: number): string {
-  const payload = Buffer.from(`${uid}|${planKey}|${expSec}`, 'utf8').toString('base64url');
-  const sig = createHmac('sha256', MEMBER_CARD_SECRET).update(payload).digest('hex');
-  return `${payload}.${sig}`;
+/** 会员码结构：mc1.<nonce:base64url 22 字符=128bit 随机>.<hmac_sha256_hex(nonce)>。
+ *  载荷零明文——串内不含 userId/plan（base64 无可解载荷）；归属/时效/已用全在
+ *  member_card_tokens 表（nonce → userId/storeScope/exp/used/iat），旧明文格式不再受理。 */
+const MEMBER_CARD_TOKEN_RE = /^mc1\.([A-Za-z0-9_-]{22})\.([0-9a-f]{64})$/;
+/** 核销失败统一对外明文（PD-78：扫码端不泄细节原因；细节只进内部日志结果码） */
+const MEMBER_CARD_REJECT_MSG = '会员码无效或已被使用，请客户重新出示';
+
+/** nonce 签名（纯函数导出：myCardToken 签发与 e2e 伪造过期/篡改/旧格式件复用） */
+export function signMemberCardNonce(nonce: string): string {
+  return createHmac('sha256', MEMBER_CARD_SECRET).update(nonce).digest('hex');
 }
 
-/** 会员码验签+解析（纯函数）：结构/签名/时效三闸；失败抛 400 明文（篡改/过期分明） */
-function parseMemberCardToken(token: string): { uid: string; planKey: string; expSec: number } {
-  const dot = token.lastIndexOf('.');
-  if (dot <= 0) badRequest('会员码格式不正确，请客户重新出示');
-  const payload = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
-  if (!/^[0-9a-f]{64}$/.test(sig)) badRequest('会员码格式不正确，请客户重新出示');
-  const expected = Buffer.from(createHmac('sha256', MEMBER_CARD_SECRET).update(payload).digest('hex'), 'utf8');
-  const actual = Buffer.from(sig, 'utf8');
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-    badRequest('会员码校验失败（签名不符，可能被篡改），请客户重新出示');
-  }
-  const raw = Buffer.from(payload, 'base64url').toString('utf8');
-  const parts = raw.split('|');
-  const expSec = Number(parts[2]);
-  if (parts.length !== 3 || !parts[0] || !parts[1] || !Number.isInteger(expSec)) {
-    badRequest('会员码格式不正确，请客户重新出示');
-  }
-  if (expSec < Math.floor(Date.now() / 1000)) {
-    badRequest('会员码已过期（5 分钟时效），请客户重新出示');
-  }
-  return { uid: parts[0]!, planKey: parts[1]!, expSec };
+/** 核销日志（PD-78 口径：只记 jti=nonce 前缀＋结果码；不落明文令牌／userId 对） */
+function logMemberCardVerify(jti: string, result: string): void {
+  console.info(`[member-card-verify] jti=${jti} result=${result}`);
 }
 
 /**
@@ -1302,19 +1287,29 @@ export const membershipRouter = router({
   }),
 
   /**
-   * myCardToken（customer 本人 · 片 3）：会员码签发——
-   * token=base64url(`{uid}|{planKey}|{exp}`)+'.'+hmac_sha256_hex(payload)（仓内常量
-   * 缺省密钥，内测口径明面注记，仿 verificationCodes 哈希纪律/预约码签名同族工艺），
-   * 时效 5 分钟；本人 active 会员才签发（非会员/冻结明文拒）。
+   * myCardToken（customer 本人 · 片 3 / PD-78 不透明引用版）：会员码签发——
+   * token=`mc1.{nonce}.{hmac_sha256_hex(nonce)}`（nonce=128bit 随机，落 member_card_tokens
+   * 表携 userId/storeScope/exp/used/iat；串内零明文载荷，base64 解不出 uid/plan），
+   * 时效 90 秒（前端到期自动刷新）；本人 active 会员才签发（非会员/冻结明文拒）。
    */
   myCardToken: customerProcedure.mutation(async ({ ctx }) => {
     const now = new Date();
     const m = await currentMembership(ctx.db, ctx.user.id, now);
     if (!m) badRequest('非会员无会员码，请先开通会员');
     if (m.status !== 'active') badRequest('会员已冻结或已退会，会员码不可用（续费解冻后可出示）');
-    const expSec = Math.floor(now.getTime() / 1000) + MEMBER_CARD_TTL_SEC;
+    /* PD-78 不透明引用：nonce 落表（userId/storeScope/exp/used/iat），串内零明文载荷 */
+    const iatSec = Math.floor(now.getTime() / 1000);
+    const expSec = iatSec + MEMBER_CARD_TTL_SEC;
+    const nonce = randomBytes(16).toString('base64url'); // 128bit 随机引用
+    await ctx.db.insert(schema.memberCardTokens).values({
+      nonce,
+      userId: ctx.user.id,
+      storeScope: null, // 会员卡全店通用（决策 #41 口径不变）；日后范围收口落店 ID 即被核验闸消费
+      exp: expSec,
+      iat: iatSec,
+    });
     return {
-      token: signMemberCardPayload(ctx.user.id, m.planKey, expSec),
+      token: `mc1.${nonce}.${signMemberCardNonce(nonce)}`,
       planKey: m.planKey,
       expiresAt: new Date(expSec * 1000),
       ttlSec: MEMBER_CARD_TTL_SEC,
@@ -1322,24 +1317,71 @@ export const membershipRouter = router({
   }),
 
   /**
-   * verifyCardToken（merchantManager 收银台核验口 · 片 3）：验签+时效+档透出。
-   * 篡改（签名不符）/过期/畸形一律 400 明文；通过后透出 uid+planKey+档位名+
-   * 当前会员状态（核销/权益使用以本口透出档位为准，签后状态变更以库为准）。
+   * verifyCardToken（merchantManager 收银台核验口 · 片 3 / PD-78 不透明引用版）：
+   * 结构 → HMAC 签名 → 表内 nonce（未用+未过期，原子置 used 防重放）→ store_scope 归属
+   * 四闸；失败一律同一明文拒（不泄细节，内部日志记 nonce 前缀+结果码）。通过后透出
+   * uid+planKey+档位名+当前会员状态（核销/权益使用以本口透出档位为准，签后状态变更以库为准）。
    */
   verifyCardToken: merchantManagerProcedure
     .input(z.object({ token: z.string().min(1).max(512) }))
     .mutation(async ({ ctx, input }) => {
-      const claims = parseMemberCardToken(input.token);
       const now = new Date();
-      const m = await currentMembership(ctx.db, claims.uid, now);
+      const nowSec = Math.floor(now.getTime() / 1000);
+      const match = MEMBER_CARD_TOKEN_RE.exec(input.token);
+      if (!match) {
+        logMemberCardVerify('-', 'bad_format'); // 含旧明文格式（base64 载荷件）——立即失效不再受理
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      const [, nonce, sig] = match;
+      const jti = nonce.slice(0, 8);
+      const expected = Buffer.from(signMemberCardNonce(nonce), 'utf8');
+      const actual = Buffer.from(sig, 'utf8');
+      if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+        logMemberCardVerify(jti, 'bad_signature');
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      const row = await ctx.db
+        .select()
+        .from(schema.memberCardTokens)
+        .where(eq(schema.memberCardTokens.nonce, nonce))
+        .then((r) => r[0]);
+      if (!row) {
+        logMemberCardVerify(jti, 'unknown_nonce');
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      if (row.used) {
+        logMemberCardVerify(jti, 'replay');
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      if (row.exp < nowSec) {
+        logMemberCardVerify(jti, 'expired');
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      /* 归属校验：核销店须在适用店范围（NULL=全店通用；范围外拒且不烧令牌，客仍可至适用店出示） */
+      if (row.storeScope && row.storeScope !== ctx.user.storeId) {
+        logMemberCardVerify(jti, 'store_scope');
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      /* 原子置 used（used=0→1 条件更新；并发双扫只有一进，零行命中=重放拒） */
+      const consumed = await ctx.db
+        .update(schema.memberCardTokens)
+        .set({ used: 1, updatedAt: now })
+        .where(and(eq(schema.memberCardTokens.nonce, nonce), eq(schema.memberCardTokens.used, 0)))
+        .returning({ nonce: schema.memberCardTokens.nonce });
+      if (!consumed.length) {
+        logMemberCardVerify(jti, 'replay');
+        badRequest(MEMBER_CARD_REJECT_MSG);
+      }
+      const m = await currentMembership(ctx.db, row.userId, now);
       const plans = await loadMemberPlans(ctx.db);
-      const plan = plans.get(claims.planKey);
+      const plan = m ? plans.get(m.planKey) : undefined;
+      logMemberCardVerify(jti, 'ok');
       return {
-        userId: claims.uid,
-        planKey: claims.planKey,
-        planLabel: plan?.label ?? claims.planKey,
+        userId: row.userId,
+        planKey: m?.planKey ?? null,
+        planLabel: plan?.label ?? m?.planKey ?? null,
         membershipStatus: m?.status ?? null, // 签发后状态变更（退会/冻结）以库为准透出
-        expiresAt: new Date(claims.expSec * 1000),
+        expiresAt: new Date(row.exp * 1000),
       };
     }),
 
