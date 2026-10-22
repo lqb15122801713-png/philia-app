@@ -17,7 +17,7 @@ const AUTH_COPY_TABLE = {
   'auth.enterCta': '进入门店',
   'auth.agreement': '登录即同意《商家内测协议》· 遇到问题联系 philia 小助手',
   'auth.gateNotice': '内测环境需先在下方输入口令',
-  'auth.seedEmpty': '未拉到店主种子用户，请重跑 server 的 db:seed，或手动输入 userId',
+  'auth.seedEmpty': '未读取到店主演示账号，请检查演示数据，或手动输入用户 ID',
   'auth.devNote':
     '仅开发环境：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。 非商家账号登录后会被引导回本页切换。',
 } as const;

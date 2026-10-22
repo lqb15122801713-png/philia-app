@@ -75,6 +75,7 @@ export const REFUND_STATUS_CHIP: Record<string, { cls: string; label: string }> 
 export const REFUND_METHOD_LABEL: Record<string, string> = {
   offline_original: '线下原路退回',
   to_stored_value: '退储值账户',
+  online_original: '线上原路退回（Mock）',
 }
 
 /** 支付段回补通道（preview.segments[].channel） */

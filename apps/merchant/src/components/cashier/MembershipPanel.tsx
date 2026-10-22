@@ -392,7 +392,7 @@ export default function MembershipPanel({
               disabled={busy || member === null}
               onClick={() => quoteM.mutate()}
             >
-              {quoteM.isPending ? '计算中…' : '计算续费金额（server 实算）'}
+              {quoteM.isPending ? '计算中…' : '计算续费金额'}
             </SheetBtn>
           ) : (
             <SheetBtn
@@ -705,7 +705,7 @@ export default function MembershipPanel({
           </div>
           {quoteFen !== null ? (
             <div className="mt-2.5 flex items-baseline justify-between rounded-[10px] bg-canvas px-3 py-2">
-              <span className="text-caption text-ink-secondary">续费应收（server 实算）</span>
+              <span className="text-caption text-ink-secondary">续费应收</span>
               <b className="font-number text-title font-bold tabular-nums" data-testid="membership-renew-quote-amount">
                 ¥{fenToYuan(quoteFen)}
               </b>

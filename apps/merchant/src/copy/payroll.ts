@@ -80,7 +80,7 @@ const PAYROLL_COPY_TABLE = {
 
   /* ---- 区 3 罚单录入 ---- */
   'payroll.ded.title': '罚单录入',
-  'payroll.ded.aside': '扣减只扣绩效不扣提成；当月累计达上限 server 硬拒（50% 红线）',
+  'payroll.ded.aside': '扣减只扣绩效不扣提成；当月累计最多扣 50%',
   'payroll.ded.staffLabel': '员工',
   'payroll.ded.staffPh': '选择员工',
   'payroll.ded.monthLabel': '归属月份',

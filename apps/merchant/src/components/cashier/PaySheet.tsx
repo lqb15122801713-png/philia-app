@@ -426,7 +426,7 @@ export default function PaySheet({
                     ? [{ key: 'rb', label: '回馈金抵扣（仅商品·不计入已收）', value: `−¥${fenToYuan(rbApplied)}`, tone: 'mut' as const }]
                     : []),
                   ...(amounts.roundingFen > 0
-                    ? [{ key: 'rounding', label: `${cc('cashier.roundingLabel')}（端口规则·server 实算）`, value: `−¥${fenToYuan(amounts.roundingFen)}`, tone: 'mut' as const }]
+                    ? [{ key: 'rounding', label: `${cc('cashier.roundingLabel')}（按门店规则核算）`, value: `−¥${fenToYuan(amounts.roundingFen)}`, tone: 'mut' as const }]
                     : []),
                   ...(crApplied > 0
                     ? [{ key: 'credit', label: '挂账（台账留痕·不计入已收）', value: `−¥${fenToYuan(crApplied)}`, tone: 'mut' as const }]
@@ -540,17 +540,19 @@ export default function PaySheet({
                 </small>
               </button>
             </div>
-            {/* 片 3 留口注记行（置灰明面：聚合扫码=通道资质候；外设=PWA 上限） */}
-            <div className="mt-2 flex flex-col gap-1" data-testid="cashier-pay-placeholder-notes">
-              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.3)]">
-                <ScanLine size={12} strokeWidth={1.8} aria-hidden />
-                {cc('cashier.scanPayNote')}
-              </p>
-              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.3)]">
-                <Printer size={12} strokeWidth={1.8} aria-hidden />
-                {cc('cashier.peripheralNote')}
-              </p>
-            </div>
+            <details className="mt-2" data-testid="cashier-pay-placeholder-notes">
+              <summary className="cursor-pointer text-caption-xs text-ink-placeholder">运维说明（扫码与外设）</summary>
+              <div className="mt-1 flex flex-col gap-1">
+                <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.3)]">
+                  <ScanLine size={12} strokeWidth={1.8} aria-hidden />
+                  {cc('cashier.scanPayNote')}
+                </p>
+                <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.3)]">
+                  <Printer size={12} strokeWidth={1.8} aria-hidden />
+                  {cc('cashier.peripheralNote')}
+                </p>
+              </div>
+            </details>
             {passBlockReason ? (
               <p className="mt-1.5 text-caption-xs text-ink-placeholder" data-testid="cashier-pass-block">
                 {passBlockReason}
@@ -762,10 +764,8 @@ export default function PaySheet({
           </>
         )}
 
-        {/* W-06 红线明面带（UX-02 §四：钉在收款面板下，常显不折叠）——
-            无充值/年费≠储值/四分列/扣次非现金 四句走 console 键（wsk.redline1-4） */}
         <div className="wsk mt-4">
-          <WRedline testId="cashier-pay-redline" />
+          <WRedline testId="cashier-pay-redline" items={['涉钱仅 Mock · 勿重复提交 · 退款须留痕']} />
         </div>
       </div>
     </div>,
