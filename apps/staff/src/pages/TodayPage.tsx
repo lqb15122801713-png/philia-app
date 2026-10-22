@@ -371,7 +371,7 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="sk">
+    <div className="sk pb-[env(safe-area-inset-bottom)]">
       <SkAppHead title={skc('sk.workTitle')} no={skc('sk.workNo')} />
 
       {todayQuery.isPending ? (

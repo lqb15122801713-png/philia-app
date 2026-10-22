@@ -29,9 +29,13 @@ export default function NotificationsPage() {
     queryKey: LIST_KEY,
     queryFn: () => trpc.push.listNotifications.query({ limit: 50 }),
   });
+  const unreadQ = useQuery({
+    queryKey: UNREAD_KEY,
+    queryFn: () => trpc.push.unreadCount.query(),
+  });
 
   const items = useMemo(() => listQ.data?.items ?? [], [listQ.data]);
-  const unreadCount = useMemo(() => items.filter((n) => n.readAt === null).length, [items]);
+  const unreadCount = unreadQ.data?.total ?? 0;
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: LIST_KEY });

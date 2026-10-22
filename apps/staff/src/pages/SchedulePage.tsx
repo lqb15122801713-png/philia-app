@@ -15,7 +15,7 @@
  * - 互斥：同时仅一单服务中——有在途单时其余待接「开始」停用（灰态）；
  *   已完成/待接保持薄行，仅服务中卡可展。
  *
- * 数据：appointment.listForStaff（from/to 闭区间，员工视界=本店且指派本人，原 HistoryPage 同口径）
+ * 数据：appointment.listForStaff（from/to 闭区间；前台显式本店接待视界，其他员工默认指派本人）
  * + auth.me（本人排班，clockrow 班次段）+ serviceStep.list（服务中卡六步只读展开，ExecutePage 同接口）。
  * 纯预约零噪音：无统计/无提成/无导出；功能零回退（执行入口/接口不动）。
  */
@@ -170,12 +170,12 @@ export default function SchedulePage() {
     return () => clearInterval(t);
   }, [isToday]);
 
-  /* ---- 班轴数据：所选日闭区间（listForStaff 员工视界=本店且指派本人） ---- */
+  /* ---- 班轴数据：前台看本店接待，其他员工看指派本人；个人绩效仍用默认本人范围 ---- */
   const from = useMemo(() => dayStartOf(pickedDate), [pickedDate]);
   const to = useMemo(() => dayEndOf(pickedDate), [pickedDate]);
   const listQuery = useQuery({
-    queryKey: ['appointment', 'listForStaff', { from: from.getTime(), to: to.getTime() }],
-    queryFn: () => trpc.appointment.listForStaff.query({ from, to }),
+    queryKey: ['appointment', 'listForStaff', { from: from.getTime(), to: to.getTime(), storewide: isFrontdesk }],
+    queryFn: () => trpc.appointment.listForStaff.query({ from, to, storewide: isFrontdesk }),
     refetchInterval: 60_000,
   });
   const items = useMemo(
@@ -185,11 +185,12 @@ export default function SchedulePage() {
 
   /* ---- 明日注：仅当天态拉明日单数 ---- */
   const tomorrowQuery = useQuery({
-    queryKey: ['appointment', 'listForStaff', { from: from.getTime() + 86_400_000, to: to.getTime() + 86_400_000 }],
+    queryKey: ['appointment', 'listForStaff', { from: from.getTime() + 86_400_000, to: to.getTime() + 86_400_000, storewide: isFrontdesk }],
     queryFn: () =>
       trpc.appointment.listForStaff.query({
         from: new Date(from.getTime() + 86_400_000),
         to: new Date(to.getTime() + 86_400_000),
+        storewide: isFrontdesk,
       }),
     enabled: isToday,
     staleTime: 60_000,

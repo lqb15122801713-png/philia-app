@@ -2521,12 +2521,22 @@ export const appointmentRouter = router({
 
   /**
    * 13. listTodayForStaff（staff）：今日时间轴，按 scheduled_start 升序。
-   * 范围 = 本人被指派的单 + 本店未指派的待承接单（pending/confirmed）；已取消不进时间轴。
+   * 前台接待范围 = 本店今日单；其他员工 = 本人被指派的单 + 本店未指派的待承接单；已取消不进时间轴。
    */
   listTodayForStaff: staffProcedure.query(async ({ ctx }) => {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+    const visibility =
+      ctx.user.staffRole === 'frontdesk'
+        ? undefined
+        : or(
+            eq(schema.appointments.staffId, ctx.user.staffId!),
+            and(
+              isNull(schema.appointments.staffId),
+              inArray(schema.appointments.status, ['pending', 'confirmed']),
+            ),
+          );
     const rows = await ctx.db
       .select()
       .from(schema.appointments)
@@ -2538,13 +2548,7 @@ export const appointmentRouter = router({
           gte(schema.appointments.scheduledStart, dayStart),
           lt(schema.appointments.scheduledStart, dayEnd),
           ne(schema.appointments.status, 'cancelled'),
-          or(
-            eq(schema.appointments.staffId, ctx.user.staffId!),
-            and(
-              isNull(schema.appointments.staffId),
-              inArray(schema.appointments.status, ['pending', 'confirmed']),
-            ),
-          ),
+          visibility,
         ),
       )
       .orderBy(asc(schema.appointments.scheduledStart));
@@ -2558,11 +2562,9 @@ export const appointmentRouter = router({
   }),
 
   /**
-   * 14. listForStaff（staff）：员工端历史页数据源（T3.1 追加，唯一一处服务端小改授权）。
-   * 范围 = 本店且（指派给本人 或 本人执行过）的预约：指派（assign）落 staff_id
-   * （S1-R1 起核销不再认领/不改写 staff_id，历史「核销认领」单保留原值不影响本查询）；
-   * 按 scheduled_start 倒序，联 pet/service/store 名称直显。
-   * 入参 from/to 过滤 scheduledStart 闭区间，status 精确过滤。
+   * 14. listForStaff（staff）：默认返回本店且指派本人的预约，供个人历史与绩效使用。
+   * 前台预约页可显式 storewide=true 读取本店范围；其他角色及其他调用仍保持本人范围。
+   * 入参 from/to 过滤 scheduledStart 闭区间，status 精确过滤，按 scheduled_start 倒序。
    */
   listForStaff: staffProcedure
     .input(
@@ -2571,14 +2573,15 @@ export const appointmentRouter = router({
           from: z.date().optional(), // scheduledStart >= from
           to: z.date().optional(), // scheduledStart <= to
           status: z.enum(APPOINTMENT_STATUSES).optional(),
+          storewide: z.boolean().optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const conds = [
-        eq(schema.appointments.storeId, ctx.user.storeId!),
-        eq(schema.appointments.staffId, ctx.user.staffId!),
-      ];
+      const conds = [eq(schema.appointments.storeId, ctx.user.storeId!)];
+      if (input?.storewide !== true || ctx.user.staffRole !== 'frontdesk') {
+        conds.push(eq(schema.appointments.staffId, ctx.user.staffId!));
+      }
       if (input?.from) conds.push(gte(schema.appointments.scheduledStart, input.from));
       if (input?.to) conds.push(lte(schema.appointments.scheduledStart, input.to));
       if (input?.status) conds.push(eq(schema.appointments.status, input.status));

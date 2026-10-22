@@ -69,7 +69,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
-      <main className={`mx-auto max-w-lg ${dockActive ? 'pb-[94px]' : ''}`}>
+      <main className={`mx-auto max-w-lg ${dockActive ? 'pb-[calc(94px+env(safe-area-inset-bottom))]' : ''}`}>
         <Routes>
           {/* 开发登录页：守卫之外，且不显示 Dock（T3.1 新增路由，契约允许） */}
           <Route path="/dev-login" element={<DevLoginPage />} />

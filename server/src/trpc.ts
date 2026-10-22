@@ -30,6 +30,8 @@ export interface SessionUser {
   roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'merchant_clerk' | 'staff'>;
   staffId?: string; // 若为 staff，其 staff 记录 id
   storeId?: string; // staff 所属门店 / merchant 管理门店
+  /** staff 岗位角色：staffProcedure 每请求随在职校验装配 */
+  staffRole?: 'frontdesk' | 'groomer';
   /**
    * 老板跨店全域集合（商家端大批片 1 连锁地基）：名下门店 ∪ 名下总部辖店
    * （stores.owner_id=本人 ∪ stores.hq_id∈名下店）。仅 merchant_owner 装配；
@@ -84,7 +86,7 @@ export const staffProcedure = publicProcedure.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: 'FORBIDDEN', message: '需要员工身份（未绑定 staff 记录）' });
   }
   const staffRow = await ctx.db
-    .select({ status: schema.staff.status })
+    .select({ status: schema.staff.status, role: schema.staff.role })
     .from(schema.staff)
     .where(eq(schema.staff.id, ctx.user.staffId))
     .get();
@@ -94,7 +96,8 @@ export const staffProcedure = publicProcedure.use(async ({ ctx, next }) => {
       message: '员工已停职，操作权限已即时冻结，请联系门店负责人',
     });
   }
-  return next();
+  const staffRole: 'frontdesk' | 'groomer' = staffRow.role === 'frontdesk' ? 'frontdesk' : 'groomer';
+  return next({ ctx: { ...ctx, user: { ...ctx.user, staffRole } } });
 });
 
 /**
