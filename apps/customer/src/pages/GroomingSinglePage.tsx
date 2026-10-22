@@ -73,24 +73,35 @@ export default function GroomingSinglePage() {
     ? (resolvePetId(petOverride, pets, readLastBooking()) ?? pets[0]?.id ?? null)
     : petOverride;
 
-  const servicesQ = useQuery({
-    queryKey: ['store', 'getWithServices', effStoreId, serviceOverride, petId],
-    queryFn: () =>
-      trpc.store.getWithServices.query({
-        storeId: effStoreId!,
-        serviceId: serviceOverride ?? undefined,
-        petId: petId ?? undefined,
-      }),
+  // 第一段：门店 + 服务目录（解析 B4-3 生效服务；两段式与首页 HomeBookingPanel 同例）
+  const catalogQ = useQuery({
+    queryKey: ['store', 'getWithServices', effStoreId],
+    queryFn: () => trpc.store.getWithServices.query({ storeId: effStoreId! }),
     enabled: effStoreId !== null,
   });
 
   const groomingServices = useMemo(
-    () => (servicesQ.data?.services ?? []).filter((service) => service.type === 'grooming'),
-    [servicesQ.data],
+    () => (catalogQ.data?.services ?? []).filter((service) => service.type === 'grooming'),
+    [catalogQ.data],
   );
-  const serviceId = servicesQ.isSuccess
+  const serviceId = catalogQ.isSuccess
     ? resolveServiceId(serviceOverride, groomingServices, readLastBooking())
     : serviceOverride;
+
+  /* 第二段：可约槽同源查询（PD-68）——带「生效服务」时长口径（+petId 走时长引擎），
+     与 appointment.create 重叠闸同一 slotsNeeded：首槽空/续槽占的时段不再误显可约，
+     create 409 后 refetch 同源剔槽（该槽不可再选）。queryKey 与 HomeBookingPanel 槽段
+     同形，同店同服务同宠直接命中缓存 */
+  const servicesQ = useQuery({
+    queryKey: ['store', 'getWithServices', effStoreId, serviceId, petId],
+    queryFn: () =>
+      trpc.store.getWithServices.query({
+        storeId: effStoreId!,
+        serviceId: serviceId ?? undefined,
+        petId: petId ?? undefined,
+      }),
+    enabled: effStoreId !== null && serviceId !== null,
+  });
 
   const staffQ = useQuery({
     queryKey: ['store', 'listStaffPublic', effStoreId],
@@ -98,7 +109,7 @@ export default function GroomingSinglePage() {
     enabled: effStoreId !== null,
   });
 
-  const store = servicesQ.data?.store ?? nearbyStores.find((item) => item.id === effStoreId) ?? null;
+  const store = servicesQ.data?.store ?? catalogQ.data?.store ?? nearbyStores.find((item) => item.id === effStoreId) ?? null;
   const slots = useMemo(() => servicesQ.data?.slots ?? [], [servicesQ.data]);
   const days = useMemo(
     () => (store ? buildWeekGrid(store, slots, servicesQ.data?.advanceDays ?? 7) : []),

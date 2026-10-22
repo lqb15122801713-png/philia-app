@@ -1,0 +1,63 @@
+{
+  "at": "2026-10-22T02:29:38.850Z",
+  "base": "http://localhost:7178",
+  "tA": 1792720800000,
+  "t2": 1792735200000,
+  "results": [
+    {
+      "id": "A1 闸差剔槽：续槽占用时段初始即不可约",
+      "ok": true,
+      "detail": "cell(10:00) available=false disabled=true text=「已满」",
+      "extra": {
+        "disabled": true,
+        "available": "false",
+        "text": "已满"
+      }
+    },
+    {
+      "id": "A2 409 后该槽不可再选（闸差路径 OBS）",
+      "ok": true,
+      "detail": "cell(10:00) disabled=true 不可点（同源剔除后不进入 409 回路）",
+      "extra": {
+        "disabled": true,
+        "available": "false",
+        "text": "已满"
+      }
+    },
+    {
+      "id": "B0 接口证：appointment.create 真回 409",
+      "ok": true,
+      "detail": "create 响应状态集=[204,409]",
+      "extra": [
+        {
+          "url": "http://localhost:7268/trpc/appointment.create?batch=1",
+          "status": 204
+        },
+        {
+          "url": "http://localhost:7268/trpc/appointment.create?batch=1",
+          "status": 409
+        }
+      ]
+    },
+    {
+      "id": "B1 409 后底栏无已选",
+      "ok": true,
+      "detail": "409 后底栏=「下一可约 00:00 已提示 · 点选时段后确认」",
+      "extra": {
+        "summary": "下一可约 00:00 已提示 · 点选时段后确认",
+        "cellAvailable": "false",
+        "cellText": "已满"
+      }
+    },
+    {
+      "id": "B2 409 后该槽置灰（不可约即不可选）",
+      "ok": true,
+      "detail": "cell(14:00) available=false text=「已满」",
+      "extra": {
+        "summary": "下一可约 00:00 已提示 · 点选时段后确认",
+        "cellAvailable": "false",
+        "cellText": "已满"
+      }
+    }
+  ]
+}
