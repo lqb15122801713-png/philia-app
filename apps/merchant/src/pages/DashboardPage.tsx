@@ -261,6 +261,9 @@ export default function DashboardPage() {
         phoneAppeal: appealCount,
       }).flatMap((row): WAlertItem[] => {
         if (row.count <= 0) return []
+        /* PD-69：附加行（countsTowardTodoTotal=false）行内挂「不计入待办合计」注记——
+           与计入合计的 todo 四件视觉/文案分离，防六行朴素和被误读为待办合计 */
+        const notCountedNote = row.countsTowardTodoTotal ? undefined : dc('dash.alertRowNotCounted')
         switch (row.key) {
           case 'cancelRequested':
             return [
@@ -268,12 +271,13 @@ export default function DashboardPage() {
                 key: 'cancel',
                 text: dc('dash.todoCancelLabel'),
                 count: row.count,
+                notCountedNote,
                 to: '/appointments?status=cancel_requested&from=todo',
               },
             ]
           case 'refund':
             return [
-              { key: 'refund', text: dc('dash.todoRefundRequestLabel'), count: row.count, to: '/cashier/refunds' },
+              { key: 'refund', text: dc('dash.todoRefundRequestLabel'), count: row.count, notCountedNote, to: '/cashier/refunds' },
             ]
           case 'unpaid':
             return [
@@ -281,6 +285,7 @@ export default function DashboardPage() {
                 key: 'unpaid',
                 text: dc('dash.todoUnpaidLabel'),
                 count: row.count,
+                notCountedNote,
                 // 批次 M1 联动口径沿用：有样例单 → 收银台自动拉入该预约
                 to: unpaidSample ? `/cashier?pull=${unpaidSample.id}` : '/cashier',
               },
@@ -291,17 +296,19 @@ export default function DashboardPage() {
                 key: 'unassigned',
                 text: dc('dash.todoUnassignedLabel'),
                 count: row.count,
+                notCountedNote,
                 to: '/appointments?status=confirmed&from=todo',
               },
             ]
           case 'overdue':
-            return [{ key: 'overdue', text: dc('dash.todoOverdueLabel'), count: row.count, to: '/boarding' }]
+            return [{ key: 'overdue', text: dc('dash.todoOverdueLabel'), count: row.count, notCountedNote, to: '/boarding' }]
           case 'pending':
             return [
               {
                 key: 'pending',
                 text: dc('dash.todoPendingLabel'),
                 count: row.count,
+                notCountedNote,
                 to: '/appointments?status=pending&from=todo',
               },
             ]
@@ -311,6 +318,7 @@ export default function DashboardPage() {
                 key: 'ticket',
                 text: dc('dash.todoTicketLabel'),
                 count: row.count,
+                notCountedNote,
                 onClick: () => scrollToAnchor(TICKET_SECTION_ID),
               },
             ]
@@ -320,6 +328,7 @@ export default function DashboardPage() {
                 key: 'invoice',
                 text: dc('dash.todoInvoiceLabel'),
                 count: row.count,
+                notCountedNote,
                 onClick: () => scrollToAnchor(INVOICE_SECTION_ID),
               },
             ]
@@ -329,6 +338,7 @@ export default function DashboardPage() {
                 key: 'phoneAppeal',
                 text: dc('dash.todoAppealLabel'),
                 count: row.count,
+                notCountedNote,
                 onClick: () => scrollToAnchor('phone-appeals'),
               },
             ]

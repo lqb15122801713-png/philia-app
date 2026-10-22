@@ -75,3 +75,34 @@ test('PD-61 首页顶部待办行与待办合计同源同构：超期寄养≠0 
     assert.equal(rows.find((r) => r.key === key)?.countsTowardTodoTotal, false, key)
   }
 })
+
+test('PD-69 附加行与计入合计四件口径分离：六行朴素和 88 的差额全部来自不计入行', () => {
+  /* 缺陷种子形：todo 四件合计 83（cancel2+unassigned5+unpaid74+pending2），
+     附加行退款2＋超期3＝5；六行（count>0）朴素和=88≠todo.total 83 */
+  const seeded: DashboardStats = {
+    ...stats,
+    todo: { pending: 2, unassigned: 5, cancelRequested: 2, unpaid: 74, total: 83 },
+    overdueBoardingCount: 3,
+  }
+  const rows = buildTodoAlertRows(seeded, { refund: 2, ticket: 0, invoice: 0, phoneAppeal: 0 })
+  const visible = rows.filter((r) => r.count > 0)
+  assert.equal(visible.length, 6)
+  const naiveSum = visible.reduce((n, r) => n + r.count, 0)
+  assert.equal(naiveSum, 88)
+  /* PD-61 回归：计入合计之和＝todo.total＝晨报待办合计，不被本修改坏 */
+  assert.equal(todoAlertCountedTotal(rows), 83)
+  assert.equal(todoAlertCountedTotal(rows), todoGrandTotal(seeded))
+  /* 朴素和与待办合计的差额＝附加行（countsTowardTodoTotal=false）之和——
+     渲染层据此给附加行挂「不计入待办合计」行内注记（DashboardPage/C-69） */
+  const extraSum = visible.filter((r) => !r.countsTowardTodoTotal).reduce((n, r) => n + r.count, 0)
+  assert.equal(extraSum, 5)
+  assert.equal(naiveSum - todoAlertCountedTotal(rows), extraSum)
+  /* 附加行键集钉死（本种子下工单/发票/申诉为 0 不显行，附加行=超期单列＋退款独立域） */
+  assert.deepEqual(
+    visible
+      .filter((r) => !r.countsTowardTodoTotal)
+      .map((r) => r.key)
+      .sort(),
+    ['overdue', 'refund'],
+  )
+})
