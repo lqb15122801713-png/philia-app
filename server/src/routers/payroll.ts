@@ -273,7 +273,7 @@ export const payrollRouter = router({
             storeId,
             staffId: st.id,
             month: input.month,
-            payloadJson: payload as unknown as Record<string, unknown>,
+            payloadJson: { ...payload, pendingServiceLines: [] } as unknown as Record<string, unknown>,
             commissionFen,
             performanceFen: payload.performance.payableFen,
             deductionFen,

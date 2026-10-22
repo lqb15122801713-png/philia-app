@@ -129,7 +129,7 @@ export default function MePage() {
     try {
       await logout(getApiBase());
       await queryClient.invalidateQueries();
-      navigate('/dev-login', { replace: true });
+      navigate('/login', { replace: true });
     } catch {
       showToast('登出失败，请检查网络后重试');
       setLoggingOut(false);

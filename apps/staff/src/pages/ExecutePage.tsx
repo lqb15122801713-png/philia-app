@@ -632,8 +632,8 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     confirmMutation.mutate({ stepKey: activeRow.def.stepKey, report: buildReportPayload() })
   }
 
-  // 规格书 §4 摘要卡 meta=服务·时间·员工（员工=当前登录本人；非本人单已被守卫拦到引导页）
-  const staffName = user?.nickname ?? null
+  const operatorName = user?.nickname ?? '—'
+  const assignedStaffName = appt.assignedStaff?.name ?? '未指派'
 
   return (
     <div className="sk flex min-h-[100dvh] flex-col">
@@ -671,7 +671,9 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             <span className="u1-num whitespace-nowrap">
               {fmtHM(appointment.scheduledStart)}–{fmtHM(appointment.scheduledEnd)}
             </span>
-            {staffName ? ` · ${staffName}` : ''}
+          </p>
+          <p className="mt-0.5 text-caption text-ink-secondary">
+            归属员工：{assignedStaffName} · 当前操作：{operatorName}
           </p>
           {pendingAllCount > 0 ? (
             <p className="mt-0.5 text-caption text-ink-secondary">

@@ -1,0 +1,52 @@
+{
+  "kind": "PD-73 验证留痕（点验，非验收结论）",
+  "baseline": "b401f9eed6334f9f1118e6ad06a4806164b023b9",
+  "branch": "feat/pd73-staff-commission-chain",
+  "migration": "未动 journal；未新增或修改 drizzle migration；独占 0114 未使用",
+  "commands": [
+    {
+      "command": "node node_modules/tsx/dist/cli.mjs src/__tests__/pd73StaffCommission.ts",
+      "result": "16/16 断言通过；覆盖待计提、markPaid 后入账、越权 403、归属字段、登录去枚举与错误文案",
+      "log": "targeted.log"
+    },
+    {
+      "command": "node node_modules/tsx/dist/cli.mjs src/__tests__/pd73EdgeCases.ts",
+      "result": "11/11 断言通过；覆盖 clerk/双角色权限、混合产能顺序、账单去重、财务与工资条快照、协作待计提、角色文案",
+      "log": "edge.log"
+    },
+    {
+      "command": "npm run build",
+      "result": "customer / merchant / staff 三端构建通过",
+      "log": "build.log"
+    },
+    {
+      "command": "E2E_PORT=7301 npm run test:e2e",
+      "result": "107 段执行完成；本令相关回归通过；仍有 8 项非本令范围断言失败：56.1×2、57.1、74.11、76.3、77.2、81.4、98.2",
+      "log": "e2e.log"
+    },
+    {
+      "command": "node node_modules/tsx/dist/cli.mjs src/routers/__tests__/appointment.smoke.ts",
+      "result": "PD-73 权限段通过；随后在既有寄养夹具处因缺医疗授权中止（非本令改动面）"
+    },
+    {
+      "command": "npm run typecheck (server)",
+      "result": "仅 src/db/pd66EvidenceFixture.ts 的 12 个既有 TS1375 模块声明错误；无本令文件报错",
+      "log": "server-typecheck.log"
+    },
+    {
+      "command": "npm run lint -w @philia/staff",
+      "result": "25 个既有错误 + 1 个既有警告；未出现本令新增代码位置",
+      "log": "staff-lint.log"
+    },
+    {
+      "command": "旧服务计提时点与旧售卡内部语全文扫描",
+      "result": "零命中"
+    },
+    {
+      "command": "git diff --check",
+      "result": "通过"
+    }
+  ],
+  "review": "独立复审：原 Critical / Important 全部解决；工资条快照待计提冻结的 Minor 项亦已修复",
+  "browser": "见 ui-evidence.json 与 01–05 PNG；隔离端口已关闭，临时数据库已删除"
+}

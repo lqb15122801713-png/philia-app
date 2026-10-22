@@ -381,7 +381,7 @@ export const serviceStepRouter = router({
   list: publicProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      await assertAppointmentAccess(ctx, input.appointmentId);
+      await assertAppointmentAccess(ctx, input.appointmentId, { staffAssignedOnly: true });
       const steps = await ctx.db
         .select()
         .from(schema.appointmentSteps)
@@ -415,7 +415,7 @@ export const serviceStepRouter = router({
   /**
    * 登记步骤照片（员工上传成功后调用）。
    * 规则 2：仅 active 步开放，locked/done 一律 FORBIDDEN；
-   * 归属：本店且（未指派或指派给自己）（assertAppointmentAccess staff 分支）；
+   * 归属：本店且指派本人（PD-73）（assertAppointmentAccess staff 分支）；
    * 上限：未失效照片总数（含本次）不得超 max，超限 BAD_REQUEST；
    * before_after 步每张照片必须带 before/after 标签；staff 未开始时补写 started_at。
    * 片 3 B5-2 现场拍兜底闸：photos 项可带 clientTakenAt（=上传口返回的 EXIF
@@ -443,7 +443,7 @@ export const serviceStepRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertAppointmentAccess(ctx, input.appointmentId);
+      await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
       const def = defOf(input.stepKey);
       const step = await loadStep(ctx.db, input.appointmentId, input.stepKey);
 
@@ -525,7 +525,7 @@ export const serviceStepRouter = router({
    * - 仅该预约**当前 active 步**的照片可删：步骤非 active（locked/done）一律
    *   FORBIDDEN「仅当前进行中的步骤可删除照片」（与规则 2 同口径）；
    * - 照片须属该步且未失效（invalidated_at IS NULL），否则 NOT_FOUND；
-   * - 归属校验复用 assertAppointmentAccess（staff 分支：本店且未指派或指派给自己）；
+   * - 归属校验复用 assertAppointmentAccess（PD-73：本店且指派本人）；
    * - 删除方式 = 硬删行（step_photos DELETE）；磁盘文件留由既有孤儿回收
    *   （storage/cleanup.ts：无表记录引用且 mtime 超 24h 的文件自动清理），此处不动文件系统。
    * 返回删除后的未失效张数统计，供端上即时刷新进度。
@@ -539,7 +539,7 @@ export const serviceStepRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertAppointmentAccess(ctx, input.appointmentId);
+      await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
       const def = defOf(input.stepKey);
       const step = await loadStep(ctx.db, input.appointmentId, input.stepKey);
 
@@ -600,7 +600,7 @@ export const serviceStepRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const appt = await assertAppointmentAccess(ctx, input.appointmentId);
+      const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
       const def = defOf(input.stepKey);
       const step = await loadStep(ctx.db, input.appointmentId, input.stepKey);
 
@@ -816,7 +816,7 @@ export const serviceStepRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const appt = await assertAppointmentAccess(ctx, input.appointmentId); // merchant 本店
+      const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffAssignedOnly: true }); // merchant 本店
       // cancelled 单打标无业务意义（completed 已于 v1.1-b3 B3-1 改为事务内重开，见上）
       if (appt.status === 'cancelled') {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '预约已取消，不可打标重拍' });
@@ -956,7 +956,7 @@ export const serviceStepRouter = router({
   progressSummary: publicProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const appt = await assertAppointmentAccess(ctx, input.appointmentId);
+      const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffAssignedOnly: true });
       const steps = await ctx.db
         .select({
           stepKey: schema.appointmentSteps.stepKey,
@@ -986,7 +986,7 @@ export const serviceStepRouter = router({
   detailSheet: publicProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const appt = await assertAppointmentAccess(ctx, input.appointmentId);
+      const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffAssignedOnly: true });
       const steps = await ctx.db
         .select({
           id: schema.appointmentSteps.id,
