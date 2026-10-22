@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-22T12:03:24.726Z",
+  "source": "pd79-in-service-void-shots.mjs（本窗 server:7200 + dev 库真链路）",
+  "personas": {
+    "merchant": "敏慧=种子「菲丽亚店主」(merchant_owner)",
+    "staff": "潘婧=前台种子「小美」(staff/frontdesk)"
+  },
+  "fixtures": {
+    "voidTarget": "01M5HQT6F7NSBK3CXWEV0G5BW9",
+    "cancelTarget": "01M5HQT6G36AD8EZ1RY1NPH415",
+    "moneyMock": "01M5HQT6GYYH02T4S2J9512HMV"
+  },
+  "steps": {
+    "A_voidedViaUi": {
+      "status": "confirmed",
+      "checkedInAt": null
+    },
+    "B_cancelledViaUi": {
+      "status": "cancelled",
+      "cancelSource": "merchant",
+      "cancelReason": "客户爽约，门店主动撤单"
+    },
+    "api": {
+      "noReason400": {
+        "httpStatus": 400,
+        "code": "BAD_REQUEST",
+        "message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"reason\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+      },
+      "moneyVoid400": {
+        "httpStatus": 400,
+        "code": "BAD_REQUEST",
+        "message": "该单已收银，涉钱单的撤单/撤核销另闸处理，本入口不放开"
+      },
+      "moneyCancel400": {
+        "httpStatus": 400,
+        "code": "BAD_REQUEST",
+        "message": "该单已收银，涉钱单的撤单/撤核销另闸处理，本入口不放开"
+      },
+      "staffVoid403": {
+        "httpStatus": 403,
+        "code": "FORBIDDEN",
+        "message": "需要店主或店长身份（merchant_owner / merchant_manager）且已绑定门店"
+      },
+      "staffCancel403": {
+        "httpStatus": 403,
+        "code": "FORBIDDEN",
+        "message": "需要店主或店长身份（merchant_owner / merchant_manager）且已绑定门店"
+      },
+      "dupCancel400": {
+        "httpStatus": 400,
+        "code": "BAD_REQUEST",
+        "message": "当前状态（cancelled）不可撤单——仅服务中（in_service）／已核销未收银单可撤"
+      },
+      "reCheckinThenVoid": {
+        "reStatus": "in_service",
+        "voidStatus": "confirmed",
+        "after": "confirmed"
+      }
+    }
+  },
+  "checks": {
+    "浏览器 dev-login（店主·敏慧人设）": true,
+    "A：in_service 详情「撤核销」「撤单」双入口可见": true,
+    "A：撤核销二次确认弹层（原因空=确认钮禁用·必填闸）": true,
+    "A：填原因后确认钮解禁": true,
+    "A：撤核销执行 → confirmed + checkedInAt 清空（可再核销）": true,
+    "B：in_service 详情双入口可见": true,
+    "B：撤单执行 → cancelled（cancelSource=merchant）+ 详情透出「商家撤单：原因」": true,
+    "C：涉钱（已收银标记）in_service 单双入口同隐（另闸不放开）": true,
+    "员工端 dev-login（前台·潘婧人设）": true,
+    "员工端（潘婧）订单视图：撤单/撤核销入口零渲染（testid+文案双缺席）": true,
+    "api：merchantCancel 缺 reason → 400": true,
+    "api：涉钱单 voidCheckin → 400 另闸": true,
+    "api：涉钱单 merchantCancel → 400 另闸": true,
+    "api：员工（潘婧）voidCheckin → 403": true,
+    "api：员工（潘婧）merchantCancel → 403": true,
+    "api：重复撤单 → 400「不可撤单」": true,
+    "api：再核销 → voidCheckin（带 reason）→ confirmed": true
+  }
+}

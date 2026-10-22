@@ -25,6 +25,15 @@ const APPT_COPY_TABLE = {
   'appt.voidCheckinConfirm': '确认撤回本单核销？预约将回到「已确认」，可重新核销；六步进度与核销时间将清空。',
   'appt.voidCheckinToast': '已撤回核销，预约回到已确认',
   'appt.voidCheckinFail': '撤核销失败，请稍后再试',
+  /* ---- PD-79 服务中撤单/撤核销入口（二次确认弹层＋必填原因全留痕；涉钱单另闸不放开） ---- */
+  'appt.voidReasonLabel': '原因（必填，全留痕）',
+  'appt.voidReasonPlaceholder': '请填写原因——操作人／时间／原因／前后状态全留痕',
+  'appt.voidCheckinConfirmCta': '确认撤核销',
+  'appt.merchantCancelCta': '撤单',
+  'appt.merchantCancelConfirm': '确认撤销本单？预约将转为「已取消」，槽位立即释放，次卡／预付台账同步回冲；操作全留痕，不可撤销。',
+  'appt.merchantCancelConfirmCta': '确认撤单',
+  'appt.merchantCancelToast': '已撤单，预约转为已取消',
+  'appt.merchantCancelFail': '撤单失败，请稍后再试',
 
   /* ---- 预约详情 /appointments/:id ---- */
   'appt.detailNotFoundTitle': '找不到这个预约',

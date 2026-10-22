@@ -1,5 +1,7 @@
 /**
  * PD-66（NO-VOID-ENTRY-ON-MERCHANT-UI）冒烟：appointment.voidCheckin 撤核销
+ * （PD-79 追加入参：reason 必填——本文件全部调用已补占位原因；reason 必填闸与
+ * 涉钱闸的本窗断言见 appointment.pd79.smoke.ts）
  *
  * 运行：node node_modules/tsx/dist/cli.mjs src/routers/__tests__/appointment.voidcheckin.smoke.ts
  *
@@ -189,15 +191,15 @@ try {
   console.log('\n[2] 权限矩阵：customer / clerk / 他店店主 FORBIDDEN；owner / manager 放行');
   check(
     '客户撤核销 → FORBIDDEN',
-    await rejects(c1.voidCheckin({ appointmentId: appt1.id }), 'FORBIDDEN'),
+    await rejects(c1.voidCheckin({ appointmentId: appt1.id, reason: 'PD-66 冒烟留痕占位' }), 'FORBIDDEN'),
   );
   check(
     'clerk 撤核销 → FORBIDDEN（owner|manager 闸）',
-    await rejects(clerk1.voidCheckin({ appointmentId: appt1.id }), 'FORBIDDEN'),
+    await rejects(clerk1.voidCheckin({ appointmentId: appt1.id, reason: 'PD-66 冒烟留痕占位' }), 'FORBIDDEN'),
   );
   check(
     '他店店主撤核销 → FORBIDDEN「非本店预约」',
-    await rejects(x1.voidCheckin({ appointmentId: appt1.id }), 'FORBIDDEN', /本店/),
+    await rejects(x1.voidCheckin({ appointmentId: appt1.id, reason: 'PD-66 冒烟留痕占位' }), 'FORBIDDEN', /本店/),
   );
 
   /* ==================== 3. 状态闸：confirmed 幂等 / cancelled 400 ==================== */
@@ -210,7 +212,7 @@ try {
     scheduledStart: at(1, 14),
     paymentMode: 'pay_at_store',
   });
-  const voidOnConfirmed = await m1.voidCheckin({ appointmentId: appt2.id });
+  const voidOnConfirmed = await m1.voidCheckin({ appointmentId: appt2.id, reason: 'PD-66 冒烟留痕占位' });
   check(
     'confirmed 无核销记录单 → 幂等返回（idempotent=true，状态不变）',
     voidOnConfirmed.idempotent === true && voidOnConfirmed.appointment.status === 'confirmed',
@@ -234,7 +236,7 @@ try {
     .then((r) => r[0]!);
   check(
     'cancelled 单撤核销 → BAD_REQUEST「不可撤核销」',
-    await rejects(m1.voidCheckin({ appointmentId: cancelledRow.id }), 'BAD_REQUEST', /不可撤核销/),
+    await rejects(m1.voidCheckin({ appointmentId: cancelledRow.id, reason: 'PD-66 冒烟留痕占位' }), 'BAD_REQUEST', /不可撤核销/),
   );
 
   /* ==================== 4. 主路径：撤核销 → 离开 in_service 回 confirmed ==================== */
@@ -249,7 +251,7 @@ try {
     operatorId: 'u-m',
   });
   const eventsBefore = await totalOutbox();
-  const vd1 = await m1.voidCheckin({ appointmentId: appt1.id });
+  const vd1 = await m1.voidCheckin({ appointmentId: appt1.id, reason: 'PD-66 冒烟留痕占位' });
   const after = await apptOf(appt1.id);
   check(
     '执行后状态离开 in_service → confirmed + checkedInAt 清空 + 原指派保留',
@@ -279,7 +281,7 @@ try {
 
   /* ==================== 5. 幂等 + manager 亦可用 + 再核销闭环 ==================== */
   console.log('\n[5] 幂等 / manager 权限 / 再核销闭环');
-  const vd2 = await m1.voidCheckin({ appointmentId: appt1.id });
+  const vd2 = await m1.voidCheckin({ appointmentId: appt1.id, reason: 'PD-66 冒烟留痕占位' });
   check(
     '重复撤核销幂等（idempotent=true 且事件总数不增）',
     vd2.idempotent === true && (await totalOutbox()) === eventsBefore + 2,
@@ -290,7 +292,7 @@ try {
     '撤回后可再核销 → in_service + 六步重新初始化 6 行（可再核销约定态成立）',
     re.appointment.status === 'in_service' && (await stepsOf(appt1.id)).length === 6,
   );
-  const vd3 = await mg1.voidCheckin({ appointmentId: appt1.id });
+  const vd3 = await mg1.voidCheckin({ appointmentId: appt1.id, reason: 'PD-66 冒烟留痕占位' });
   check(
     'manager（有权角色）撤核销放行 → confirmed',
     vd3.idempotent === false && (await apptOf(appt1.id))?.status === 'confirmed',
