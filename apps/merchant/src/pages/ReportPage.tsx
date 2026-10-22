@@ -1610,10 +1610,12 @@ export default function ReportPage() {
      manager 不出现切换（固定本店现状，sheet 查询零入参加回=零回归） */
   const [view, setView] = useState<ReportView>('store');
   const [pickedStoreId, setPickedStoreId] = useState<string | null>(null);
+  /* PD-70：报表「含已关闭」默认不勾；勾选后 listMine 带 closed 行（选项挂「已关闭」标识） */
+  const [includeClosed, setIncludeClosed] = useState(false);
   const mineQ = useQuery({
     enabled: role.isOwner && valid && isSheet,
-    queryKey: ['store', 'listMine'],
-    queryFn: () => trpc.store.listMine.query(),
+    queryKey: ['store', 'listMine', includeClosed],
+    queryFn: () => trpc.store.listMine.query(includeClosed ? { includeClosed: true } : undefined),
   });
   const mineStores = mineQ.data?.stores ?? [];
   const effStoreId =
@@ -1783,7 +1785,8 @@ export default function ReportPage() {
               ))}
             </div>
           ) : null}
-          {/* 单店视图门店下拉（listMine 店集合，选中店传 storeId；缺省=当前店） */}
+          {/* 单店视图门店下拉（listMine 店集合，选中店传 storeId；缺省=当前店；
+              PD-70：默认仅 active，勾「含已关闭」后 closed 店入列并挂标识） */}
           {role.isOwner && isSheet && view === 'store' ? (
             <label className="flex items-center gap-2 text-caption text-[rgba(44,40,34,.62)]">
               {rpt('rpt.view.storePick')}
@@ -1795,10 +1798,22 @@ export default function ReportPage() {
               >
                 {mineStores.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name}
+                    {s.status === 'closed' ? `${s.name}（${rpt('rpt.view.closedBadge')}）` : s.name}
                   </option>
                 ))}
               </select>
+            </label>
+          ) : null}
+          {/* PD-70：「含已关闭」勾选（默认不勾）——勾选即重取 listMine(includeClosed=true) */}
+          {role.isOwner && isSheet && view === 'store' ? (
+            <label className="flex items-center gap-1 text-caption text-[rgba(44,40,34,.62)]">
+              <input
+                type="checkbox"
+                checked={includeClosed}
+                onChange={(e) => setIncludeClosed(e.target.checked)}
+                data-testid="report-include-closed"
+              />
+              {rpt('rpt.view.includeClosed')}
             </label>
           ) : null}
           {/* 导出 CSV 仅店主可见可点（总规则③；非店主不渲染，server exportCsv 同闸 403） */}

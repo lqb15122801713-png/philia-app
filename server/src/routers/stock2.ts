@@ -727,6 +727,8 @@ export const stock2Router = router({
       const toStore = mustGet(await ctx.db.select().from(schema.stores).where(eq(schema.stores.id, input.toStoreId)).get(), '目标门店不存在');
       if (!scope.includes(toStore.id)) notFound('目标门店不存在');
       if (toStore.id === storeId) badRequest('调拨目标店不可为本店');
+      /* PD-70：closed 店拒作调拨目标（软关店写口闸；调拨目标下拉同由 listMine 默认排除） */
+      if (toStore.status !== 'active') badRequest('目标门店已关闭，不可调入');
       const items: Array<{ productId: string; name: string; qty: number }> = [];
       for (const it of input.items) {
         const p = await loadProduct(ctx.db, storeId, it.productId);

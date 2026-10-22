@@ -35,16 +35,15 @@ export default function HqConsolePage() {
   const { trpc, queryClient } = usePhiliaClient();
   const { isOwner } = useMerchantRole();
 
+  /* 店列表默认仅 active；「含已关闭」默认不勾（PD-70 裁③同口径；服务端 listMine.includeClosed） */
+  const [includeClosed, setIncludeClosed] = useState(false);
   const mineQ = useQuery({
-    queryKey: ['store', 'listMine'],
-    queryFn: () => trpc.store.listMine.query(),
+    queryKey: ['store', 'listMine', includeClosed],
+    queryFn: () => trpc.store.listMine.query({ includeClosed }),
     enabled: isOwner,
   });
   const stores = (mineQ.data?.stores ?? []) as HqStoreRow[];
-
-  /* 店列表默认仅 active；「含已关闭」默认不勾（PD-70 裁③同口径） */
-  const [includeClosed, setIncludeClosed] = useState(false);
-  const visible = includeClosed ? stores : stores.filter((s) => s.status === 'active');
+  const visible = stores;
 
   const [busy, setBusy] = useState(false);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ['store', 'listMine'] });
@@ -56,7 +55,7 @@ export default function HqConsolePage() {
     if (!closeTarget) return;
     setBusy(true);
     try {
-      await trpc.store.closeStore.mutate({ storeId: closeTarget.id });
+      await trpc.store.closeStore.mutate({ storeId: closeTarget.id, acknowledgeOpenFulfillment: closeAck });
       toast(`已关闭「${closeTarget.name}」：历史预约/账/会员/员工全部保留`);
       setCloseTarget(null);
       setCloseAck(false);
