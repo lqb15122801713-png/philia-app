@@ -15,6 +15,6 @@ export function isSecureContextOk(): boolean {
 export const INSECURE_CONTEXT_GEO_MESSAGE =
   '当前页面为 HTTP 环境，浏览器已禁用定位——请用 HTTPS 链接或 App 内打开后重试';
 
-/** 非安全源 · 摄像头场景文案 */
+/** 非安全源 · 摄像头场景文案（PD-76 R6-03：一线口语，去 HTTP 技术词；手动输入为主出路） */
 export const INSECURE_CONTEXT_CAMERA_MESSAGE =
-  '当前页面为 HTTP 环境，浏览器已禁用摄像头——请用 HTTPS 链接或 App 内打开，或改用手动输入';
+  '相机暂不可用，请手动输入核销码';

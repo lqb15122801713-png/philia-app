@@ -8,6 +8,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { skc, type SkeletonCopyKey } from '../../copy/skeleton';
+import { badgeAriaText, badgeCapText } from '../../lib/unreadBadge';
 
 /* ---- apphead（serif 屏题+mono 注） ---- */
 export function SkAppHead({ title, no }: { title: string; no: string }) {
@@ -162,8 +163,9 @@ export function SkDock({ active, badges }: { active: SkDockActive; badges?: Part
             {t.icon}
             {t.label}
             {(badges?.[t.key] ?? 0) > 0 ? (
-              <span className="bdg" data-testid={`${t.testId}-badge`} aria-label={`${badges![t.key]} 条未读`}>
-                {badges![t.key]! > 99 ? '99+' : badges![t.key]}
+              // PD-76 口径 A：显示封顶 99+，aria 恒真值（规则唯一来源 lib/unreadBadge）
+              <span className="bdg" data-testid={`${t.testId}-badge`} aria-label={badgeAriaText(badges![t.key]!)}>
+                {badgeCapText(badges![t.key]!)}
               </span>
             ) : null}
           </Link>

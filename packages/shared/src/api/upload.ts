@@ -77,7 +77,13 @@ export async function uploadImage(
     } catch {
       // 保留默认错误信息
     }
-    throw new Error(message);
+    const err = new Error(message);
+    /* PD-76：服务端 400 = 明确拒收（文件类型/体积等），挂 data.code 供上传状态机转拒收态
+       （原因 message 透传、可重试），不再被当瞬态错误无限退避；其它状态码维持原瞬态语义 */
+    if (res.status === 400) {
+      (err as Error & { data?: { code?: string } }).data = { code: 'BAD_REQUEST' };
+    }
+    throw err;
   }
 
   const body = (await res.json()) as { url: string; thumbUrl: string; exifTakenAt?: number | string | null };
