@@ -63,6 +63,7 @@ const REPORT_COPY_TABLE = {
   /* ---- ReportPage 公共 ---- */
   'rpt.page.monthLabel': '报表月份',
   'rpt.page.exportCta': '导出 CSV',
+  'rpt.page.printCta': '打印',
   'rpt.page.exporting': '导出中…',
   'rpt.page.exportOwnerOnly': '导出 CSV 仅店主（总规则③）',
   'rpt.page.exportDone': '已导出 {name}（{n} 行）',

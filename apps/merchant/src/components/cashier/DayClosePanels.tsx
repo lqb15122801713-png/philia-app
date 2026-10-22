@@ -16,6 +16,8 @@
  *   原单 reversed 挂 reversalId）；详情=字段行 + 冲正前后值快照 + 调整记录；
  * - 反结账（拆箱）=reverseDayClose（仅 owner · 强制原因弹层）；
  *   导出 CSV=exportDayCloseCsv（仅 owner · Blob 浏览器下载）；
+ *   打印日结单=详情弹层「打印」钮（PD-81 · 仅 owner 同导出闸；window.print
+ *   + @media print 内联隔离，屏外全隐仅日结单可见——照 ReceiptPage 先例）；
  *   调整备注=adjustDayClose（owner|manager · 只增不改）。
  */
 
@@ -934,9 +936,12 @@ interface CloseSnapshot {
 
 export function DayCloseDetailDialog({
   row,
+  isOwner,
   onClose,
 }: {
   row: DayCloseRow | null
+  /** PD-81：打印日结单入口（仅店主，与导出 CSV 同闸——总规则③口径不动） */
+  isOwner: boolean
   onClose: () => void
 }) {
   if (!row) return null
@@ -954,9 +959,32 @@ export function DayCloseDetailDialog({
       onClose={onClose}
       title={isReversalRow ? '冲正单详情' : '日结单详情'}
       testid="dayclose-detail"
-      footer={<SheetBtn onClick={onClose}>关闭</SheetBtn>}
+      footer={
+        <>
+          {/* PD-81：日结单打印入口（EXPORT_ENTRY_MISSING 补缺 · 仅店主同导出闸；
+              window.print() + @media print 内联隔离，屏外全隐仅日结单可见——
+              工艺照 ReceiptPage 小票先例） */}
+          {isOwner ? (
+            <SheetBtn data-testid="dayclose-print" onClick={() => window.print()}>
+              {cc('cashier.dayClosePrint')}
+            </SheetBtn>
+          ) : null}
+          <SheetBtn onClick={onClose}>关闭</SheetBtn>
+        </>
+      }
     >
-      <div>
+      {/* 打印隔离锚（@media print 仅本块可见；屏上样式不变） */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #dayclose-print-sheet, #dayclose-print-sheet * { visibility: visible; }
+          #dayclose-print-sheet {
+            position: absolute; left: 0; top: 0; width: 100%;
+            max-height: none; overflow: visible;
+          }
+        }
+      `}</style>
+      <div id="dayclose-print-sheet">
         <div className="u3-field"><span className="lb">日结单号</span><span className="vl font-number tabular-nums">{row.id}</span></div>
         <div className="u3-field"><span className="lb">营业日</span><span className="vl font-number tabular-nums">{row.bizDate}</span></div>
         <div className="u3-field"><span className="lb">班次</span><span className="vl font-number tabular-nums">{row.shiftId}</span></div>

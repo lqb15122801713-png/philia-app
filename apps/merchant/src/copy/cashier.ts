@@ -239,6 +239,9 @@ const CASHIER_COPY_TABLE = {
   'cashier.receiptNightLine': '共{total}晚 · 已住{occ}晚 · 剩{rem}晚 · 晚单价 ¥{per}',
   'cashier.receiptThanks': '谢谢惠顾 · 单据留痕可查',
 
+  /* ---- PD-81：日结单打印（详情弹层 · 仅店主同导出闸） ---- */
+  'cashier.dayClosePrint': '打印日结单',
+
   /* ---- 片 3：台账专页 /ledger ---- */
   'cashier.ledgerTitle': '台账',
   'cashier.ledgerSub': '挂账 / 押金 / 预付 / 授权 四台账留痕 · 记录不可删 · 全程不碰真钱',

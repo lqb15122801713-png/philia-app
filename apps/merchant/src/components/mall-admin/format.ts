@@ -19,6 +19,22 @@ export type StoreOrder = StoreOrderGroups['paid'][number]
 
 /** React Query 键（TabBar 红点与 OrdersPage 共用，invalidate 互通不重复拉取） */
 export const STORE_ORDERS_KEY = ['mall', 'listStoreOrders'] as const
+
+/* ------------------------------------------------------------------ */
+/* PD-81 死单前台隐藏（显示层过滤 · 庆贲裁：禁删库/禁直改库，库内保留）          */
+/* ------------------------------------------------------------------ */
+
+/** 死单显示层名单：已付无退口的商城夹具死单（P261022YKNXD2／01M5H1E1… ¥19）；
+    仅前台列表过滤，库内行保留不动 */
+const DEAD_ORDER_NOS: ReadonlySet<string> = new Set(['P261022YKNXD2'])
+const DEAD_ORDER_ID_PREFIXES: readonly string[] = ['01M5H1E1']
+
+/** 商家端订单队列显示层过滤：名单内死单不渲染（计数同源同步剔除） */
+export function isDeadOrderDisplayHidden(order: { id?: string | null; orderNo?: string | null }): boolean {
+  if (order.orderNo && DEAD_ORDER_NOS.has(order.orderNo)) return true
+  const id = order.id ?? ''
+  return id.length > 0 && DEAD_ORDER_ID_PREFIXES.some((p) => id.startsWith(p))
+}
 /** 商品管理列表键前缀（带筛选参数派生： [...PRODUCTS_KEY, {category, keyword}]） */
 export const PRODUCTS_KEY = ['mall', 'listProductsForStore'] as const
 
