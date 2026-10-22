@@ -27,7 +27,7 @@ const REPORT_COPY_TABLE = {
   'rpt.quadYesterdayClose': '日结对账：{n} 箱 · 账面现金 ¥{amt}',
   'rpt.quadYesterdayNoClose': '昨日未封箱（日结行缺）',
   'rpt.sparkTitle': '近 14 日营收走势',
-  'rpt.sparkNote': '今日格=截至当前已收 · financeStats 同源口径',
+  'rpt.sparkNote': '今日格=截至当前已收 · 与财务统计同口径',
 
   /* ---- 左 M5 月度台账 ---- */
   'rpt.ledgerTitle': '月度台账',
@@ -255,7 +255,7 @@ const REPORT_COPY_TABLE = {
   'rpt.embed.ev7': 'book_same_click 预约同款点击',
   'rpt.embed.ev8': 'booking_attributed 预约归因',
   'rpt.embed.ev9': 'booking_verified 到店核销确认',
-  'rpt.embed.outNote': '出表=瀑布流批（H 表 §方向三清单）；导出 CSV 不对预埋项开放（server 400 明文）',
+  'rpt.embed.outNote': '导出 CSV 仅覆盖已开放报表，预埋项暂不导出',
 } as const;
 
 export const REPORT_COPY = withCopyOverrides(REPORT_COPY_TABLE);

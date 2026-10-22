@@ -252,8 +252,8 @@ export default function AppointmentMonitorPage() {
 
   const title = `${pet?.name ?? '宠物'} · ${service?.name ?? (isBoarding ? '寄养服务' : '洗护服务')} · 实时监控`;
   const sub = appt
-    ? `${staff?.name ?? (appt.staffId ? '员工' : '待指派')} · ${fmtTime(appt.scheduledStart)}–${fmtTime(appt.scheduledEnd)} · SSE 实时同步`
-    : 'SSE 实时同步';
+    ? `${staff?.name ?? (appt.staffId ? '员工' : '待指派')} · ${fmtTime(appt.scheduledStart)}–${fmtTime(appt.scheduledEnd)} · 实时同步`
+    : '实时同步';
   const liveBadge = (
     <span className={connected ? 'u3-st live' : 'u3-st wait'} data-testid="monitor-live-badge">
       {connected ? '● 实时连接中' : '重连中…'}

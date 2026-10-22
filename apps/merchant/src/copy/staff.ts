@@ -11,7 +11,7 @@ import { withCopyOverrides } from '@philia/shared';
 
 const STAFF_COPY_TABLE = {
   'staff.title': '员工',
-  'staff.sub': '在职 {a} · 美容师 {b} · 前台 {c} · 自动派单按排班+负荷（S4）',
+  'staff.sub': '在职 {a} · 美容师 {b} · 前台 {c} · 自动派单按排班与负荷',
   'staff.inviteCta': '＋ 邀请员工',
   'staff.panelAside': '排班=自动派单与可约判定之源',
   'staff.empty': '还没有员工',
@@ -22,7 +22,7 @@ const STAFF_COPY_TABLE = {
   'staff.inviteCodeOnce': '明文仅此一次展示，关闭本弹层后无法再次查看，请立即复制并转交员工。',
   'staff.editRoleHint': '前台负责扫码核销与接待；美容师负责服务执行（无核销入口）',
   'staff.editSuspendNote': '停用后该员工立即无法操作员工端（历史业绩保留）',
-  'staff.editSkillNote': '技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。',
+  'staff.editSkillNote': '技能标签暂为只读；排班请点员工行右侧的排班摘要编辑。',
   'staff.scheduleNote': '每天最多 {n} 个时段；设为「休息」的当天不排班。',
 
   /* ---- 片 5 段 3（W-12 校形）：M5 台账考勤列 + 权限口径卡 ---- */

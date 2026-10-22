@@ -248,7 +248,7 @@ export default function DevLoginPage() {
                 ) : (
                   <p className="rounded-control bg-danger-light px-4 py-3 text-[12px] text-danger-deep">
                     {seedsError
-                      ? `种子用户拉取失败（${seedsError}），请确认 server 已启动，或手动输入 userId`
+                      ? `演示账号读取失败（${seedsError}），请确认服务已启动，或手动输入用户 ID`
                       : au('auth.seedEmpty')}
                   </p>
                 )}

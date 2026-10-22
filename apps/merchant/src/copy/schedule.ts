@@ -56,7 +56,7 @@ const SCHEDULE_COPY_TABLE = {
   'sched.swap.title': '换班审批',
   'sched.swap.aside': '批准后班次换挂接手人；未认领前责任归原人',
   'sched.swap.empty': '暂无待审批的换班申请',
-  'sched.swap.noQueue': '换班队列读口（swapQueue）server 端未透出，审批区待接上；员工发起换班后可在此批准/驳回。',
+  'sched.swap.noQueue': '换班队列暂未接入，审批区待开放。',
   'sched.swap.openTarget': '开放认领',
   'sched.swap.approve': '批准',
   'sched.swap.reject': '驳回',

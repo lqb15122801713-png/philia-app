@@ -7,7 +7,7 @@
  *   刷新靠重连全量 + 断线轮询兜底 + 本块操作后失效（不新增订阅，已报备）；
  * - 行：工单号（mono）+ 类型签 + 描述截断 + 联系方式 + 申请时刻；
  *   「回复」弹层（textarea 必填）→ ticketReply → toast + 失效；
- * - 空态不渲染区块；加载中骨架行（禁转圈）；失败给错误行 + 真重试。
+ * - 空态默认不渲染，深链进入时保留处理面；加载中骨架行（禁转圈）；失败给错误行 + 真重试。
  */
 
 import { Skeleton, usePhiliaClient } from '@philia/shared'
@@ -47,14 +47,17 @@ export default function TicketTodoSection({
   items,
   loading,
   error,
+  forceVisible = false,
   onRetry,
 }: {
   items: TicketPendingItem[] | undefined
   loading: boolean
   error: boolean
+  forceVisible?: boolean
   onRetry: () => void
 }) {
   const [replyTarget, setReplyTarget] = useState<TicketPendingItem | null>(null)
+  const visibleItems = items ?? []
 
   if (error) {
     return (
@@ -86,19 +89,31 @@ export default function TicketTodoSection({
     )
   }
 
-  /* 空态不渲染区块 */
-  if (!items || items.length === 0) return null
+  if (visibleItems.length === 0) {
+    if (!forceVisible) return null
+    return (
+      <section className="u3-panel" id={TICKET_SECTION_ID} data-testid="dash-ticket-section">
+        <div className="u3-panel-head">
+          <h3>{dc('dash.ticketBlockTitle')}</h3>
+          <span className="aside">0 笔</span>
+        </div>
+        <p className="px-[17px] pb-4 text-caption text-ink-secondary" data-testid="ticket-todo-empty">
+          暂无待处理客诉／工单
+        </p>
+      </section>
+    )
+  }
 
   return (
     <section className="u3-panel" id={TICKET_SECTION_ID} data-testid="dash-ticket-section">
       <div className="u3-panel-head">
         <h3>{dc('dash.ticketBlockTitle')}</h3>
         <span className="aside">
-          <span className="font-number tabular-nums">{items.length}</span> 笔
+          <span className="font-number tabular-nums">{visibleItems.length}</span> 笔
         </span>
       </div>
       <div>
-        {items.map((t) => (
+        {visibleItems.map((t) => (
           <div
             key={t.id}
             className="flex items-start gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3"

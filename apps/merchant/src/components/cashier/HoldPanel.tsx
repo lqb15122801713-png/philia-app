@@ -1,8 +1,8 @@
 /**
  * 右栏：挂单队列（P4）+ 今日流水简表（P7）
  *
- * - P4 挂单卡：挂单号 Montserrat 12 + 会员名/散客 · 行数 + 备注行（有 note 才渲染，
- *   测试件标注醒目位，PR-3 C2b）+ 挂出时间 + 金额 +
+ * - P4 挂单卡：挂单号 Montserrat 12 + 会员名/散客 · 行数 + 备注行（有 note 才渲染）
+ *   + 挂出时间 + 金额 +
  *   刚挂的右上角 cream 圆点；点卡=取单（resume 恢复整单）；⋯ = 撤单入口
  *   （owner-only，manager 置灰 + title 原因）；空 = 浅木圆牌「无挂单」；
  * - P7 流水行：单号短显 Montserrat + 买家 + 金额右对齐 Montserrat + 状态/方式签
@@ -116,12 +116,12 @@ export default function HoldPanel({
                 {b.billNo === freshHeldNo ? (
                   <span className="absolute right-3 top-2.5 h-[7px] w-[7px] rounded-full bg-brand-primary" />
                 ) : null}
-                <div className="font-number text-caption font-semibold tabular-nums">
-                  {b.billNo}
+                <div className="flex flex-wrap items-center gap-x-1.5 font-number text-caption font-semibold tabular-nums">
+                  <span className="break-all">{b.billNo}</span>
                   {/* 片 3：挂出超 24h 徽标（按 heldAt 计算，防压单） */}
                   {b.heldAt && Date.now() - new Date(b.heldAt).getTime() > 24 * 3600 * 1000 ? (
                     <span
-                      className="ml-1.5 inline-flex items-center rounded-[6px] bg-danger-light px-1.5 py-[2px] align-middle text-caption-xs font-sans font-semibold leading-none text-danger-deep"
+                      className="inline-flex items-center rounded-[6px] bg-danger-light px-1.5 py-[2px] align-middle text-caption-xs font-sans font-semibold leading-none text-danger-deep"
                       data-testid={`cashier-held-over24-${b.billNo}`}
                     >
                       {cc('cashier.holdOver24')}
@@ -131,7 +131,7 @@ export default function HoldPanel({
                 <div className="mt-1 text-caption-xs">
                   {b.buyerName} · <span className="font-number tabular-nums">{b.itemCount}</span> 项
                 </div>
-                {/* PR-3 C2b：备注行（保留标测试件标注「测试件勿动」在队列即醒目，PD-02 反对意见①） */}
+                {/* 整单备注（测试标记行已在页面显示层过滤，不删除数据） */}
                 {b.note ? (
                   <div className="mt-1 truncate text-caption-xs text-ink-secondary" title={b.note}>
                     {b.note}
@@ -164,7 +164,7 @@ export default function HoldPanel({
                 type="button"
                 data-testid="cashier-hold-expand"
                 onClick={() => setHoldExpanded(true)}
-                className="rounded-[16px] bg-sunken px-3.5 py-2.5 text-center text-caption-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
+                className="w-full shrink-0 whitespace-nowrap rounded-[16px] bg-sunken px-3.5 py-2.5 text-center text-caption-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
               >
                 {cc('cashier.holdExpand', { n: (held ?? []).length })}
               </button>
@@ -174,7 +174,7 @@ export default function HoldPanel({
                 type="button"
                 data-testid="cashier-hold-collapse"
                 onClick={() => setHoldExpanded(false)}
-                className="rounded-[16px] bg-sunken px-3.5 py-2.5 text-center text-caption-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
+                className="w-full shrink-0 whitespace-nowrap rounded-[16px] bg-sunken px-3.5 py-2.5 text-center text-caption-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
               >
                 {cc('cashier.holdCollapse')}
               </button>
@@ -192,7 +192,7 @@ export default function HoldPanel({
       >
         <div className="mb-1.5 flex items-center justify-between">
           <b className="text-body-sm">今日流水</b>
-          <Link to="/cashier/records" className="text-caption-xs text-ink-placeholder hover:text-ink">
+          <Link to="/cashier/records" className="shrink-0 whitespace-nowrap text-caption-xs text-ink-placeholder hover:text-ink">
             全部 ›
           </Link>
         </div>

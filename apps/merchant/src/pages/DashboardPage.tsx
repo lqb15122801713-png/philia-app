@@ -6,10 +6,8 @@
  *   → M3 单店口径一栏卡（原四 stat 重排；多店三栏=连锁预留开口项，注记明面；
  *     大批片 2：owner 且 listMine.stores>=1 时换连锁视图卡=合计条六项+逐店分栏，
  *     读口 store.chainDashboard 真值；manager/clerk 单店卡零回归）
- *   → M4 合计条（WTotal：今日营业额大数+已收/待收分列+近 14 日 spark 槽——
- *     逐日营收序列无读口，槽位空态置灰不造假）
- *   → 双列 [今日预约 wlist + 审批 wlist ｜ M6 晨报卡（WPostcard：今日营收大数+
- *     在店/待办/超期三行；昨日营收无读口不虚造，取 stats 真值）]
+ *   → 双列 [今日预约 wlist + 审批 wlist ｜ 单店 M6 待办卡（WPostcard；
+ *     连锁视图已由 M3 主显待办，不重复装配；经营计数不在其他区块重复主显）]
  *   → 快捷/系统状态双列收尾（既有 PhoneAppealSection/TicketTodoSection/
  *     InvoiceTodoSection 原位保留，role.canManage 闸不变）。
  *
@@ -22,14 +20,14 @@
 import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import PhoneAppealSection from '@/components/dashboard/PhoneAppealSection'
 import TicketTodoSection from '@/components/dashboard/TicketTodoSection'
 import InvoiceTodoSection from '@/components/dashboard/InvoiceTodoSection'
-import { WAlert, WList, WPostcard, WTotal, type WAlertItem } from '@/components/skeleton'
+import { WAlert, WList, WPostcard, type WAlertItem } from '@/components/skeleton'
 import { useStepProgress } from '@/components/appointments/useStepProgress'
 import { REFUND_REQUEST_PENDING_KEY } from '@/components/cashier/refund'
 import { AmortizationDashNote } from '@/components/member/amortization'
@@ -91,6 +89,8 @@ export default function DashboardPage() {
   const events = useMerchantEvents()
   const role = useMerchantRole()
   const navigate = useNavigate()
+  const location = useLocation()
+  const ticketDeepLinked = location.hash === `#${TICKET_SECTION_ID}`
   const now = new Date()
 
   const statsQuery = useQuery({
@@ -223,6 +223,10 @@ export default function DashboardPage() {
   // 断线重连全量对齐（续传补发之外的变更也能追上）
   useEffect(() => events.onReconnect(invalidateAll), [events, invalidateAll])
 
+  useEffect(() => {
+    if (ticketDeepLinked && role.canManage && !ticketQuery.isPending) scrollToAnchor(TICKET_SECTION_ID)
+  }, [ticketDeepLinked, role.canManage, ticketQuery.isPending])
+
   const hasError =
     statsQuery.isError ||
     todayQuery.isError ||
@@ -345,6 +349,7 @@ export default function DashboardPage() {
         }
       })
     : []
+  const unpaidAction = alertItems.find((item) => item.key === 'unpaid' && (item.count ?? 0) > 0)
 
   /* ---------------- M3 单店口径一栏（原 StatCards 四 stat 重排，派生口径不变） ---------------- */
 
@@ -450,8 +455,8 @@ export default function DashboardPage() {
               <SearchInput placeholder="搜索预约 / 客户 / 宠物…" testid="dashboard-search" />
             </div>
           </div>
-          <LemonButton testid="dashboard-create" onClick={() => navigate('/appointments')}>
-            ＋ 新增预约
+          <LemonButton testid="dashboard-create" onClick={() => navigate(unpaidAction?.to ?? '/appointments')}>
+            {unpaidAction ? `${unpaidAction.text} ${unpaidAction.count} 笔` : '＋ 新增预约'}
           </LemonButton>
         </>
       }
@@ -631,31 +636,8 @@ export default function DashboardPage() {
         </section>
         )}
 
-        {/* M4 合计条（今日营业额大数+已收/待收分列+近 14 日 spark 槽：无逐日读口，置灰不造假） */}
-        <div className="mt-3.5">
-          <WTotal
-            cap={dc('dash.totalCap')}
-            value={tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
-            cells={[
-              { k: dc('dash.totalPaidCell'), v: String(tenderPaidCount) },
-              { k: dc('dash.totalUnpaidCell'), v: String(stats?.todo.unpaid ?? 0) },
-            ]}
-            spark={
-              <div
-                className="flex items-end gap-[3px] opacity-40"
-                title={dc('dash.sparkEmpty')}
-                aria-label={dc('dash.sparkEmpty')}
-              >
-                {Array.from({ length: 14 }).map((_, i) => (
-                  <i key={i} className="h-[10px] w-[4px] rounded-sm bg-[hsl(var(--background)/.5)]" />
-                ))}
-              </div>
-            }
-          />
-        </div>
-
         {/* 双列：今日预约 wlist + 审批 wlist ｜ M6 晨报卡右栏 */}
-        <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
+        <div className={`mt-3.5 grid gap-3.5 ${chainView ? '' : 'lg:grid-cols-[1.7fr_1fr]'}`}>
           <div className="flex min-w-0 flex-col gap-3.5">
             <div>
               <div className="wsk-hd">
@@ -695,29 +677,14 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          <WPostcard
-            figure={tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
-            figureCap={dc('dash.postcardFigCap')}
-            rows={[
-              {
-                key: 'boarding',
-                label: dc('dash.postcardRowBoarding'),
-                value: String(boardingCount),
-              },
-              {
-                key: 'todo',
-                label: dc('dash.postcardRowTodo'),
-                value: stats ? String(todoGrandTotal(stats)) : '—',
-              },
-              {
-                key: 'overdue',
-                label: dc('dash.postcardRowOverdue'),
-                value: String(stats?.overdueBoardingCount ?? 0),
-                tone: (stats?.overdueBoardingCount ?? 0) > 0 ? 'red' : undefined,
-              },
-            ]}
-            testId="dash-postcard"
-          />
+          {!chainView ? (
+            <WPostcard
+              figure={stats ? String(todoGrandTotal(stats)) : '—'}
+              figureCap={dc('dash.postcardRowTodo')}
+              rows={[]}
+              testId="dash-postcard"
+            />
+          ) : null}
         </div>
 
         {/* 快捷/系统状态双列收尾（既有待办块原位保留；clerk 不渲染同原口径） */}
@@ -728,6 +695,7 @@ export default function DashboardPage() {
                 items={ticketQuery.data}
                 loading={ticketQuery.isPending}
                 error={ticketQuery.isError}
+                forceVisible={ticketDeepLinked}
                 onRetry={() => void ticketQuery.refetch()}
               />
               <InvoiceTodoSection

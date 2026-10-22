@@ -33,6 +33,7 @@ import {
   BILL_STATUS_CHIP,
   CASHIER_ROOT_KEY,
   fenToYuan,
+  hasBillDisplayFixtureMarker,
   PAY_METHOD_LABEL,
   RECORDS_KEY,
   TODAY_TENDER_KEY,
@@ -182,13 +183,16 @@ export default function CashierRecordsPage() {
     onError: (e) => toast.error(errMsg(e)),
   })
 
-  const rows = useMemo(() => listQ.data ?? [], [listQ.data])
+  const rows = useMemo(
+    () => (listQ.data ?? []).filter((b) => !hasBillDisplayFixtureMarker(b)),
+    [listQ.data],
+  )
 
   return (
     <MainScaffold
       testid="cashier-records-page"
       title={cc('cashier.recordsTitle')}
-      sub={cc('cashier.recordsSub', { n: listQ.data?.length ?? '…' })}
+      sub={cc('cashier.recordsSub', { n: listQ.data ? rows.length : '…' })}
       actions={
         <SearchInput placeholder="搜索买家（昵称/手机号/散客）…" value={buyer} onChange={setBuyer} testid="cashier-records-search" />
       }

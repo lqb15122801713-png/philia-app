@@ -74,7 +74,7 @@ const CONSOLE_ADMIN_COPY_TABLE = {
 
   /* ---- 非 owner 引导（manager；clerk 由 ClerkRouteGuard 拦） ---- */
   'cadm.ownerOnlyTitle': '运营后台端仅店主可用',
-  'cadm.ownerOnlyBody': '端口配置与发布属店主专属（页内闸门 + server 硬闸门兜底）；请切换店主账号。',
+  'cadm.ownerOnlyBody': '端口配置与发布属店主专属；请切换店主账号。',
 
   /* ---- kill switch 显著态（端口批收尾片 1 · 件 4a：页顶横幅/小字行+双确认切换） ----
      PD-25 D-56 C3：arm 三键支付语义加强（明示支付+非 Banner；闸/端点/行为零改动） */

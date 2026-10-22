@@ -207,7 +207,7 @@ export default function RefundDialog({
       toast.success(
         r.idempotent
           ? `${r.refund.refundNo} 同参重复提交——返回现状，未重复落账（幂等）`
-          : `已退款 ¥${fenToYuan(r.refund.amountFen)} —— 退款单 ${r.refund.refundNo} 已落账（六联动同事务生效）`,
+          : `Mock 退款单 ${r.refund.refundNo} 已落库（¥${fenToYuan(r.refund.amountFen)}），未发起真实退款`,
       )
       setConfirmOpen(false)
       onExecuted()

@@ -29,6 +29,7 @@ import {
   CASH_MOVE_LIST_KEY,
   DAY_CLOSE_PREVIEW_KEY,
   HANDOVER_OF_KEY,
+  shiftCrossDays,
   type CashMoveRow,
   type DayCloseRow,
   type ShiftInfo,
@@ -60,6 +61,13 @@ export function ShiftCard({
       与开班中并存=冻结后新开单进次日班次的 D-29 已裁口径，本件只补明示不动状态机） */
   dayFrozen: boolean
 }) {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const crossDays = shift ? shiftCrossDays(shift.openedAt, now) : 0
+
   return (
     <div className="u3-panel" data-testid="close-shift-card">
       <div className="u3-panel-head">
@@ -80,6 +88,15 @@ export function ShiftCard({
             {dayFrozen ? (
               <span className="u3-st" data-testid="close-shift-day-frozen">
                 {cc('cashier.shiftFrozenBadge')}
+              </span>
+            ) : null}
+            {crossDays > 0 ? (
+              <span
+                role="alert"
+                data-testid="close-shift-cross-day"
+                className="inline-flex items-center rounded-[8px] bg-danger-light px-2.5 py-1 text-caption-xs font-semibold text-danger-deep"
+              >
+                已跨 {crossDays} 日未交班 · 请店长确认，系统不自动日切
               </span>
             ) : null}
             <span className="text-caption text-ink-secondary">
@@ -104,7 +121,7 @@ export function ShiftCard({
               className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
             >
               <LogOut size={13} strokeWidth={1.8} aria-hidden />
-              {closing ? '交接中…' : '交接班（闭班）'}
+              {closing ? '交接中…' : crossDays > 0 ? '店长确认交接班' : '交接班（闭班）'}
             </button>
           </>
         )}
@@ -244,7 +261,7 @@ export function DayCloseForm({
     <div className="u3-panel" data-testid="dayclose-form">
       <div className="u3-panel-head">
         <h3>{overrideShiftId ? '重新日结（拆箱后同日）' : '日结（冻结全日账目）'}</h3>
-        <span className="aside">账面=server 全日同源预览 · 冻结与预览同值 · 一日一结</span>
+        <span className="aside">账面=今日收款同源预览 · 冻结与预览同值 · 一日一结</span>
         {/* 片 3 盲交开关（实点先行，账面遮罩） */}
         <button
           type="button"

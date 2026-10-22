@@ -26,7 +26,7 @@ const PASS_COPY_TABLE = {
   'pass.statRebate': '回馈金负债',
   'pass.statPassSub': '剩余可扣 {n} 次',
   'pass.statPending': '读口待补',
-  'pass.statPendingNote': '会员域暂无本店聚合读口（现仅按人查），待 server 开口——不造数',
+  'pass.statPendingNote': '会员域暂无本店汇总数据（现仅按人查询），暂不展示汇总数值',
   'pass.threeBooksNote': '三本账分离明面：次卡次数 / 储值 / 回馈金各自单列，永不混列；年费≠储值',
   /* ---- W-11 台账：卡号 mono + 档色点（档色即身份）+ 双归属注 ---- */
   'pass.cardNoCol': '卡号',

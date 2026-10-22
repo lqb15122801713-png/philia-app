@@ -38,6 +38,32 @@ export type PayMethod = SettleInput['payments'][number]['method']
 /** pass.listForStore 行（会员次卡余额/可用性真值来源，与 PassPage 同接口同缓存） */
 export type PassListRow = RouterOutputs['pass']['listForStore'][number]
 
+const STORE_DAY_OFFSET_MS = 8 * 60 * 60 * 1000
+const NATURAL_DAY_MS = 24 * 60 * 60 * 1000
+
+export function shiftCrossDays(openedAt: Date | string, now: Date): number {
+  const opened = openedAt instanceof Date ? openedAt : new Date(openedAt)
+  if (Number.isNaN(opened.getTime()) || Number.isNaN(now.getTime())) return 0
+  const openedDay = Math.floor((opened.getTime() + STORE_DAY_OFFSET_MS) / NATURAL_DAY_MS)
+  const currentDay = Math.floor((now.getTime() + STORE_DAY_OFFSET_MS) / NATURAL_DAY_MS)
+  return Math.max(0, currentDay - openedDay)
+}
+
+const DISPLAY_FIXTURE_RE = /(?:^|[^A-Z0-9])(?:INJECT|QA)[-_]|QA夹具|测试件|请忽略/i
+const DISPLAY_INJECT_ONLY_RE = /^INJECT$/i
+
+export function hasDisplayFixtureMarker(...values: Array<string | null | undefined>): boolean {
+  return values.some(
+    (value) => value != null && (DISPLAY_FIXTURE_RE.test(value) || DISPLAY_INJECT_ONLY_RE.test(value.trim())),
+  )
+}
+
+export function hasBillDisplayFixtureMarker(
+  bill: Partial<Pick<BillListRow, 'billNo' | 'buyerName' | 'note' | 'summary'>>,
+): boolean {
+  return hasDisplayFixtureMarker(bill.billNo, bill.note, bill.summary)
+}
+
 /* ------------------------------------------------------------------ */
 /* React Query 键                                                      */
 /* ------------------------------------------------------------------ */

@@ -226,7 +226,7 @@ export function PayChannelPortBody() {
               凭据更新：{credPatchCount > 0 ? `${credPatchCount} 位（掩码留痕，真值不明文显示）` : '本次不变更凭据'}
             </div>
           </div>
-          <Field label={`请输入「${CONFIRM_PHRASE}」以继续`} hint="防误触：口令与按钮双重确认（server 同句硬闸）">
+          <Field label={`请输入「${CONFIRM_PHRASE}」以继续`} hint="防误触：口令与按钮双重确认">
             <input
               className={inputCls}
               data-testid="pay-channel-confirm-input"

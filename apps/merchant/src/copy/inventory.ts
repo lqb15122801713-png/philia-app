@@ -12,7 +12,7 @@ const INVENTORY_COPY_TABLE = {
   'inv.pageSub': '上下限预警 · 效期批次 · 报损 · 估清恢复',
   'inv.guideTitle': '库存域由店长或店主处理',
   'inv.guideHint': '批次、预警、报损与估清属管理层动作；店员账号的工作面是收银台。',
-  'inv.marginNote': '进价/成本与毛利=店主/店长视界（server 双层闸）',
+  'inv.marginNote': '进价/成本与毛利仅店主、店长可见',
 
   /* ---- 区 1 上下限预警（stock2.stockAlerts） ---- */
   'inv.alerts.title': '上下限预警',
