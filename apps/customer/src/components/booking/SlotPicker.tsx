@@ -141,7 +141,6 @@ export default function SlotPicker({
             })}
           </div>
         )}
-        <p className="mt-2 text-caption text-ink-placeholder">灰色为已约满或 1 小时内的临近时段</p>
       </div>
     </div>
   );
