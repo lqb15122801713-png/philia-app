@@ -176,6 +176,9 @@ function OrderCard({
   invoice: { id: string } | null;
 }) {
   const meta = STATUS_META[order.status];
+  /* PD-75（P-CLIENT-03）：自提单 paid 态不写「待发货」 */
+  const statusLabelKey: MallCopyKey | undefined =
+    order.status === 'paid' && order.deliveryMethod === 'pickup' ? 'mall.statusWaitPickup' : meta?.labelKey;
   const qty = order.items.reduce((n, it) => n + it.quantity, 0);
   /* 补缺大批片 4：发票入口显态=paid/shipped/received（server invoiceCreate 同口径已付闸） */
   const invoiceEntry = ['paid', 'shipped', 'received'].includes(order.status) ? (
@@ -210,7 +213,7 @@ function OrderCard({
           ) : null}
         </p>
         <span className={`rounded-chip px-[7px] py-0.5 text-caption-xs font-semibold ${meta?.pill ?? 'bg-sunken text-ink-secondary'}`}>
-          {meta ? <CK k={meta.labelKey}>{mlc(meta.labelKey)}</CK> : order.status}
+          {statusLabelKey ? <CK k={statusLabelKey}>{mlc(statusLabelKey)}</CK> : order.status}
         </span>
       </div>
       <p className="mt-1 font-number text-caption-xs text-ink-placeholder">
@@ -639,7 +642,13 @@ function MallOrdersInner() {
               refundSlot={refundSlotOf(o)}
               invoice={invoiceByBill.get(o.id) ?? null}
               onContinuePay={(order) =>
-                setPayOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen })
+                setPayOrder({
+                  id: order.id,
+                  orderNo: order.orderNo,
+                  totalFen: order.totalFen,
+                  /* PD-75（HP-CLIENT-04）：收银台件数=订单卡同口径 */
+                  itemCount: order.items.reduce((n, it) => n + it.quantity, 0),
+                })
               }
               onReceive={(order) => setReceiveTarget(order)}
               onCancel={(order) => setCancelTarget(order)}

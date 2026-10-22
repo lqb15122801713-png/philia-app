@@ -13,26 +13,26 @@ import { withCopyOverrides } from '@philia/shared';
 const DEVLOGIN_COPY_TABLE = {
   'devlogin.tagline': 'PHILIA · 洗护 / 美容 / 寄养',
   'devlogin.primaryCta': '手机号一键登录',
-  'devlogin.gateLink': '口令入内测 ›',
-  /* 口令门卡 */
-  'devlogin.gateTitle': '内测环境需要口令',
-  'devlogin.gateBody': '请输入内测口令后加载可登录账号；无口令或口令错误将无法登录。',
+  'devlogin.gateLink': '口令登录 ›',
+  /* 口令门卡（PD-75 HP-CLIENT-02：去「内测」工程语，统一「访问口令」） */
+  'devlogin.gateTitle': '需要访问口令',
+  'devlogin.gateBody': '请输入访问口令后加载可登录账号；无口令或口令错误将无法登录。',
   'devlogin.gateHint': '口令通过后在上方选择账号一键登录。',
   /* D-16 手机号自助开户卡 */
   'devlogin.phoneTitle': '手机号登录 / 注册',
   'devlogin.phoneBody': '输入手机号即登录；首次使用将自动注册（新客建档）。',
-  /* 种子账号区 */
-  'devlogin.seedTitle': '选择种子用户登录',
-  'devlogin.devOnly': '仅开发环境 · 生产环境请移除',
-  'devlogin.seedFail': '种子用户拉取失败（网络连接失败：{error}）——请检查网络或确认 server 已启动；若是口令问题请用上方口令门',
-  'devlogin.seedEmpty': '未拉到种子用户，请重跑 server 的 db:seed，或手动输入 userId',
+  /* 演示账号区（PD-75 HP-CLIENT-02：去 seed/userId/db:seed 工程语） */
+  'devlogin.seedTitle': '选择演示账号登录',
+  'devlogin.devOnly': '',
+  'devlogin.seedFail': '演示账号拉取失败（{error}），请检查网络后重试；若有口令请先在上方验证',
+  'devlogin.seedEmpty': '暂无可登录的演示账号，请稍后再试',
   /* 手动输入区 */
-  'devlogin.manualTitle': '手动输入 userId',
-  'devlogin.manualBody': '重跑 server 的 db:seed 后用户 ID 会变化，可在 server 库中查 users 表后粘贴到这里。',
-  'devlogin.seedNote': '提示：种子用户一键登录 + 口令门内手机号自助开户（D-16：新号自动注册 customer）； 会话 cookie 有效期 7 天。',
+  'devlogin.manualTitle': '账号 ID 登录',
+  'devlogin.manualBody': '演示环境重建后账号 ID 会变化，可向门店索取最新账号 ID。',
+  'devlogin.seedNote': '提示：演示账号一键登录，也可在口令通过后用手机号自助开户；登录状态保留 7 天。',
   /* 底部协议小字 */
   'devlogin.footerA': '登录即同意《用户协议》与《隐私政策》',
-  'devlogin.footerB': '内测期间口令由门店发放',
+  'devlogin.footerB': '访问口令由门店发放',
   /* D-33 按角色落端：员工/商家种子账号登录后不迷航——已知拓扑直接跳，未知拓扑出明示卡 */
   'devlogin.endStaffTitle': '该账号是员工账号',
   'devlogin.endStaffBody': '客户端（宠友壳）没有员工工作台，请前往员工端登录使用；当前会话已登录，点下方链接直达。',
@@ -41,7 +41,7 @@ const DEVLOGIN_COPY_TABLE = {
   'devlogin.endLinkStaff': '前往员工端 ›',
   'devlogin.endLinkMerchant': '前往商家端 ›',
   /* 微信槽写准注记（客户端体验大批 片 1 · 开口项 1 裁：不吹不删槽） */
-  'devlogin.wechatNote': '微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测',
+  'devlogin.wechatNote': '微信授权登录属小程序/资质批，PWA 端暂以手机号或演示账号登录',
 } as const;
 
 export const DEVLOGIN_COPY = withCopyOverrides(DEVLOGIN_COPY_TABLE);

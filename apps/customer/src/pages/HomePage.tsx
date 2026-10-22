@@ -111,7 +111,17 @@ export default function HomePage() {
   })
   const inServiceAppt: AppointmentListItem | null = useMemo(() => {
     const rows = mineQ.data?.groups.in_service ?? []
-    return rows.find((appointment) => appointment.type === 'grooming') ?? null
+    /* PD-75（P-CLIENT-01）：预约未开始（提前核销未来单）不出「服务进行中」；
+       已取消/翻转会随 30s 轮询出桶，双保险再核 status 原值 */
+    const now = Date.now()
+    return (
+      rows.find(
+        (appointment) =>
+          appointment.type === 'grooming' &&
+          appointment.status === 'in_service' &&
+          new Date(appointment.scheduledStart).getTime() <= now,
+      ) ?? null
+    )
   }, [mineQ.data])
   const stepsQ = useQuery({
     queryKey: ['serviceStep', 'list', inServiceAppt?.id],

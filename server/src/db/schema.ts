@@ -274,7 +274,7 @@ export const pets = sqliteTable('pets', {
   weightKg: real('weight_kg'),
   /** 疫苗有效期至，ISO 日期 'YYYY-MM-DD' */
   vaccineValidUntil: text('vaccine_valid_until'),
-  /** 疫苗证明图片 URL 数组（片 2 · 0038：仅留证不改寄养硬闸——行为变更报备在案） */
+  /** 疫苗证明图片 URL 数组（片 2 · 0038 留证列；PD-75 起寄养硬闸看 vaccine_valid_until，server create/confirm 双闸） */
   vaccineProofUrls: text('vaccine_proof_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
   /** 是否已绝育 */
   neutered: integer('neutered', { mode: 'boolean' }).notNull().default(false),

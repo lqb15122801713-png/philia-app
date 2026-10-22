@@ -107,7 +107,10 @@ function doneTimeOf(steps: ServiceProcessStep[], key: string) {
 }
 
 export function buildServiceProcessModel({ appointment, steps }: ServiceProcessInput): ServiceProcessModel {
-  const notStarted = !appointment.checkedInAt && (appointment.status === 'pending' || appointment.status === 'confirmed')
+  /* PD-75（HP-CLIENT-06）：已取消/取消申请中不得落入「服务进行中」（归 not-started 静息态；
+     直播页对 cancelled 另有专属分支，本闸为兜底防御） */
+  const cancelled = appointment.status === 'cancelled' || appointment.status === 'cancel_requested'
+  const notStarted = cancelled || (!appointment.checkedInAt && (appointment.status === 'pending' || appointment.status === 'confirmed'))
   const completed = appointment.status === 'completed'
   const viewState: ServiceProcessViewState = completed ? 'completed' : notStarted ? 'not-started' : 'in-progress'
   const currentInternalStepKey = completed ? null : steps.find((step) => step.status === 'active')?.stepKey ?? null

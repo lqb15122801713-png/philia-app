@@ -140,8 +140,8 @@ export default function GroomingServiceProcess({
         />
         {notStarted ? (
           <section className="mt-3 rounded-card bg-sunken px-4 py-3">
+            {/* PD-75（HP-CLIENT-06）：去规格溯源口吻「入口来自…」，只留人话 */}
             <h2 className="text-body font-semibold">到店后会自动推进</h2>
-            <p className="mt-1 text-caption text-ink-secondary">入口来自预约成功「查看服务过程」</p>
           </section>
         ) : null}
         {completed ? (
