@@ -8251,6 +8251,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentsPage 页面内文案"
  },
  {
+  "key": "appt.merchantCancelCta",
+  "domain": "merchant:appointments",
+  "text": "撤单",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 操作区撤单钮/弹层题"
+ },
+ {
+  "key": "appt.merchantCancelConfirm",
+  "domain": "merchant:appointments",
+  "text": "确认撤销本单？预约将转为「已取消」，槽位立即释放，次卡／预付台账同步回冲；操作全留痕，不可撤销。",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤单弹层正文"
+ },
+ {
+  "key": "appt.merchantCancelConfirmCta",
+  "domain": "merchant:appointments",
+  "text": "确认撤单",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤单弹层确认钮"
+ },
+ {
+  "key": "appt.merchantCancelFail",
+  "domain": "merchant:appointments",
+  "text": "撤单失败，请稍后再试",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤单失败 toast"
+ },
+ {
+  "key": "appt.merchantCancelToast",
+  "domain": "merchant:appointments",
+  "text": "已撤单，预约转为已取消",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤单成功 toast"
+ },
+ {
   "key": "appt.openDetail",
   "domain": "merchant:appointments",
   "text": "详情",
@@ -8410,6 +8445,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "客户到店后由员工扫码或输入此码核销",
   "screen": "商家·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appt.voidCheckinConfirmCta",
+  "domain": "merchant:appointments",
+  "text": "确认撤核销",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤核销弹层确认钮"
+ },
+ {
+  "key": "appt.voidReasonLabel",
+  "domain": "merchant:appointments",
+  "text": "原因（必填，全留痕）",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤核销/撤单弹层原因标签"
+ },
+ {
+  "key": "appt.voidReasonPlaceholder",
+  "domain": "merchant:appointments",
+  "text": "请填写原因——操作人／时间／原因／前后状态全留痕",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 撤核销/撤单弹层原因占位"
  },
  {
   "key": "auth.agreement",

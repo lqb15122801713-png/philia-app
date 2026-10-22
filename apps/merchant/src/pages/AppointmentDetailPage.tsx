@@ -8,9 +8,10 @@
  *       + 服务进度卡（u3-stepv 六步+过程照墙，零回退）/寄养信息块 + 事件轨迹卡；
  *   右 = fdot 状态流五节点（确认→核销→服务中→完成→收款，按现状状态机映射；
  *       寄养单第三步=「寄养中」；已取消单=确认节点留痕其余封口）
- *       + 操作钮组（原 MainScaffold actions 全量迁入：改期/改派/服务监视/撤核销/确认预约/
+ *       + 操作钮组（原 MainScaffold actions 全量迁入：改期/改派/服务监视/撤核销/撤单/确认预约/
  *       审批取消申请/去收款，testid 不变，每屏至多一个 cream 主钮口径不变；PD-66 撤核销
- *       仅 in_service 可见，回 confirmed 可再核销，confirm 二次闸 + owner|manager 服务端闸）
+ *       仅 in_service 可见，回 confirmed 可再核销；PD-79 撤核销/撤单同档——in_service 且未涉钱
+ *       可见，二次确认弹层+原因必填全留痕，涉钱单另闸 + owner|manager 服务端闸）
  *       + 提示卡（按态一句引导+改派覆盖 merchant 留痕注，语言包 W-03 注记明面）
  *       + 协作拆分块（段 4 既有 CollabSplitSection 原位保留）。
  * - 寄养单：六步卡不渲染（无 steps），换 boardingStay 信息块（房间/称重/物品/退住）+ 轨迹卡。
@@ -60,7 +61,7 @@ import { RescheduleSheet } from '../components/appointments/RescheduleSheet';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
 import { CollabSplitSection } from '../components/payroll/CollabSplitSection';
 import { ac } from '../copy/appointments';
-import { canVoidCheckin } from './appointmentDetail.utils';
+import { canMerchantCancel, canVoidCheckin } from './appointmentDetail.utils';
 
 /** SSE 断线时的兜底轮询间隔（与总览页同值） */
 const POLL_FALLBACK_MS = 30_000;
@@ -176,6 +177,9 @@ export default function AppointmentDetailPage() {
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  // PD-79：撤核销/撤单共用二次确认弹层（'checkin'=撤核销 / 'cancel'=撤单），原因必填全留痕
+  const [voidSheet, setVoidSheet] = useState<'checkin' | 'cancel' | null>(null);
+  const [voidReason, setVoidReason] = useState('');
   const [viewer, setViewer] = useState<{ photos: PhotoViewerPhoto[]; index: number } | null>(null);
 
   const confirmMut = useMutation({
@@ -208,14 +212,29 @@ export default function AppointmentDetailPage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : '操作失败，请稍后再试'),
   });
 
-  // PD-66：撤核销（in_service／已核销未收银单 → 回 confirmed 可再核销；owner|manager 服务端闸 + confirm 二次闸）
+  // PD-66/PD-79：撤核销（in_service／已核销未收银单 → 回 confirmed 可再核销；
+  // owner|manager 服务端闸 + 二次确认弹层 + 原因必填全留痕 + 涉钱单另闸）
   const voidCheckinMut = useMutation({
-    mutationFn: () => trpc.appointment.voidCheckin.mutate({ appointmentId: aid! }),
+    mutationFn: (reason: string) => trpc.appointment.voidCheckin.mutate({ appointmentId: aid!, reason }),
     onSuccess: () => {
       toast.success(ac('appt.voidCheckinToast'));
+      setVoidSheet(null);
+      setVoidReason('');
       invalidateAll();
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : ac('appt.voidCheckinFail')),
+  });
+
+  // PD-79：撤单（in_service／已核销未收银单 → cancelled，cancelSource=merchant；同闸同留痕口径）
+  const merchantCancelMut = useMutation({
+    mutationFn: (reason: string) => trpc.appointment.merchantCancel.mutate({ appointmentId: aid!, reason }),
+    onSuccess: () => {
+      toast.success(ac('appt.merchantCancelToast'));
+      setVoidSheet(null);
+      setVoidReason('');
+      invalidateAll();
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : ac('appt.merchantCancelFail')),
   });
 
   // 事件轨迹（S4：事件即轨迹，零审计表接口；无时间戳的事件不合成行。
@@ -413,15 +432,26 @@ export default function AppointmentDetailPage() {
           服务监视
         </QuietButton>
       ) : null}
-      {canVoidCheckin(appt.status) ? (
+      {canVoidCheckin(appt.status, appt.paidAt) ? (
         <QuietButton
           testid="detail-void-checkin"
-          disabled={voidCheckinMut.isPending}
           onClick={() => {
-            if (window.confirm(ac('appt.voidCheckinConfirm'))) voidCheckinMut.mutate();
+            setVoidReason('');
+            setVoidSheet('checkin');
           }}
         >
-          {voidCheckinMut.isPending ? '撤回中…' : ac('appt.voidCheckinCta')}
+          {ac('appt.voidCheckinCta')}
+        </QuietButton>
+      ) : null}
+      {canMerchantCancel(appt.status, appt.paidAt) ? (
+        <QuietButton
+          testid="detail-merchant-cancel"
+          onClick={() => {
+            setVoidReason('');
+            setVoidSheet('cancel');
+          }}
+        >
+          {ac('appt.merchantCancelCta')}
         </QuietButton>
       ) : null}
       {appt.status === 'pending' ? (
@@ -879,6 +909,60 @@ export default function AppointmentDetailPage() {
             className="h-11 flex-1 rounded-control bg-destructive text-body-sm font-bold text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             {reviewCancelMut.isPending ? '处理中…' : '批准取消'}
+          </button>
+        </div>
+      </Modal>
+      {/* PD-79：撤核销/撤单二次确认弹层（必填原因全留痕；确认钮=danger 红，原因空禁用） */}
+      <Modal
+        open={voidSheet !== null}
+        title={voidSheet === 'cancel' ? ac('appt.merchantCancelCta') : ac('appt.voidCheckinCta')}
+        onClose={() => setVoidSheet(null)}
+        widthClass="sm:max-w-md"
+      >
+        <p className="text-[12px] leading-relaxed text-ink-secondary">
+          {voidSheet === 'cancel' ? ac('appt.merchantCancelConfirm') : ac('appt.voidCheckinConfirm')}
+        </p>
+        <label className="mt-3 block text-[12px] font-semibold text-ink" htmlFor="void-reason">
+          {ac('appt.voidReasonLabel')}
+        </label>
+        <textarea
+          id="void-reason"
+          data-testid="void-reason-input"
+          value={voidReason}
+          onChange={(e) => setVoidReason(e.target.value)}
+          placeholder={ac('appt.voidReasonPlaceholder')}
+          maxLength={100}
+          rows={3}
+          className="u1-ring mt-1.5 w-full rounded-control bg-card px-3.5 py-2.5 text-[13px] text-ink placeholder:text-ink-placeholder focus:outline-none"
+        />
+        <div className="mt-4 flex gap-2.5">
+          <button
+            type="button"
+            disabled={voidCheckinMut.isPending || merchantCancelMut.isPending}
+            onClick={() => setVoidSheet(null)}
+            className="u1-ring h-11 flex-1 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          >
+            再想想
+          </button>
+          <button
+            type="button"
+            data-testid="void-confirm"
+            disabled={
+              !voidReason.trim() || voidCheckinMut.isPending || merchantCancelMut.isPending
+            }
+            onClick={() => {
+              const reason = voidReason.trim();
+              if (!reason) return;
+              if (voidSheet === 'cancel') merchantCancelMut.mutate(reason);
+              else voidCheckinMut.mutate(reason);
+            }}
+            className="h-11 flex-1 rounded-control bg-destructive text-body-sm font-bold text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          >
+            {voidCheckinMut.isPending || merchantCancelMut.isPending
+              ? '处理中…'
+              : voidSheet === 'cancel'
+                ? ac('appt.merchantCancelConfirmCta')
+                : ac('appt.voidCheckinConfirmCta')}
           </button>
         </div>
       </Modal>

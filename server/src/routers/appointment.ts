@@ -342,6 +342,26 @@ async function petNameOf(d: DbHandle, petId: string): Promise<string | undefined
   return r?.name;
 }
 
+/**
+ * PD-79 涉钱闸（服务中撤单/撤核销共用）：已收银（paidAt 落值）或已入收银台
+ * （cashier_bill_items 存在 kind='appointment' 且 refId=本单 的预约行）→ BAD_REQUEST。
+ * 涉钱单另闸，本令不放开；预付台账（次卡扣次/预付登记）属可逆联动，不算涉钱，
+ * 由撤核销/撤单事务内既有助手回翻（checked_deducted→prepaid_registered / refunded）。
+ */
+async function assertNoMoneyInvolved(d: DbHandle, appt: AppointmentRow): Promise<void> {
+  if (appt.paidAt) {
+    badRequest('该单已收银，涉钱单的撤单/撤核销另闸处理，本入口不放开');
+  }
+  const billItem = await d
+    .select({ id: schema.cashierBillItems.id })
+    .from(schema.cashierBillItems)
+    .where(and(eq(schema.cashierBillItems.kind, 'appointment'), eq(schema.cashierBillItems.refId, appt.id)))
+    .get();
+  if (billItem) {
+    badRequest('该单已入收银台账单，涉钱单的撤单/撤核销另闸处理，本入口不放开');
+  }
+}
+
 /** 取消时回减槽位占用（槽位行不存在或已为 0 则不动，幂等安全） */
 async function releaseSlot(tx: DbHandle, storeId: string, slotStart: Date): Promise<void> {
   const slot = await tx
@@ -1576,16 +1596,29 @@ export const appointmentRouter = router({
   /**
    * PD-66（NO-VOID-ENTRY-ON-MERCHANT-UI）：撤核销——误核销/夹具单撤出服务中，回 confirmed 可再核销。
    * - 闸：仅 in_service（grooming 服务中，已核销未收银单）；in_boarding 寄养另案；completed/cancelled 等 400 明文；
+   * - PD-79 追加：reason 必填（min 1 / max 100，全留痕口径）+ 涉钱闸（已收银/已入收银台单另闸，本令不放开）；
    * - 语义：checkin 事务的逆操作——回 confirmed + 清 checkedInAt；槽位从未因核销释放，无需回补，预约仍占槽；
    * - 事务：appointments 回 confirmed（条件 where status='in_service' 防并发双击）+
    *   删除六步初始化行及其步骤照片（腾开 uq_appointment_steps_appt_key，再核销重新初始化）+
    *   预付台账逆联动 checked_deducted → prepaid_registered（仅本单，幂等）；
+   *   提成/XP/回馈金无需回冲——提成读侧只计已结收银单、XP 完成时才发、回馈金收银结算才计提，
+   *   已核销未收银单三者均未发生（PD-79 口径注记）；
    * - 幂等：confirmed 且无 checkedInAt（=已撤回态/未核销单）→ idempotent=true 原样返回零写库；
-   * - 留痕：appointment.checkinVoided 双频道（appointment+store），payload 带 by/beforeStatus/原 checkedInAt；
-   * - 权限：merchantManagerProcedure（owner|manager——钉店主/有权角色）；二次确认闸在 UI 层。
+   * - 留痕：appointment.checkinVoided 双频道（appointment+store），payload 带 by/reason/beforeStatus/
+   *   afterStatus/原 checkedInAt（操作人/原因/前后状态全留痕，时间=event_outbox.created_at）；
+   * - 权限：merchantManagerProcedure（owner|manager——钉店主/有权角色）；二次确认+必填原因弹层在 UI 层。
    */
   voidCheckin: merchantManagerProcedure
-    .input(z.object({ appointmentId: z.string().min(1) }))
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        reason: z
+          .string()
+          .trim()
+          .min(1, '请填写撤核销原因')
+          .max(100, '撤核销原因不能超过 100 字'),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
       if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
@@ -1593,6 +1626,7 @@ export const appointmentRouter = router({
       if (appt.status !== 'in_service') {
         badRequest(`当前状态（${appt.status}）不可撤核销——仅服务中（in_service）单可撤回至已确认`);
       }
+      await assertNoMoneyInvolved(ctx.db, appt); // PD-79：涉钱单另闸
       const now = new Date();
       const outboxIds: string[] = [];
       const updated = await ctx.db.transaction(async (tx) => {
@@ -1627,11 +1661,99 @@ export const appointmentRouter = router({
           appointmentId: appt.id,
           code: appt.code,
           by: ctx.user.id,
+          reason: input.reason,
           beforeStatus: 'in_service',
+          afterStatus: 'confirmed',
           checkedInAt: appt.checkedInAt,
         };
         outboxIds.push(await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCheckinVoided, payload));
         outboxIds.push(await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCheckinVoided, payload));
+        return row;
+      });
+      outboxIds.forEach(broadcastNow);
+      return { appointment: updated, idempotent: false as const };
+    }),
+
+  /**
+   * PD-79（服务中撤单入口）：商家/店长对 in_service（已核销未收银）单撤单 → cancelled。
+   * - 闸：仅 in_service；in_boarding 寄养另案；其余状态 400 明文（pending 走 reject、
+   *   cancel_requested 走 reviewCancel、completed 不可撤）；
+   * - 涉钱闸：已收银（paidAt）/已入收银台（cashier_bill_items 预约行）→ 400 另闸（本令不放开）；
+   * - reason 必填（min 1 / max 100），落 cancelReason + cancelSource='merchant'（新来源值，
+   *   text 列零 schema 变更；透出标签「商家撤单」）；
+   * - 事务（复用 reject 取消积木，均幂等）：释放槽位 releaseAppointmentSlots +
+   *   次卡回补 refundPassIfDeducted + 预付台账两段回翻（checked_deducted → prepaid_registered
+   *   → refunded；核销起点单的第一段按 voidCheckin 逆联动补齐，flipPrepaidOnCancel 口径不变）+
+   *   appointments 置 cancelled（条件 where status='in_service' 防并发双击）；
+   *   六步进度行保留作历史留痕（撤单后不再核销，无 uq_appointment_steps_appt_key 压力，
+   *   与撤核销「腾索引再核销」语义不同）；
+   *   提成/XP/回馈金无需回冲——已核销未收银单三者均未发生（读侧计提口径，见 voidCheckin 注）；
+   * - 留痕：appointment.cancelled 双频道（user 客户 + store 门店），payload 带
+   *   by/reason/beforeStatus/afterStatus/cancelSource（操作人/原因/前后状态全留痕）；
+   * - 权限：merchantManagerProcedure（owner|manager）；二次确认+必填原因弹层在 UI 层。
+   */
+  merchantCancel: merchantManagerProcedure
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        reason: z
+          .string()
+          .trim()
+          .min(1, '请填写撤单原因')
+          .max(100, '撤单原因不能超过 100 字'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (appt.status !== 'in_service') {
+        badRequest(`当前状态（${appt.status}）不可撤单——仅服务中（in_service）／已核销未收银单可撤`);
+      }
+      await assertNoMoneyInvolved(ctx.db, appt); // PD-79：涉钱单另闸
+      const petName = await petNameOf(ctx.db, appt.petId);
+      const now = new Date();
+      const outboxIds: string[] = [];
+      const updated = await ctx.db.transaction(async (tx) => {
+        // 取消积木三件套（与 reject/reviewCancel 批准同源，均幂等）
+        await releaseAppointmentSlots(txDb(tx), appt);
+        await refundPassIfDeducted(txDb(tx), appt);
+        /* PD-79：撤单起点是 in_service（已核销）——预付台账多半挂在 checked_deducted，
+           而 flipPrepaidOnCancel 只翻 pending/registered（核销单不在其口径）。先按
+           voidCheckin 逆联动回翻 checked_deducted → prepaid_registered，再统一翻 refunded，
+           两段同事务，保证「核销中撤单」台账落 refunded 不悬空（幂等，无行不动）。 */
+        await tx
+          .update(schema.prepaidRecords)
+          .set({ status: 'prepaid_registered', updatedAt: now })
+          .where(
+            and(
+              eq(schema.prepaidRecords.appointmentId, appt.id),
+              eq(schema.prepaidRecords.status, 'checked_deducted'),
+            ),
+          );
+        await flipPrepaidOnCancel(txDb(tx), appt.id, ctx.user.id);
+        const row = await tx
+          .update(schema.appointments)
+          .set({
+            status: 'cancelled',
+            cancelReason: input.reason,
+            cancelSource: 'merchant',
+            updatedAt: now,
+          })
+          .where(and(eq(schema.appointments.id, appt.id), eq(schema.appointments.status, 'in_service')))
+          .returning()
+          .then((r) => r[0]!);
+        const payload = {
+          appointmentId: appt.id,
+          code: appt.code,
+          petName,
+          by: ctx.user.id,
+          reason: input.reason,
+          beforeStatus: 'in_service',
+          afterStatus: 'cancelled',
+          cancelSource: 'merchant',
+        };
+        outboxIds.push(await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentCancelled, payload));
+        outboxIds.push(await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCancelled, payload));
         return row;
       });
       outboxIds.forEach(broadcastNow);

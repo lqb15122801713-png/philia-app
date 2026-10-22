@@ -91,11 +91,12 @@ export const statusBadge = (s: string): string =>
 export const customerLabel = (name?: string | null, phoneTail?: string | null): string =>
   `${name?.trim() ? name.trim() : '客户'}${phoneTail ? ` · 尾号 ${phoneTail}` : ''}`;
 
-/** B3-5（W-14）：取消来源标记 → 中文 */
+/** B3-5（W-14）：取消来源标记 → 中文（merchant=PD-79 商家/店长服务中撤单） */
 export const CANCEL_SOURCE_LABEL: Record<string, string> = {
   merchant_reject: '商家婉拒',
   customer: '客户取消',
   merchant_review: '商家批准取消',
+  merchant: '商家撤单',
 };
 export const cancelSourceLabel = (s: string | null): string =>
   (s && CANCEL_SOURCE_LABEL[s]) || '取消';

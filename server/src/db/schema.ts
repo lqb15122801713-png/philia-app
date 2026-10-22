@@ -448,7 +448,8 @@ export const appointments = sqliteTable('appointments', {
   cancelReason: text('cancel_reason'),
   /**
    * 取消来源标记，取值：merchant_reject（B3-3 商家拒单） | customer（客户自助取消，
-   * W-14 起填） | merchant_review（商家批准 ≤4h 取消申请）。NULL = 未取消/历史数据。
+   * W-14 起填） | merchant_review（商家批准 ≤4h 取消申请） | merchant（PD-79 商家/店长
+   * 对 in_service 已核销未收银单撤单）。NULL = 未取消/历史数据。
    */
   cancelSource: text('cancel_source'),
   /** 紧急联系人快照（体验大批片 2 · 0038：{name,phone,relation} 按单一填） */
