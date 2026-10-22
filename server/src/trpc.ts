@@ -47,9 +47,13 @@ export interface Context {
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
-  errorFormatter({ shape }) {
-    const data = { ...shape.data };
+  errorFormatter({ shape, error }) {
+    const data: Record<string, unknown> = { ...shape.data };
     delete data.stack;
+    // PD-77：业务原因码透传——throw TRPCError 时带 cause:{reasonCode} 即经
+    // error.data.reasonCode 上线上端（PD-76 状态机读取展示）；无 cause 的错误不变。
+    const reasonCode = (error.cause as { reasonCode?: unknown } | undefined)?.reasonCode;
+    if (typeof reasonCode === 'string') data.reasonCode = reasonCode;
     return { ...shape, data };
   },
 });

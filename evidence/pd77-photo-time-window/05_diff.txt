@@ -1,0 +1,345 @@
+# git status --short
+ M server/src/routers/__tests__/serviceStep.smoke.ts
+ M server/src/routers/appointment.ts
+ M server/src/routers/serviceStep.ts
+ M server/src/trpc.ts
+?? evidence/pd77-photo-time-window/
+?? server/src/lib/storeClock.ts
+
+# git diff --stat
+ server/src/routers/__tests__/serviceStep.smoke.ts | 122 ++++++++++++++++++++++
+ server/src/routers/appointment.ts                 |  30 +-----
+ server/src/routers/serviceStep.ts                 |  51 +++++++--
+ server/src/trpc.ts                                |   8 +-
+ 4 files changed, 173 insertions(+), 38 deletions(-)
+
+# git diff（跟踪文件）
+diff --git a/server/src/routers/__tests__/serviceStep.smoke.ts b/server/src/routers/__tests__/serviceStep.smoke.ts
+index d888a58..7367db8 100644
+--- a/server/src/routers/__tests__/serviceStep.smoke.ts
++++ b/server/src/routers/__tests__/serviceStep.smoke.ts
+@@ -16,6 +16,10 @@
+  * 7. v1.1-b3 B3-1（A-P0-9 结构性）：completed 单打标 → 同事务重开（in_service + 清
+  *    completed_at + 末步 reactivate）+ appointment.reopened 三频道事件 + 二次完成
+  *    （completed_at 重写、completed 事件再发）；cancelled/pending 维持拒绝且无写库副作用
++ * 8. PD-77 拍照时间窗：拍摄时刻∈[槽起−15min, 槽止+15min] 且 now∈服务日 → 成功；
++ *    窗外拍摄 → BAD_REQUEST＋口语原因＋cause.reasonCode=PHOTO_TIME_OUT_OF_SLOT；
++ *    窗内拍摄但 now 非服务日 → PHOTO_DAY_MISMATCH；缺 EXIF 放行留痕口径不变
++ *    （两道闸同免，flag_reason 落列）
+  *
+  * 使用独立临时库（PHILIA_DB_URL 指向 %TMP%），跑完清场，不污染 server/data/philia.db。
+  */
+@@ -593,6 +597,124 @@ try {
+     'FORBIDDEN',
+   );
+ 
++  /* ============================== [8] PD-77 拍照时间窗 ============================== */
++  // 置于 [7] 之前：基线 [7] 段存在未捕获异常（service_certificates 唯一约束，见 PD-77 卷宗
++  // 基线对照），会中断 try 块使后置段落不执行；本段自含夹具，不依赖前文状态。
++  console.log('\n[8] PD-77 拍照时间窗：槽±15min＋当日成功／窗外拒／非服务日拒（原因码透传）');
++  const APPT_W = 'appt-ss0win'; // 今日单：槽 = now+1h ~ now+2h（now∈服务日）
++  const APPT_T = 'appt-ss0tmr'; // 明日单：槽 = now+25h ~ now+26h（now 必非服务日）
++  const winStart = new Date(Date.now() + 3600_000);
++  const tmrStart = new Date(Date.now() + 25 * 3600_000);
++  await db.insert(schema.appointments).values([
++    {
++      id: APPT_W, code: '770001', customerId: CUSTOMER, storeId: STORE, staffId: STAFF,
++      petId: PET, serviceId: SERVICE, type: 'grooming',
++      scheduledStart: winStart, scheduledEnd: new Date(winStart.getTime() + 3600_000),
++      status: 'in_service', checkedInAt: new Date(), priceFen: 12800,
++    },
++    {
++      id: APPT_T, code: '770002', customerId: CUSTOMER, storeId: STORE, staffId: STAFF,
++      petId: PET, serviceId: SERVICE, type: 'grooming',
++      scheduledStart: tmrStart, scheduledEnd: new Date(tmrStart.getTime() + 3600_000),
++      status: 'in_service', checkedInAt: new Date(), priceFen: 12800,
++    },
++  ]);
++  await db.insert(schema.appointmentSteps).values(
++    [APPT_W, APPT_T].flatMap((aid) =>
++      STEP_DEFS.map((d) => ({
++        appointmentId: aid, stepKey: d.stepKey, stepOrder: d.stepOrder,
++        status: d.stepOrder === 1 ? ('active' as const) : ('locked' as const),
++        requiredPhotos: d.minPhotos, startedAt: null,
++      })),
++    ),
++  );
++
++  const wimg = (aid: string, clientTakenAt?: number) => {
++    photoSeq += 1;
++    return {
++      url: `/api/img/smoke/${aid}/${photoSeq}.jpg`,
++      thumbUrl: `/api/img/smoke/${aid}/${photoSeq}_t.jpg`,
++      ...(clientTakenAt !== undefined ? { clientTakenAt } : {}),
++    };
++  };
++  async function expectErrCause(
++    name: string,
++    p: Promise<unknown>,
++    msgPart: string,
++    reasonCode: string,
++  ): Promise<void> {
++    try {
++      await p;
++      check(`${name}：应拒绝（${reasonCode}）`, false, '未抛错');
++    } catch (e) {
++      const err = e as { code?: string; message?: string; cause?: { reasonCode?: string } };
++      check(
++        `${name}：BAD_REQUEST＋提示含「${msgPart}」＋cause.reasonCode=${reasonCode}`,
++        err?.code === 'BAD_REQUEST' &&
++          String(err?.message ?? '').includes(msgPart) &&
++          err?.cause?.reasonCode === reasonCode,
++        { code: err?.code, message: err?.message, cause: err?.cause },
++      );
++    }
++  }
++
++  const winStartSec = Math.floor(winStart.getTime() / 1000);
++  const winEndSec = Math.floor((winStart.getTime() + 3600_000) / 1000);
++  // 窗外拍摄：早于 槽起−15min / 晚于 槽止+15min → PHOTO_TIME_OUT_OF_SLOT（口语原因）
++  await expectErrCause(
++    '窗外拍摄（槽起−16min）',
++    staffCaller.addPhotos({
++      appointmentId: APPT_W, stepKey: 'disinfection',
++      photos: [wimg(APPT_W, winStartSec - 16 * 60)],
++    }),
++    '含±15分钟容差', 'PHOTO_TIME_OUT_OF_SLOT',
++  );
++  await expectErrCause(
++    '窗外拍摄（槽止+16min）',
++    staffCaller.addPhotos({
++      appointmentId: APPT_W, stepKey: 'disinfection',
++      photos: [wimg(APPT_W, winEndSec + 16 * 60)],
++    }),
++    '含±15分钟容差', 'PHOTO_TIME_OUT_OF_SLOT',
++  );
++  // 窗内拍摄但 now 非服务日（明日单）→ PHOTO_DAY_MISMATCH
++  await expectErrCause(
++    'now 非服务日（明日单，拍摄时刻∈槽内）',
++    staffCaller.addPhotos({
++      appointmentId: APPT_T, stepKey: 'disinfection',
++      photos: [wimg(APPT_T, Math.floor(tmrStart.getTime() / 1000))],
++    }),
++    '服务当日', 'PHOTO_DAY_MISMATCH',
++  );
++  // 界内：槽起−15min／槽内／槽止+15min 三临界值一批 → 成功（now∈服务日）
++  const winAdded = await staffCaller.addPhotos({
++    appointmentId: APPT_W, stepKey: 'disinfection',
++    photos: [
++      wimg(APPT_W, winStartSec - 15 * 60),
++      wimg(APPT_W, winStartSec),
++      wimg(APPT_W, winEndSec + 15 * 60),
++    ],
++  });
++  check(
++    '拍摄∈[槽起−15min, 槽止+15min] 且 now∈服务日 → 成功（三临界值全过，totalValid=3）',
++    winAdded.added === 3 && winAdded.totalValid === 3,
++    { added: winAdded.added, totalValid: winAdded.totalValid },
++  );
++  check(
++    '界内照片落库：clientTakenAt 落列且 flagReason 为空',
++    winAdded.photos.every((p) => p.clientTakenAt instanceof Date && p.flagReason === null),
++    winAdded.photos.map((p) => ({ clientTakenAt: p.clientTakenAt, flagReason: p.flagReason })),
++  );
++  // 缺 EXIF 放行留痕口径不变（两道闸同免）：明日单无 clientTakenAt → 放行且落 flag_reason
++  const noExif = await staffCaller.addPhotos({
++    appointmentId: APPT_T, stepKey: 'disinfection', photos: [wimg(APPT_T)],
++  });
++  check(
++    '缺 EXIF 放行留痕（两道闸同免）：明日单也放行且落 flagReason',
++    noExif.added === 1 && noExif.photos[0]!.flagReason === 'EXIF 缺失或未提供',
++    noExif.photos.map((p) => ({ flagReason: p.flagReason })),
++  );
++
+   /* ============================== [7] B3-1：completed 单打标 → 事务重开 ============================== */
+   console.log('\n[7] B3-1：completed 打标 → in_service + reopened 三频道事件 + 二次完成全链路');
+   const APPT_CANCELLED = 'appt-ss00002';
+diff --git a/server/src/routers/appointment.ts b/server/src/routers/appointment.ts
+index 1c74254..9380581 100644
+--- a/server/src/routers/appointment.ts
++++ b/server/src/routers/appointment.ts
+@@ -80,6 +80,7 @@ import { broadcastNow, emitEvent } from '../realtime/bus';
+ import { EventType } from '../realtime/events';
+ import { awardXp, loadXpRules } from '../services/xpAward';
+ import { StepLabel, type StepKey } from './serviceStep';
++import { storeDayStartMs, storeWallclock } from '../lib/storeClock';
+ 
+ /* ------------------------------------------------------------------ */
+ /* 常量与类型                                                            */
+@@ -202,31 +203,10 @@ const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+ const pad2 = (n: number) => String(n).padStart(2, '0');
+ 
+ /* ------------------------------------------------------------------ */
+-/* 门店规范时区（B8-B4）：openHours / 员工排班 / 寄养晚界的墙钟统一按      */
+-/* Asia/Shanghai（固定 +8，中国无夏令时）。此前一律用「服务器本地时区」    */
+-/* 解释墙钟：VPS 容器为 UTC 时槽位栅格整体偏移 8h，客户端（手机 CST）     */
+-/* 本地栅格与服务端可约集错位——上午/下午大面积灰死、点击无响应，仅错位   */
+-/* 后碰巧对齐的 17:00-19:30 可点（走查「预约时段首次点击无响应需点两次」  */
+-/* 根因；走查单落在 18:00 正因此）。改为固定 +8 后与客户端栅格同帧；      */
+-/* +1h 缓冲 / 容量 / 时长连续 / 幂等 等槽位规则不变（仅矫正墙钟参照系）。 */
+-const STORE_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
+-
+-/** instant → 门店规范时区（+8）墙钟部件（位移后用 UTC getter 读取） */
+-export function storeWallclock(d: Date): { y: number; m: number; day: number; dow: number; minutes: number } {
+-  const s = new Date(d.getTime() + STORE_TZ_OFFSET_MS);
+-  return {
+-    y: s.getUTCFullYear(),
+-    m: s.getUTCMonth() + 1,
+-    day: s.getUTCDate(),
+-    dow: s.getUTCDay(),
+-    minutes: s.getUTCHours() * 60 + s.getUTCMinutes(),
+-  };
+-}
+-
+-/** 门店规范时区某日 00:00 的 epoch（槽位栅格合成基准） */
+-export function storeDayStartMs(y: number, m1: number, day: number): number {
+-  return Date.UTC(y, m1 - 1, day) - STORE_TZ_OFFSET_MS;
+-}
++/* 门店规范时区（B8-B4）助手：实现已迁至 ../lib/storeClock（PD-77 抽出共享， */
++/* 供 serviceStep 同帧复用且避免 routers 间循环依赖）；此处再导出，既有     */
++/* import 路径与口径不变。                                               */
++export { storeDayStartMs, storeWallclock } from '../lib/storeClock';
+ 
+ // 注意：必须用 function 声明（而非箭头函数常量），TS 才会把「返回 never 的调用」
+ // 当作控制流终止点，从而在 if (!x) badRequest(...) 之后正确收窄 x 为非空。
+diff --git a/server/src/routers/serviceStep.ts b/server/src/routers/serviceStep.ts
+index f567e1d..ea03d39 100644
+--- a/server/src/routers/serviceStep.ts
++++ b/server/src/routers/serviceStep.ts
+@@ -33,6 +33,7 @@ import { z } from 'zod';
+ import { schema, type db } from '../db';
+ import { broadcastNow, emitEvent, type Db as BusDb } from '../realtime/bus';
+ import { EventType } from '../realtime/events';
++import { storeDayStartMs, storeWallclock } from '../lib/storeClock';
+ import {
+   assertAppointmentAccess,
+   merchantManagerProcedure,
+@@ -418,10 +419,17 @@ export const serviceStepRouter = router({
+    * 归属：本店且指派本人（PD-73）（assertAppointmentAccess staff 分支）；
+    * 上限：未失效照片总数（含本次）不得超 max，超限 BAD_REQUEST；
+    * before_after 步每张照片必须带 before/after 标签；staff 未开始时补写 started_at。
+-   * 片 3 B5-2 现场拍兜底闸：photos 项可带 clientTakenAt（=上传口返回的 EXIF
+-   * 拍摄时刻秒值）；存在且落在 [step.startedAt−30min, now+5min] 窗外 → 400 明文拒
+-   * 「照片拍摄时刻不在服务窗口内，须现场拍摄」；缺省 → 放行但落
+-   * flag_reason='EXIF 缺失或未提供'（只标记不阻断，考勤 flagged 同口径）。
++   * PD-77 拍照时间窗（潘婧 R7 口径，取代片 3 B5-2 旧窗 [step.startedAt−30min, now+5min]）：
++   * photos 项可带 clientTakenAt（=上传口返回的 EXIF 拍摄时刻秒值）；存在时判定——
++   * ①拍摄时刻须 ∈ [预约槽起−15min, 预约槽止+15min]，窗外 400
++   *   「拍摄时间不在本次服务时段（含±15分钟容差），请重拍」，cause.reasonCode=
++   *   PHOTO_TIME_OUT_OF_SLOT；
++   * ②上传时刻 now 限服务日（=scheduledStart 的门店规范日，店历同 B8-B4 +8 口径；
++   *   不要求 now∈槽），非当日 400「请在服务当日上传本次服务照片」，
++   *   cause.reasonCode=PHOTO_DAY_MISMATCH。
++   * 原因码经 errorFormatter 透传至 error.data.reasonCode，供 PD-76 状态机展示
++   * （本令不改 UI）。clientTakenAt 缺省 → 放行但落 flag_reason='EXIF 缺失或未提供'
++   * （只标记不阻断，考勤 flagged 同口径；两道闸同免，与既有留痕政策一致）。
+    */
+   addPhotos: staffProcedure
+     .input(
+@@ -443,7 +451,7 @@ export const serviceStepRouter = router({
+       }),
+     )
+     .mutation(async ({ ctx, input }) => {
+-      await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
++      const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
+       const def = defOf(input.stepKey);
+       const step = await loadStep(ctx.db, input.appointmentId, input.stepKey);
+ 
+@@ -463,17 +471,38 @@ export const serviceStepRouter = router({
+       }
+ 
+       const now = new Date();
+-      /* 片 3 B5-2 服务窗口=[步骤开始−30min, now+5min]：开始前 30 分钟内的备台照放行，
+-         未来 5 分钟容忍时钟漂移；startedAt 未落（本批首开）时按 now 起算窗口 */
+-      const windowStartMs = (step.startedAt ?? now).getTime() - 30 * 60_000;
+-      const windowEndMs = now.getTime() + 5 * 60_000;
++      /* PD-77 拍照时间窗（潘婧 R7 口径）：
++         ①拍摄时刻 ∈ [预约槽起−15min, 预约槽止+15min]（槽=appointments.scheduledStart/End），
++           窗外 → PHOTO_TIME_OUT_OF_SLOT；
++         ②now 限服务日（=scheduledStart 的门店规范日，店历同 B8-B4 +8 口径；两时刻同日
++           ⇔ dayStart 相等；不要求 now∈槽），非当日 → PHOTO_DAY_MISMATCH。
++         两道闸仅对有 clientTakenAt 的照片生效；缺 EXIF=放行留痕（落库时写 flag_reason） */
++      const windowStartMs = appt.scheduledStart.getTime() - 15 * 60_000;
++      const windowEndMs = appt.scheduledEnd.getTime() + 15 * 60_000;
++      let hasExif = false;
+       for (const p of input.photos) {
+-        if (p.clientTakenAt === undefined) continue; // 缺 EXIF=放行留痕（落库时写 flag_reason）
++        if (p.clientTakenAt === undefined) continue;
++        hasExif = true;
+         const takenMs = p.clientTakenAt * 1000;
+         if (takenMs < windowStartMs || takenMs > windowEndMs) {
+           throw new TRPCError({
+             code: 'BAD_REQUEST',
+-            message: '照片拍摄时刻不在服务窗口内，须现场拍摄',
++            message: '拍摄时间不在本次服务时段（含±15分钟容差），请重拍',
++            cause: { reasonCode: 'PHOTO_TIME_OUT_OF_SLOT' },
++          });
++        }
++      }
++      if (hasExif) {
++        const nowWc = storeWallclock(now);
++        const svcWc = storeWallclock(appt.scheduledStart);
++        if (
++          storeDayStartMs(nowWc.y, nowWc.m, nowWc.day) !==
++          storeDayStartMs(svcWc.y, svcWc.m, svcWc.day)
++        ) {
++          throw new TRPCError({
++            code: 'BAD_REQUEST',
++            message: '请在服务当日上传本次服务照片',
++            cause: { reasonCode: 'PHOTO_DAY_MISMATCH' },
+           });
+         }
+       }
+diff --git a/server/src/trpc.ts b/server/src/trpc.ts
+index 17c1749..ac48fd8 100644
+--- a/server/src/trpc.ts
++++ b/server/src/trpc.ts
+@@ -47,9 +47,13 @@ export interface Context {
+ 
+ const t = initTRPC.context<Context>().create({
+   transformer: superjson,
+-  errorFormatter({ shape }) {
+-    const data = { ...shape.data };
++  errorFormatter({ shape, error }) {
++    const data: Record<string, unknown> = { ...shape.data };
+     delete data.stack;
++    // PD-77：业务原因码透传——throw TRPCError 时带 cause:{reasonCode} 即经
++    // error.data.reasonCode 上线上端（PD-76 状态机读取展示）；无 cause 的错误不变。
++    const reasonCode = (error.cause as { reasonCode?: unknown } | undefined)?.reasonCode;
++    if (typeof reasonCode === 'string') data.reasonCode = reasonCode;
+     return { ...shape, data };
+   },
+ });
+
+# 新文件（untracked）：server/src/lib/storeClock.ts 全文
+/**
+ * 门店规范时区（B8-B4）：openHours / 员工排班 / 寄养晚界 / 拍照时间窗服务日的
+ * 墙钟统一按 Asia/Shanghai（固定 +8，中国无夏令时）。此前一律用「服务器本地时区」
+ * 解释墙钟：VPS 容器为 UTC 时槽位栅格整体偏移 8h，客户端（手机 CST）
+ * 本地栅格与服务端可约集错位——上午/下午大面积灰死、点击无响应，仅错位
+ * 后碰巧对齐的 17:00-19:30 可点（走查「预约时段首次点击无响应需点两次」
+ * 根因；走查单落在 18:00 正因此）。改为固定 +8 后与客户端栅格同帧；
+ * +1h 缓冲 / 容量 / 时长连续 / 幂等 等槽位规则不变（仅矫正墙钟参照系）。
+ *
+ * PD-77：自 routers/appointment.ts 抽出为中立模块——serviceStep 复用同帧
+ * 店历日判定，避免 routers 间循环依赖（appointment 依赖 serviceStep）。
+ * appointment.ts 原路径再导出，既有 import 不变。
+ */
+const STORE_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+/** instant → 门店规范时区（+8）墙钟部件（位移后用 UTC getter 读取） */
+export function storeWallclock(d: Date): { y: number; m: number; day: number; dow: number; minutes: number } {
+  const s = new Date(d.getTime() + STORE_TZ_OFFSET_MS);
+  return {
+    y: s.getUTCFullYear(),
+    m: s.getUTCMonth() + 1,
+    day: s.getUTCDate(),
+    dow: s.getUTCDay(),
+    minutes: s.getUTCHours() * 60 + s.getUTCMinutes(),
+  };
+}
+
+/** 门店规范时区某日 00:00 的 epoch（槽位栅格合成基准；两时刻同窗 ⇔ dayStart 相等） */
+export function storeDayStartMs(y: number, m1: number, day: number): number {
+  return Date.UTC(y, m1 - 1, day) - STORE_TZ_OFFSET_MS;
+}
