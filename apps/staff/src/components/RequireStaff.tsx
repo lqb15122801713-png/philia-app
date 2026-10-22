@@ -1,9 +1,9 @@
 /**
  * 员工端路由守卫（契约 docs/STAFF-CONTRACTS.md · T3.1，参照 apps/customer RequireAuth 改造）
  *
- * 包在主内容外（/dev-login 本身除外）：
+ * 包在主内容外（/login 本身除外）：
  * - useMe 加载中显示等待态；
- * - 未登录（user=null）跳 /dev-login，并带 from 以便登录后回跳；
+ * - 未登录（user=null）跳 /login，并带 from 以便登录后回跳；
  * - 已登录但 roles 不含 staff → 员工身份引导页（提示换用员工账号登录，非报错页）。
  *
  * 注意：守卫只是体验层，接口归属校验全部由服务端强制（staffProcedure，见 server/src/trpc.ts）。
@@ -28,7 +28,7 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/dev-login" replace state={{ from: location.pathname }} />
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
   if (!user.roles.includes('staff')) {
@@ -47,7 +47,7 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
         {/* P3-3：员工身份引导页出口钮同族归色——深棕墨底淡金字（34 号档 §4.11 空态件=深棕钮） */}
         <button
           type="button"
-          onClick={() => navigate('/dev-login', { replace: true })}
+          onClick={() => navigate('/login', { replace: true })}
           className="mt-6 h-14 min-w-[200px] rounded-full bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           去切换账号

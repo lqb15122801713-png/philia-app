@@ -575,9 +575,9 @@ try {
   );
   resetCheckinRateLimitForTest();
 
-  /* ==================== 3b. PD-65：核销店范围／execute404 ==================== */
-  console.log('\n[3b] PD-65：同店前台核销他人 grooming 单 → 真进服务（toast 与 execute 一致）');
-  // 场景钉死令包缺陷：小美（同店 frontdesk）核销派给阿强的单——核销 toast 成功则 execute 不得再 404。
+  /* ==================== 3b. PD-65/PD-73：核销店范围／执行派单闸 ==================== */
+  console.log('\n[3b] PD-65/PD-73：同店前台可核销，惟被派员工可执行');
+  // 小美（同店 frontdesk）可核销派给阿强的单；PD-73 起执行读写仅阿强本人可用。
   // 失败路径：groomer（st-e，本单指派人）核销 → FORBIDDEN「核销需前台账号操作」；
   // 前端 toast 以 mutation resolve 为准（QrScanner/ManualCodeInput catch → toast.error），
   // 拒绝即不可能出现成功 toast——此处断言零脏状态（status/checked_in_at/steps 全不动）。
@@ -612,41 +612,53 @@ try {
       ck65.idempotent === false,
     ck65.appointment,
   );
-  // 一致性断言：同一核销人 execute 读口不再 404（修复前此处 NOT_FOUND「预约不存在」）
-  const get65 = await bStaff.get({ appointmentId: pd65Appt.id });
+  // PD-73：核销不等于取得执行权；同店非派单与跨店员工均 FORBIDDEN。
   check(
-    'PD-65：核销人 appointment.get 放行（execute 页数据源不再 404）',
-    get65.appointment.status === 'in_service',
-    get65.appointment.status,
+    'PD-73：同店非派单核销人 appointment.get → FORBIDDEN',
+    await rejects(bStaff.get({ appointmentId: pd65Appt.id }), 'FORBIDDEN'),
   );
   const bStep65 = serviceStepRouter.createCaller(ctxStaff('u-b', 'st-b', 's-1'));
-  const list65 = await bStep65.list({ appointmentId: pd65Appt.id });
   check(
-    'PD-65：核销人 serviceStep.list 放行（六步就绪，step1 active）',
+    'PD-73：同店非派单核销人 serviceStep.list → FORBIDDEN',
+    await rejects(bStep65.list({ appointmentId: pd65Appt.id }), 'FORBIDDEN'),
+  );
+  check(
+    'PD-73：同店非派单核销人写六步 → FORBIDDEN',
+    await rejects(
+      bStep65.addPhotos({
+        appointmentId: pd65Appt.id,
+        stepKey: 'disinfection',
+        photos: [{ url: `/api/img/pd65/${pd65Appt.id}/1.jpg`, thumbUrl: `/api/img/pd65/${pd65Appt.id}/1_t.jpg` }],
+      }),
+      'FORBIDDEN',
+    ),
+  );
+  const eStep65 = serviceStepRouter.createCaller(ctxStaff('u-e', 'st-e', 's-1'));
+  const list65 = await eStep65.list({ appointmentId: pd65Appt.id });
+  check(
+    'PD-73：本店被派员工 serviceStep.list 放行（六步就绪，step1 active）',
     list65.length === 6 && list65[0]?.status === 'active',
     list65.map((s) => [s.stepKey, s.status]),
   );
-  // 可执行断言：核销人直接推进 step1（传 1 张达标照片 → confirm → step1 done、step2 active=真正进服务）
-  await bStep65.addPhotos({
+  await eStep65.addPhotos({
     appointmentId: pd65Appt.id,
     stepKey: 'disinfection',
     photos: [{ url: `/api/img/pd65/${pd65Appt.id}/1.jpg`, thumbUrl: `/api/img/pd65/${pd65Appt.id}/1_t.jpg` }],
   });
-  await bStep65.confirmStep({ appointmentId: pd65Appt.id, stepKey: 'disinfection' });
+  await eStep65.confirmStep({ appointmentId: pd65Appt.id, stepKey: 'disinfection' });
   const steps65 = await db
     .select()
     .from(schema.appointmentSteps)
     .where(eq(schema.appointmentSteps.appointmentId, pd65Appt.id))
     .orderBy(asc(schema.appointmentSteps.stepOrder));
   check(
-    'PD-65：核销人 confirmStep 可执行——step1 done、step2 active（成功则真正进服务）',
+    'PD-73：被派员工 confirmStep 可执行——step1 done、step2 active',
     steps65[0]?.status === 'done' && steps65[1]?.status === 'active',
     steps65.map((s) => [s.stepKey, s.status]),
   );
-  // 反锚：跨店员工对同一已核销单仍统一 NOT_FOUND（片 2 裁件①防探测口径不回退）
   check(
-    'PD-65 反锚：跨店员工读同一已核销单仍统一 NOT_FOUND「预约不存在」',
-    await rejects(cStaff.get({ appointmentId: pd65Appt.id }), 'NOT_FOUND', /预约不存在/),
+    'PD-73：跨店员工读同一已核销单 → FORBIDDEN',
+    await rejects(cStaff.get({ appointmentId: pd65Appt.id }), 'FORBIDDEN'),
   );
 
   /* ==================== 4. type 分支：六步 / 寄养 ==================== */

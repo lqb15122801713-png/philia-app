@@ -51,6 +51,7 @@ const PAY_COPY_TABLE = {
   'pay.retry': '重新加载',
 
   /* ---- 区块题（S7 明细分组） ---- */
+  'pay.sec.pendingService': '待计提服务',
   'pay.sec.service': '服务提成',
   'pay.sec.card': '售卡提成',
   'pay.sec.product': '商品提成',
@@ -63,9 +64,13 @@ const PAY_COPY_TABLE = {
   /* ---- 计提行 ---- */
   'pay.line.billNo': '单号',
   'pay.line.pending': '超产能·待店长批准',
+  'pay.line.pendingPayment': '待计提',
+  'pay.line.posted': '收款后入账',
   'pay.line.overwork': '超产能·1.5 倍已批准',
   'pay.line.probation': '试用期 ×50%',
   'pay.line.base': '基数',
+  'pay.pending.estimated': '预计',
+  'pay.pending.note': '服务已完成但尚未收款，预计提成不计入本月合计；收款后转入服务提成。',
 
   /* ---- 绩效格 ---- */
   'pay.perf.quarterTail': '季度',

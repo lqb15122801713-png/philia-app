@@ -216,27 +216,16 @@ export type AppointmentRow = typeof schema.appointments.$inferSelect;
 /**
  * 预约归属校验，返回预约行：
  * - customer：仅本人预约
- * - staff：本店且（未指派或指派给自己）；PD-65：已核销单（checked_in_at 非空）
- *   本店任意员工放行——服务执行=班次共享动作（与 PD-24 D-52 寄养照护同源）：
- *   核销 S1-R1「本店任意单、不认领、不改写 staff_id」既已成立，核销人/同店员工
- *   须能真正进服务（execute 读口+步骤写口同闸），责任/提成归属仍以 staff_id 为准不变；
- *   未核销单「未指派或指派给本人」闸不变，跨店仍统一 NOT_FOUND。
- * - merchant（owner/manager）：本店；片 2 裁件④（片 3 随带）：merchant_clerk 读本店放行
- * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；
- * 归属不通过（含跨店）一律 NOT_FOUND（片 2 裁件①：跨店按 id 取数统一 NOT_FOUND
- * 防探测口径——不透出他店单存在性；片 1 意见书 §三裁定）。
- *
- * PD-24 D-52（寄养去打卡 404）：opts.staffBoardingStorewide=true 时，staff 分支对
- * **寄养单**放宽为「本店任意员工」——与 boarding.ts getBoardingAppointment 的
- * staffStorewide 口径同源（PR-2 修正版 #33 5864881857：寄养照护=班次共享动作，
- * 非责任动作；dailyLog/stayForStaff/checkout 早已同口径放行）。
- * 仅限读口 appointment.get 使用（员工端 /boarding/:id/checkin 页数据源）；
- * 写口与其他类型预约的「未指派或指派给本人」闸不变。
+ * - staff：读口按角色与本人 ownership 解析；staffAssignedOnly=true 时，纯员工洗护执行读
+ *   收窄为本店且指派本人；staffExecutionWrite=true 时，任意 staff 记录写口均须本店且指派本人。
+ * - merchant（owner/manager/clerk）：本店读口不受员工派单闸影响
+ * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；默认归属不通过抛 NOT_FOUND。
+ * 非本店/非派单执行读写抛 FORBIDDEN，不透出核销码；寄养共享读口径不变。
  */
 export async function assertAppointmentAccess(
   ctx: Context,
   appointmentId: string,
-  opts?: { staffBoardingStorewide?: boolean },
+  opts?: { staffBoardingStorewide?: boolean; staffAssignedOnly?: boolean; staffExecutionWrite?: boolean },
 ): Promise<AppointmentRow> {
   const appt = await ctx.db
     .select()
@@ -251,7 +240,27 @@ export async function assertAppointmentAccess(
   if (!user) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: '未登录或会话已过期' });
   }
+  if (opts?.staffExecutionWrite && user.staffId) {
+    if (user.storeId !== appt.storeId || appt.staffId !== user.staffId) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: '仅本店被派员工可执行该服务单' });
+    }
+    return appt;
+  }
   if (user.roles.includes('customer') && appt.customerId === user.id) {
+    return appt;
+  }
+  if (
+    opts?.staffAssignedOnly &&
+    (opts?.staffBoardingStorewide !== true || appt.type !== 'boarding') &&
+    user.staffId &&
+    user.roles.includes('staff') &&
+    !user.roles.includes('merchant_owner') &&
+    !user.roles.includes('merchant_manager') &&
+    !user.roles.includes('merchant_clerk')
+  ) {
+    if (user.storeId !== appt.storeId || appt.staffId !== user.staffId) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: '仅本店被派员工可访问该服务单' });
+    }
     return appt;
   }
   if (
@@ -269,7 +278,6 @@ export async function assertAppointmentAccess(
   if (isMerchant && user.storeId === appt.storeId) {
     return appt;
   }
-  /* 片 2 裁件④（片 3 随带）：clerk 读本店预约详情放行（权限补齐件，跨店仍 NOT_FOUND） */
   if (user.roles.includes('merchant_clerk') && user.storeId === appt.storeId) {
     return appt;
   }

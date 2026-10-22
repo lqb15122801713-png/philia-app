@@ -1,0 +1,42 @@
+{
+  "kind": "PD-73 浏览器点验记录（非验收结论）",
+  "runtime": {
+    "apiBase": "http://localhost:7300",
+    "staffBase": "http://localhost:7302",
+    "database": "独立临时库，仅 1 家门店；测后已删除",
+    "fixtures": ["pd73-ui-execute", "pd73-ui-commission"],
+    "money": "appointment.markPaid 登记型 mock；paidFen=10000；无真实支付"
+  },
+  "checks": [
+    {
+      "id": "login-no-dev-exposure",
+      "url": "/login",
+      "observed": "员工账号 ID 表单；无 dev-login、种子枚举、userId 提示或种子清单请求",
+      "screenshot": "01-login.png"
+    },
+    {
+      "id": "commission-pending",
+      "url": "/pay",
+      "observed": "本月合计 ¥0；待计提服务行=基础洗护（小型犬），基数 ¥100 × 20%，预计 ¥20；policyNote=服务单=收款后计提；无旧版服务计提时点文案",
+      "screenshot": "02-pay-pending.png"
+    },
+    {
+      "id": "commission-posted",
+      "url": "/pay",
+      "observed": "markPaid 后本月合计 ¥20；服务提成行显示收款后入账 ¥20；待计提出库；无重复行",
+      "screenshot": "03-pay-posted.png"
+    },
+    {
+      "id": "execute-assigned",
+      "url": "/execute/pd73-ui-execute",
+      "observed": "归属员工：阿强 · 当前操作：阿强；本店被派员工可进入",
+      "screenshot": "04-execute-assigned.png"
+    },
+    {
+      "id": "execute-forbidden",
+      "url": "/execute/pd73-ui-execute",
+      "observed": "切换同店非派单员工小美后显示：无法执行该预约／该预约未指派给你，或不属于本店（非本人单）",
+      "screenshot": "05-execute-forbidden.png"
+    }
+  ]
+}
