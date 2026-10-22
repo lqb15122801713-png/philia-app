@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { schema, type db } from '../db';
 import { broadcastNow, emitEvent, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
+import { storeDayStartMs, storeWallclock } from '../lib/storeClock';
 import {
   assertAppointmentAccess,
   merchantManagerProcedure,
@@ -418,10 +419,17 @@ export const serviceStepRouter = router({
    * 归属：本店且指派本人（PD-73）（assertAppointmentAccess staff 分支）；
    * 上限：未失效照片总数（含本次）不得超 max，超限 BAD_REQUEST；
    * before_after 步每张照片必须带 before/after 标签；staff 未开始时补写 started_at。
-   * 片 3 B5-2 现场拍兜底闸：photos 项可带 clientTakenAt（=上传口返回的 EXIF
-   * 拍摄时刻秒值）；存在且落在 [step.startedAt−30min, now+5min] 窗外 → 400 明文拒
-   * 「照片拍摄时刻不在服务窗口内，须现场拍摄」；缺省 → 放行但落
-   * flag_reason='EXIF 缺失或未提供'（只标记不阻断，考勤 flagged 同口径）。
+   * PD-77 拍照时间窗（潘婧 R7 口径，取代片 3 B5-2 旧窗 [step.startedAt−30min, now+5min]）：
+   * photos 项可带 clientTakenAt（=上传口返回的 EXIF 拍摄时刻秒值）；存在时判定——
+   * ①拍摄时刻须 ∈ [预约槽起−15min, 预约槽止+15min]，窗外 400
+   *   「拍摄时间不在本次服务时段（含±15分钟容差），请重拍」，cause.reasonCode=
+   *   PHOTO_TIME_OUT_OF_SLOT；
+   * ②上传时刻 now 限服务日（=scheduledStart 的门店规范日，店历同 B8-B4 +8 口径；
+   *   不要求 now∈槽），非当日 400「请在服务当日上传本次服务照片」，
+   *   cause.reasonCode=PHOTO_DAY_MISMATCH。
+   * 原因码经 errorFormatter 透传至 error.data.reasonCode，供 PD-76 状态机展示
+   * （本令不改 UI）。clientTakenAt 缺省 → 放行但落 flag_reason='EXIF 缺失或未提供'
+   * （只标记不阻断，考勤 flagged 同口径；两道闸同免，与既有留痕政策一致）。
    */
   addPhotos: staffProcedure
     .input(
@@ -443,7 +451,7 @@ export const serviceStepRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
+      const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffExecutionWrite: true });
       const def = defOf(input.stepKey);
       const step = await loadStep(ctx.db, input.appointmentId, input.stepKey);
 
@@ -463,17 +471,38 @@ export const serviceStepRouter = router({
       }
 
       const now = new Date();
-      /* 片 3 B5-2 服务窗口=[步骤开始−30min, now+5min]：开始前 30 分钟内的备台照放行，
-         未来 5 分钟容忍时钟漂移；startedAt 未落（本批首开）时按 now 起算窗口 */
-      const windowStartMs = (step.startedAt ?? now).getTime() - 30 * 60_000;
-      const windowEndMs = now.getTime() + 5 * 60_000;
+      /* PD-77 拍照时间窗（潘婧 R7 口径）：
+         ①拍摄时刻 ∈ [预约槽起−15min, 预约槽止+15min]（槽=appointments.scheduledStart/End），
+           窗外 → PHOTO_TIME_OUT_OF_SLOT；
+         ②now 限服务日（=scheduledStart 的门店规范日，店历同 B8-B4 +8 口径；两时刻同日
+           ⇔ dayStart 相等；不要求 now∈槽），非当日 → PHOTO_DAY_MISMATCH。
+         两道闸仅对有 clientTakenAt 的照片生效；缺 EXIF=放行留痕（落库时写 flag_reason） */
+      const windowStartMs = appt.scheduledStart.getTime() - 15 * 60_000;
+      const windowEndMs = appt.scheduledEnd.getTime() + 15 * 60_000;
+      let hasExif = false;
       for (const p of input.photos) {
-        if (p.clientTakenAt === undefined) continue; // 缺 EXIF=放行留痕（落库时写 flag_reason）
+        if (p.clientTakenAt === undefined) continue;
+        hasExif = true;
         const takenMs = p.clientTakenAt * 1000;
         if (takenMs < windowStartMs || takenMs > windowEndMs) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: '照片拍摄时刻不在服务窗口内，须现场拍摄',
+            message: '拍摄时间不在本次服务时段（含±15分钟容差），请重拍',
+            cause: { reasonCode: 'PHOTO_TIME_OUT_OF_SLOT' },
+          });
+        }
+      }
+      if (hasExif) {
+        const nowWc = storeWallclock(now);
+        const svcWc = storeWallclock(appt.scheduledStart);
+        if (
+          storeDayStartMs(nowWc.y, nowWc.m, nowWc.day) !==
+          storeDayStartMs(svcWc.y, svcWc.m, svcWc.day)
+        ) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '请在服务当日上传本次服务照片',
+            cause: { reasonCode: 'PHOTO_DAY_MISMATCH' },
           });
         }
       }
