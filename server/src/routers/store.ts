@@ -34,6 +34,8 @@
  *   对账一致性：区间服务收入 = 按日序列 serviceFen 之和 = 员工维度 serviceFen 之和
  *   = 收款方式拆分两桶之和——四者全部由同一份「区间内已收款预约」行集在内存聚合，
  *   无二次查询，天然相等。
+ * - store.closeStore / store.reopenStore（PD-71 总部台最小写口；owner）：软关/再开，
+ *   仅写 status（active↔closed）+ updatedAt，零物理删；storeType=hq 硬拒；越域 NOT_FOUND。
  */
 
 import { TRPCError } from '@trpc/server';
@@ -1236,6 +1238,67 @@ export const storeRouter = router({
         return newStore!;
       });
       return { store: cloned };
+    }),
+
+  /**
+   * 软关店（PD-71 总部台挂片最小写口；owner）：写 status=closed，零物理删/零级联
+   * （历史预约/账/会员/员工行全留）。storeType=hq 硬拒（PD-70 裁②：总部门店记录不可关闭）；
+   * 越域=NOT_FOUND（同 cloneStore 防探测口径）。
+   * 完整软关语义（未完成履约强警示/listMine 默认排除/报表含已关闭勾选）权威=PD-70。
+   */
+  closeStore: merchantOwnerProcedure
+    .input(z.object({ storeId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const scope = storeScopeIds(ctx.user);
+      const row = await ctx.db
+        .select()
+        .from(schema.stores)
+        .where(eq(schema.stores.id, input.storeId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!row || !scope.includes(row.id)) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+      }
+      if (row.storeType === 'hq') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '总部门店记录不可关闭' });
+      }
+      if (row.status === 'closed') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '门店已是关闭状态' });
+      }
+      const [updated] = await ctx.db
+        .update(schema.stores)
+        .set({ status: 'closed', updatedAt: new Date() })
+        .where(eq(schema.stores.id, row.id))
+        .returning();
+      return { store: updated! };
+    }),
+
+  /** 再开店（PD-71 对称写口；owner）：closed → active，同 closeStore 闸径。 */
+  reopenStore: merchantOwnerProcedure
+    .input(z.object({ storeId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const scope = storeScopeIds(ctx.user);
+      const row = await ctx.db
+        .select()
+        .from(schema.stores)
+        .where(eq(schema.stores.id, input.storeId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!row || !scope.includes(row.id)) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+      }
+      if (row.storeType === 'hq') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '总部门店记录无需再开' });
+      }
+      if (row.status !== 'closed') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '门店未处于关闭状态' });
+      }
+      const [updated] = await ctx.db
+        .update(schema.stores)
+        .set({ status: 'active', updatedAt: new Date() })
+        .where(eq(schema.stores.id, row.id))
+        .returning();
+      return { store: updated! };
     }),
 
   /**

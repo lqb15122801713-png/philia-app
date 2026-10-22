@@ -109,6 +109,10 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
   if (pathname.startsWith('/matrix')) {
     return { title: '权限矩阵由店长或店主查看', hint: '角色×权限矩阵属管理层视界；店员账号的工作面是收银台。' }
   }
+  if (pathname.startsWith('/hq')) {
+    // PD-71 总部台：关店/再开/克隆写口仅店主（manager 页内另有引导页，server 硬 403）
+    return { title: '总部台仅店主可用', hint: '连锁门店的关闭/再开/克隆属店主动作；店员账号的工作面是收银台。' }
+  }
   if (pathname.startsWith('/console')) {
     // PD-25 D-56 A5：换名+去「店长或店主」歧义（店主为准）；角色矩阵不动
     return { title: '运营后台端由店主处理', hint: '端口配置与发布属管理层动作；店员账号的工作面是收银台。' }

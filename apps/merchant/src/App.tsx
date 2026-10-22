@@ -31,6 +31,7 @@ import ConsolePage from './pages/ConsolePage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
+import HqConsolePage from './pages/HqConsolePage'
 import InventoryPage from './pages/InventoryPage'
 import LedgerPage from './pages/LedgerPage'
 import MarketingPage from './pages/MarketingPage'
@@ -153,6 +154,10 @@ function ProtectedRoutes() {
         <Route path="/matrix" element={<MatrixPage />} />
         {/* PD46 U7：W-我的 店主真页 /me（`203:5480` 身份＋经营/账本/系统入口；dock 第五槽落点） */}
         <Route path="/me" element={<MePage />} />
+        {/* PD-71：总部台立壳——同仓独立壳（另路由 /hq + 墨轨另导航名「总部台」），
+            ≠控制台（/console）；owner-only（页内闸 + server merchantOwnerProcedure 硬闸，
+            clerk 由 ClerkRouteGuard 白名单拦）；关店/再开/克隆主写口 */}
+        <Route path="/hq" element={<HqConsolePage />} />
         {/* 商家端控制台骨架批 片 5 段 3：开发者管理端（W-16 聚合：直嵌 rules/copy/slots 三页内核；
             旧三路由 /settings/rules|copy|slots 保留可直达不重定向，rail foot 子行不动） */}
         <Route path="/console" element={<ConsolePage />} />

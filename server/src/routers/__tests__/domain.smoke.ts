@@ -17,6 +17,8 @@
  *    stayBoard 超期标记正确；
  *    B3-5 A-P2-14：checkout 基类修正为 staffProcedure——未登录 UNAUTHORIZED、
  *    客户/商家 FORBIDDEN（中间件层拦截、零副作用），员工正常退房（原有断言回归）
+ * 6. PD-71 总部台写口：closeStore/reopenStore——owner 软关/再开往返 + listNearby 联动；
+ *    manager/clerk FORBIDDEN；越域 NOT_FOUND；storeType=hq 硬拒零副作用
  *
  * 所有夹具均为脚本自建（不动种子数据），finally 里按子表→父表清场，跑完种子原样。
  */
@@ -623,7 +625,70 @@ async function main() {
   assert.equal(itemOver.lastLogDate, null, '未打卡时最近打卡日期为 null');
   console.log('✅ 5. boarding：checkinStay 幂等 / dailyLog UPSERT+事件 / checkout 幂等+completed / stayBoard 超期标记正确');
 
-  console.log('\n[domain.smoke] 全部 5 项通过 🎉');
+  /* ===== 6. PD-71 总部台写口：closeStore / reopenStore ===== */
+  const managerUser = await makeUser('烟雾店长', ['merchant_manager']);
+  const clerkUser = await makeUser('烟雾店员', ['merchant_clerk']);
+  const [hqStore] = await db
+    .insert(schema.stores)
+    .values({ ownerId: merchant1, name: '烟雾总部', storeType: 'hq', status: 'active' })
+    .returning();
+  created.storeIds.push(hqStore.id);
+
+  const ctxManager = ctxOf({ id: managerUser, nickname: '烟雾店长', roles: ['merchant_manager'], storeId: storeA.id });
+  const ctxClerk = ctxOf({ id: clerkUser, nickname: '烟雾店员', roles: ['merchant_clerk'], storeId: storeA.id });
+  // owner 全域视角（店域集合含总部行——会话中间件真实装配同名语义）
+  const ctxM1All = ctxOf({
+    id: merchant1, nickname: '烟雾商家1', roles: ['merchant_owner'],
+    storeId: storeA.id, storeIds: [storeA.id, hqStore.id],
+  });
+  const storeManager = storeRouter.createCaller(ctxManager);
+  const storeClerk = storeRouter.createCaller(ctxClerk);
+  const storeM1All = storeRouter.createCaller(ctxM1All);
+
+  // owner 软关本店 → status=closed；listNearby 即刻不见
+  const closed1 = await storeM1.closeStore({ storeId: storeA.id });
+  assert.equal(closed1.store.status, 'closed');
+  const nearbyAfterClose = await storeAnon.listNearby();
+  assert.ok(!nearbyAfterClose.stores.some((s) => s.id === storeA.id), '关店后 listNearby 不应再出现该店');
+
+  // 幂等拒绝：已关闭再关 → BAD_REQUEST
+  await assert.rejects(
+    storeM1.closeStore({ storeId: storeA.id }),
+    (e) => errCode(e) === 'BAD_REQUEST' && /已是关闭状态/.test((e as Error).message),
+  );
+
+  // 权限闸：manager / clerk 写口一律 FORBIDDEN（中间件层，零副作用）
+  await assert.rejects(storeManager.closeStore({ storeId: storeA.id }), (e) => errCode(e) === 'FORBIDDEN');
+  await assert.rejects(storeClerk.closeStore({ storeId: storeA.id }), (e) => errCode(e) === 'FORBIDDEN');
+  await assert.rejects(storeManager.reopenStore({ storeId: storeA.id }), (e) => errCode(e) === 'FORBIDDEN');
+
+  // 越域关他店 → NOT_FOUND（防探测口径，不透出存在性）
+  await assert.rejects(storeM2.closeStore({ storeId: storeA.id }), (e) => errCode(e) === 'NOT_FOUND');
+
+  // hq 硬拒（PD-70 裁②）：owner 全域店域内含总部行，关/再开一律 BAD_REQUEST 明文
+  await assert.rejects(
+    storeM1All.closeStore({ storeId: hqStore.id }),
+    (e) => errCode(e) === 'BAD_REQUEST' && /总部门店记录不可关闭/.test((e as Error).message),
+  );
+  await assert.rejects(
+    storeM1All.reopenStore({ storeId: hqStore.id }),
+    (e) => errCode(e) === 'BAD_REQUEST',
+  );
+  const hqAfter = await db.select().from(schema.stores).where(eq(schema.stores.id, hqStore.id)).then((r) => r[0]);
+  assert.equal(hqAfter.status, 'active', 'hq 行零副作用');
+
+  // 再开 → active 恢复；listNearby 回见；未关闭店再开 → BAD_REQUEST
+  const reopened = await storeM1.reopenStore({ storeId: storeA.id });
+  assert.equal(reopened.store.status, 'active');
+  const nearbyAfterReopen = await storeAnon.listNearby();
+  assert.ok(nearbyAfterReopen.stores.some((s) => s.id === storeA.id), '再开后 listNearby 应恢复可见');
+  await assert.rejects(
+    storeM1.reopenStore({ storeId: storeA.id }),
+    (e) => errCode(e) === 'BAD_REQUEST' && /未处于关闭状态/.test((e as Error).message),
+  );
+  console.log('✅ 6. PD-71 closeStore/reopenStore：owner 软关/再开往返正确；manager/clerk FORBIDDEN；越域 NOT_FOUND；hq 硬拒零副作用');
+
+  console.log('\n[domain.smoke] 全部 6 项通过 🎉');
 }
 
 try {

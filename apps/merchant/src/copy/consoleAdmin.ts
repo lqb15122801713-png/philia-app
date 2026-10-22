@@ -123,7 +123,9 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.groupF': 'F · 页面画布',
   'cadm.portCanvas': '画布端口',
 
-  /* ---- A28 新店克隆口（端口批收尾片 3；ProfilePortBody 底部「门店操作」区） ---- */
+  /* ---- A28 新店克隆口（端口批收尾片 3；ProfilePortBody 底部「门店操作」区） ----
+     PD-71：克隆写口迁总部台（/hq），档案页仅留「请至总部台」只读说明；
+     cloneCta/cloneModalTitle/cloneWarn 等写口键随之退役（保留键位备查，零调用） */
   'cadm.cloneSectionTitle': '门店操作',
   'cadm.cloneCta': '新店克隆',
   'cadm.cloneModalTitle': '确认克隆新店',
@@ -170,7 +172,7 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.cardRecycleTitle': '回收站',
   'cadm.cardRecycleHint': '软删的商品/活动/公告在这里恢复',
   'cadm.cardProfileTitle': '门店档案',
-  'cadm.cardProfileHint': '门店档案维护+连锁归属+新店克隆',
+  'cadm.cardProfileHint': '门店档案维护+连锁归属（克隆新店请至总部台）',
   'cadm.cardCarepackTitle': '安心包',
   'cadm.cardCarepackHint': '安心包库存与临期（只读 v1）',
   'cadm.cardMarketingTitle': '会员营销',
