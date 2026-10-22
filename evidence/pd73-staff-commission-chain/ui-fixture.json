@@ -1,0 +1,13 @@
+{
+  "apiBase": "http://localhost:7300",
+  "staffBase": "http://localhost:7302",
+  "executeId": "pd73-ui-execute",
+  "commissionId": "pd73-ui-commission",
+  "ownerId": "01M5HEYVFB1Q6SGQHCF0H66GXT",
+  "frontdeskId": "01M5HEYVFC5QFSH7DBHFXC3NPS",
+  "frontdeskName": "小美",
+  "groomerId": "01M5HEYVFCHEHTGC0GBK52GQA5",
+  "groomerName": "阿强",
+  "expectedFen": 2000,
+  "dbFile": "E:\\KIMI code\\pd73-staff-commission-chain\\.runtime\\pd73-ui\\ui.db"
+}

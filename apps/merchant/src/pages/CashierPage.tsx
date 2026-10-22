@@ -38,7 +38,7 @@ import { EventType, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { TRPCClientError } from '@trpc/client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import CartPanel from '@/components/cashier/CartPanel'
 import { DiscountDialog, PriceDialog, VoidDialog } from '@/components/cashier/dialogs'
@@ -75,6 +75,8 @@ import {
   DAY_CLOSES_KEY,
   discountOverLimit,
   fenToYuan,
+  hasBillDisplayFixtureMarker,
+  hasDisplayFixtureMarker,
   HELD_BILLS_KEY,
   lineTotal,
   PENDING_APPTS_KEY,
@@ -152,10 +154,21 @@ export default function CashierPage() {
     staleTime: 300_000,
   })
 
-  const services = servicesQ.data?.services
+  const services = useMemo(
+    () => servicesQ.data?.services.filter((s) => !hasDisplayFixtureMarker(s.name)),
+    [servicesQ.data],
+  )
   const products = useMemo(
-    () => (productsQ.data?.items ?? []).filter((p) => p.status === 'on'),
+    () => (productsQ.data?.items ?? []).filter((p) => p.status === 'on' && !hasDisplayFixtureMarker(p.name)),
     [productsQ.data],
+  )
+  const heldBills = useMemo(
+    () => heldQ.data?.filter((b) => !hasBillDisplayFixtureMarker(b)),
+    [heldQ.data],
+  )
+  const todayBills = useMemo(
+    () => todayQ.data?.filter((b) => !hasBillDisplayFixtureMarker(b)),
+    [todayQ.data],
   )
 
   /* ---------------- R11a 会员状态会话缓存（售卡/续费成交回写真值；无 server 读路径报备） ---------------- */
@@ -632,7 +645,7 @@ export default function CashierPage() {
    * 混入次卡等值）；改接 store.todayTenderStats 统一聚合出口。
    * clerk（restricted=true 服务端硬遮罩）隐藏整个金额块（矩阵总规则②）。 */
   const tender = tenderQ.data && !tenderQ.data.restricted ? tenderQ.data : null
-  const heldCount = heldQ.data?.length ?? 0
+  const heldCount = heldBills?.length ?? 0
 
   const pickError =
     pickTab === 'service'
@@ -693,6 +706,17 @@ export default function CashierPage() {
             <b className="font-number tabular-nums text-ink-secondary">¥{fenToYuan(tender.tender.storedValueFen)}</b>
           </div>
         ) : null}
+        {role.canManage ? (
+          <div className="mt-2">
+            <Link
+              to="/dashboard#dash-todo-tickets"
+              data-testid="cashier-ticket-entry"
+              className="inline-flex items-center rounded-full bg-card px-3.5 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)]"
+            >
+              客诉 / 工单
+            </Link>
+          </div>
+        ) : null}
       </header>
 
       {/* R4 离线状态条（双信号常显 + 本地暂存单数） */}
@@ -723,9 +747,9 @@ export default function CashierPage() {
         ))}
       </div>
 
-      <div className="lg:grid lg:grid-cols-[1fr_380px_260px] lg:items-start lg:gap-4">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_380px_260px] lg:items-start lg:gap-4">
         {/* 左栏：开单区（P1 会员检索 + tabs/P2 选品） */}
-        <section className={`flex-col gap-3 ${mobileTab === 'pick' ? 'flex' : 'hidden'} lg:flex`}>
+        <section className={`min-w-0 flex-col gap-3 ${mobileTab === 'pick' ? 'flex' : 'hidden'} lg:flex`}>
           <div className="rounded-[20px] bg-card p-3.5 shadow-[0_0_0_1px_rgba(44,40,34,.09)]">
             <MemberSearch
               member={member}
@@ -773,7 +797,7 @@ export default function CashierPage() {
         </section>
 
         {/* 中栏：购物车（380px） */}
-        <section className={`${mobileTab === 'cart' ? 'block' : 'hidden'} lg:block`}>
+        <section className={`min-w-0 ${mobileTab === 'cart' ? 'block' : 'hidden'} lg:block`}>
           <div className="flex min-h-[320px] flex-col rounded-[20px] bg-card p-4 shadow-[0_0_0_1px_rgba(44,40,34,.09)] lg:h-full">
             <CartPanel
               lines={lines}
@@ -836,10 +860,10 @@ export default function CashierPage() {
         </section>
 
         {/* 右栏：挂单队列 + 今日流水（260px；M1-补2 G：clerk 隐藏今日流水——矩阵总规则②） */}
-        <section className={`flex-col gap-3 ${mobileTab === 'queue' ? 'flex' : 'hidden'} lg:flex`}>
+        <section className={`min-w-0 flex-col gap-3 ${mobileTab === 'queue' ? 'flex' : 'hidden'} lg:flex`}>
           <HoldPanel
-            held={heldQ.data}
-            todayBills={todayQ.data}
+            held={heldBills}
+            todayBills={todayBills}
             hideToday={!role.canSeeTurnover}
             loading={heldQ.isPending || (role.canSeeTurnover && todayQ.isPending)}
             error={heldQ.isError || (role.canSeeTurnover && todayQ.isError)}

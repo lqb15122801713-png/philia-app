@@ -1332,11 +1332,20 @@ export const appointmentRouter = router({
    *  （kind='appointment' 且 ref_id=appointment.id，关联口径同 refund.ts 按行退取数）
    *  反查 cashier_bills，取最新一笔已结账（status='settled'；部分退亦可——已结账即可退）
    *  单的 billId，无则 null（客户端服务单退款入口的数据源，本人单闸既有）
-   *  PD-24 D-52：寄养单 staff 读放宽=本店任意员工（staffBoardingStorewide）——
-   *  员工端 /boarding/:id/checkin 页数据源；照护=班次共享动作（boarding.ts PR-2 同口径），
-   *  负责人仍记 appointments.staff_id 不变；非寄养单/写口闸不变，跨店仍 NOT_FOUND。 */
+   *  PD-73：洗护执行详情须本店且指派本人，非本店/非派单 FORBIDDEN；
+   *  寄养共享读口径不变；附 assignedStaff 供头卡区分归属员工与当前操作者。 */
   get: publicProcedure.input(z.object({ appointmentId: z.string().min(1) })).query(async ({ ctx, input }) => {
-    const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffBoardingStorewide: true });
+    const appt = await assertAppointmentAccess(ctx, input.appointmentId, {
+      staffAssignedOnly: true,
+      staffBoardingStorewide: true,
+    });
+    const assignedStaff = appt.staffId
+      ? await ctx.db
+          .select({ id: schema.staff.id, userId: schema.staff.userId, name: schema.staff.name })
+          .from(schema.staff)
+          .where(eq(schema.staff.id, appt.staffId))
+          .get()
+      : null;
     const pet = await ctx.db.select().from(schema.pets).where(eq(schema.pets.id, appt.petId)).get();
     const service = await ctx.db
       .select()
@@ -1377,6 +1386,7 @@ export const appointmentRouter = router({
       .then((r) => r[0]);
     return {
       appointment: appt,
+      assignedStaff: assignedStaff ?? null,
       pet: pet ?? null,
       service: service ?? null,
       store: store ?? null,

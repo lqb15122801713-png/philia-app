@@ -17,14 +17,14 @@ const SETTINGS_COPY_TABLE = {
   'set.panelStore': '门店',
   'set.panelRules': '经营口径',
   'set.hoursHint': '可约栅格之源',
-  'set.addrHint': 'listNearby 距离粗排之用',
+  'set.addrHint': '用于附近门店的距离排序',
   'set.servicesHint': '洗护/造型美容/寄养房型（时长引擎之母）',
   'set.servicesEmpty': '还没有服务项，点下方「＋ 新增服务」创建洗护或寄养服务',
   'set.servicesOffNote': '下架项本次会话内仍列出（可重新上架）；刷新后不再显示（「含下架」列表接口 v2 补齐）',
   'set.notifyAside': '通知偏好仅本机生效（v2 接服务端）',
-  'set.autoAcceptHint': 'S4 口径 · 默认开（无开关项，仅口径展示）',
+  'set.autoAcceptHint': '新预约自动接单 · 默认开启',
   'set.notifyNewLabel': '新预约通知',
-  'set.notifyNewHint': 'SSE store 频道 · 声音提醒',
+  'set.notifyNewHint': '门店新预约实时推送 · 声音提醒',
   'set.notifyCancelLabel': '取消申请提醒',
   'set.notifyCancelHint': '≤4h 申请需审批',
   'set.notifyBoardingLabel': '寄养打卡提醒',
@@ -43,12 +43,12 @@ const SETTINGS_COPY_TABLE = {
 
   /* ---- 片 5 段 3（W-15 校形）：槽位/文案端口入口行（owner-only）+ 带端口出生注 ---- */
   'set.panelPorts': '端口入口',
-  'set.portsAside': 'owner 专属 · 带端口出生',
+  'set.portsAside': '店主专属 · 后台可配置',
   'set.entryCopy': '文案端口',
-  'set.entryCopyHint': '控制台第七域 · 三端文案后台改',
+  'set.entryCopyHint': '三端文案统一维护',
   'set.entrySlots': '槽位端口',
-  'set.entrySlotsHint': '控制台第八域 · 素材上传→待审→上线/回退',
-  'set.portBornNote': '带端口出生，后台可改不动代码',
+  'set.entrySlotsHint': '素材上传→待审→上线/回退',
+  'set.portBornNote': '后台可改，无需改代码',
 } as const;
 
 export const SETTINGS_COPY = withCopyOverrides(SETTINGS_COPY_TABLE);

@@ -130,7 +130,7 @@ const CASHIER_COPY_TABLE = {
   'cashier.refundPolicyReject': '草稿单（gold 审批位）可驳回——店长（本店）/店主（全域），原因必填留痕',
   'cashier.refundSettleNote': '内测期实退=线下原路退回+系统内登记；登记后退款单置「实退完成」，账不再变（executed 不可撤销口径）。',
   'cashier.refundRejectNote': '驳回仅对草稿（draft）生效；驳回留痕 rejected+原因。已执行单不可撤销，纠错=再开正单。',
-  'cashier.refundSvNotice': '本单涉储值/次卡：退款须店主办理（负债科目不设阈值，server 同口径拦截）',
+  'cashier.refundSvNotice': '本单涉储值/次卡：退款须店主办理（负债科目不设阈值）',
   'cashier.refundAllocNote': '按支付段占比同比例分摊回补（V3）；按金额退不回库存只退钱（口径写死）',
   'cashier.refundBoardingNote': '已发生晚一分不退；已住/剩余晚数与晚单价以六联动预览为准（分段明示）',
   'cashier.refundPassCancelNote': '折算=剩余付费次数×（实付÷付费总次数），赠次不计价（随退作废）；退卡后卡作废留痕',
@@ -164,7 +164,7 @@ const CASHIER_COPY_TABLE = {
   'cashier.memberAlreadyMember': '该客户已是会员 —— 点这里切换到「续费」',
   'cashier.memberNextPlanBadge': '已预约下期：{plan}',
   'cashier.memberRenewNote': '续费=当前档位顺延 {days} 天（到期冻结自今日顺延）+ 回馈金解冻；档位不变（变更请退会后重售）。',
-  'cashier.memberRenewCalcNote': '续费金额=当前档价+既有宠物只数附加费，由 server 实算——先点「计算续费金额」取得应收再收款。',
+  'cashier.memberRenewCalcNote': '续费金额按当前档价与既有宠物只数核算，请先点「计算续费金额」确认应收再收款。',
   'cashier.memberPaySectionNote': '到店付收款段（内测期现金/微信/支付宝登记，Σ须等于应收）',
   'cashier.memberRulesNote':
     '会员费=权益服务费（年费 ≠ 储值，不计储值账户/不进储值看板）；有效期 {days} 天自开通日； 到期不自动续费（到期=冻结，续费解冻，退会清零回馈金）。',
@@ -178,7 +178,7 @@ const CASHIER_COPY_TABLE = {
     '剩余 {m} 整月 ×（新档月均价 ¥{newMonthly} − 旧档月均价 ¥{oldMonthly}）= 补差 ¥{total}',
   'cashier.upgradeDiffBase': '档价补差 ¥{amount}',
   'cashier.upgradeDiffPet': '多宠附加补差 ¥{amount}',
-  'cashier.upgradeQuoteTotal': '补差应收（server 实算）',
+  'cashier.upgradeQuoteTotal': '补差应收',
   'cashier.upgradeNewPurchaseNote': '新购口径：按新档全价实收（多宠附加按当前只数重算），有效期自成交日重起算',
   'cashier.upgradeNoDowngradeNote': '期内只升不降——如需换到更低档，可在到期前 {days} 天预约下期档位',
   'cashier.upgradeSubmit': '收 ¥{amount} 升档',
@@ -253,7 +253,7 @@ const CASHIER_COPY_TABLE = {
 
   /* ---- 片 3 交接班族：盲交 / 实点非现金 / 差异说明 / 现金收支 / 备用金 ---- */
   'cashier.blindClose': '盲交',
-  'cashier.blindCloseNote': '盲交中——账面已遮罩（server blind 口径不透账面），实点先行，差异提交后揭晓',
+  'cashier.blindCloseNote': '盲交中——账面金额已遮罩，实点先行，差异提交后揭晓',
   'cashier.diffNotePh': '差异说明（长短款超阈值必填，留痕）',
   'cashier.diffNoteRequired': '长短款差异超复核阈值——须填差异说明后再提交（输入已保留）',
   'cashier.cashMoveTitle': '现金收支（钱箱存入/取出）',

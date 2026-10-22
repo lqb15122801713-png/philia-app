@@ -63,7 +63,7 @@ const DOCK_TABS: Record<string, StaffDockActive> = { '/schedule': 'history', '/a
 
 export default function App() {
   const { pathname } = useLocation()
-  const isDevLogin = pathname === '/dev-login'
+  const isLogin = pathname === '/login' || pathname === '/dev-login'
   const dockActive = DOCK_TABS[pathname]
   const { user } = useMe()
 
@@ -71,8 +71,8 @@ export default function App() {
     <div className="min-h-screen bg-canvas text-ink">
       <main className={`mx-auto max-w-lg ${dockActive ? 'pb-[calc(94px+env(safe-area-inset-bottom))]' : ''}`}>
         <Routes>
-          {/* 开发登录页：守卫之外，且不显示 Dock（T3.1 新增路由，契约允许） */}
-          <Route path="/dev-login" element={<DevLoginPage />} />
+          <Route path="/login" element={<DevLoginPage />} />
+          <Route path="/dev-login" element={<Navigate to="/login" replace />} />
           <Route
             path="/*"
             element={
@@ -86,7 +86,7 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && dockActive && user?.staffId ? (
+      {!isLogin && dockActive && user?.staffId ? (
         <StaffDock active={dockActive} role={user.staffRole === 'frontdesk' ? 'frontdesk' : 'groomer'} />
       ) : null}
       <Toaster position="top-center" richColors />

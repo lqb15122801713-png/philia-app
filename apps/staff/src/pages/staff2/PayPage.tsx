@@ -54,7 +54,7 @@ interface CommissionLine {
   itemId: string;
   refId: string;
   name: string;
-  date: string; // YYYY-MM-DD（账单 settled_at 本地日期）
+  date: string; // YYYY-MM-DD（账单 settled_at 或预约 paid_at 本地日期）
   baseFen: number;
   rateBp: number;
   multiplierBp: number;
@@ -62,6 +62,18 @@ interface CommissionLine {
   overwork: boolean;
   pendingApproval: boolean;
   /** 协作拆分注记（薪资/XP 面扩）：拆分行=按比拆得；splitBp=拆分比例 bp，splitFrom=来源单/协作方（契约预留，本版不透出） */
+  splitFrom?: string;
+  splitBp?: number;
+}
+
+interface PendingCommissionLine {
+  itemId: string;
+  refId: string;
+  name: string;
+  date: string;
+  baseFen: number;
+  rateBp: number;
+  estimatedFen: number;
   splitFrom?: string;
   splitBp?: number;
 }
@@ -113,6 +125,7 @@ interface MonthPayload {
   grade: string | null;
   probation: boolean;
   serviceLines: CommissionLine[];
+  pendingServiceLines?: PendingCommissionLine[];
   productLines: CommissionLine[];
   cardLines: CommissionLine[];
   cardNote: string;
@@ -176,13 +189,16 @@ const secAsideSt: CSSProperties = { marginLeft: 'auto', fontWeight: 500 };
 
 /* ---------------- 提成单列 ---------------- */
 
-function LineRow({ line, probation }: { line: CommissionLine; probation: boolean }) {
+function LineRow({ line, probation, posted = false }: { line: CommissionLine; probation: boolean; posted?: boolean }) {
   return (
     <div className="row">
       <span className="lb" style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: 'block', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{line.name}</span>
         <span style={monoNote}>
           {line.date.slice(5)} · {PAY_COPY['pay.line.billNo']} {line.billNo}
+          {posted ? (
+            <span style={tagSt('var(--paper)', 'var(--ink)')}>{PAY_COPY['pay.line.posted']}</span>
+          ) : null}
           {line.pendingApproval ? (
             <span style={tagSt('var(--gold-pale)', 'var(--ink-deep)')}>{PAY_COPY['pay.line.pending']}</span>
           ) : line.overwork ? (
@@ -206,6 +222,29 @@ function LineRow({ line, probation }: { line: CommissionLine; probation: boolean
   );
 }
 
+function PendingLineRow({ line }: { line: PendingCommissionLine }) {
+  return (
+    <div className="row">
+      <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: 'block', fontWeight: 700 }}>{line.name}</span>
+        <span style={monoNote}>
+          {line.date.slice(5)}
+          <span style={tagSt('var(--gold-pale)', 'var(--ink-deep)')}>{PAY_COPY['pay.line.pendingPayment']}</span>
+          {line.splitBp != null ? (
+            <span style={tagSt('var(--paper)', 'var(--ink)')}>
+              {pcc('prl.line.splitLead')} {bpToPct(line.splitBp)}
+            </span>
+          ) : null}
+        </span>
+        <span style={monoNote}>
+          {PAY_COPY['pay.line.base']} {fenToYuan(line.baseFen)} × {bpToPct(line.rateBp)}
+        </span>
+      </span>
+      <span className="vl">{PAY_COPY['pay.pending.estimated']} {fenToYuan(line.estimatedFen)}</span>
+    </div>
+  );
+}
+
 /** 分列小节（题+小计 → SkRows 逐行；空态文案可选） */
 function Section({
   title,
@@ -213,12 +252,14 @@ function Section({
   emptyNote,
   probation,
   testid,
+  posted = false,
 }: {
   title: string;
   lines: CommissionLine[];
   emptyNote?: string;
   probation: boolean;
   testid: string;
+  posted?: boolean;
 }) {
   const total = lines.reduce((s, l) => s + l.amountFen, 0);
   return (
@@ -235,7 +276,7 @@ function Section({
             <span className="lb" style={{ color: 'var(--muted)' }}>{emptyNote ?? PAY_COPY['pay.empty.default']}</span>
           </div>
         ) : (
-          lines.map((l) => <LineRow key={l.itemId} line={l} probation={probation} />)
+          lines.map((l) => <LineRow key={l.itemId} line={l} probation={probation} posted={posted} />)
         )}
       </SkRows>
     </>
@@ -593,18 +634,28 @@ export default function PayPage() {
             </div>
           </SkPanel>
 
-          {/* S7 明细：服务 / 售卡 / 商品 */}
+          {/* S7 明细：待计提 / 服务 / 售卡 / 商品 */}
+          {(payload.pendingServiceLines?.length ?? 0) > 0 ? (
+            <>
+              <SkSec>{PAY_COPY['pay.sec.pendingService']}</SkSec>
+              <SkRows testId="pay-pending-service">
+                {payload.pendingServiceLines!.map((line) => <PendingLineRow key={line.itemId} line={line} />)}
+              </SkRows>
+              <SkNote>{PAY_COPY['pay.pending.note']}</SkNote>
+            </>
+          ) : null}
           <Section
             title={PAY_COPY['pay.sec.service']}
             lines={payload.serviceLines}
             emptyNote={PAY_COPY['pay.empty.service']}
             probation={payload.probation}
             testid="pay-service"
+            posted
           />
           <Section
             title={PAY_COPY['pay.sec.card']}
             lines={[...payload.cardLines]}
-            emptyNote={payload.cardNote /* server 明示：随会员前置批开通（不悬空、不虚构行） */}
+            emptyNote={payload.cardNote}
             probation={payload.probation}
             testid="pay-card"
           />

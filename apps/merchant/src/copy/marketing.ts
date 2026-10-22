@@ -15,7 +15,7 @@ const MARKETING_COPY_TABLE = {
   'mk.page.sub': '会员标签 · 券矩阵 · 定向发放 · 生日营销 · 活动配置',
   'mk.page.toLedger': '营销台账 →',
   'mk.guide.title': '会员营销由店长或店主管理',
-  'mk.guide.hint': '标签/券/活动配置属管理层视界（server 硬闸门兜底）；请切换店长或店主账号。',
+  'mk.guide.hint': '标签/券/活动配置仅管理层可操作；请切换店长或店主账号。',
   'mk.common.loadFail': '加载失败，请检查网络后重试',
   'mk.common.retry': '重新加载',
   'mk.common.cancel': '取消',

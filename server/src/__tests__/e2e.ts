@@ -12365,7 +12365,7 @@ async function main(): Promise<void> {
       groomerGet105.appointment.id === bAppt105.id && groomerGet105.appointment.type === 'boarding' &&
       groomerGet105.appointment.staffId === liliStaff105.id,
       { id: groomerGet105.appointment.id, staffId: groomerGet105.appointment.staffId });
-    /* 闸不回退①：非寄养指派单，同店非指派员工仍 NOT_FOUND */
+    /* PD-73：非寄养执行单，同店非派单员工 FORBIDDEN；寄养共享读口径不扩 */
     const gSvc105 = (await db.select().from(schema.services)
       .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'grooming'), eq(schema.services.active, true))).limit(1))[0]!;
     const gAppt105 = (await db.insert(schema.appointments).values({
@@ -12375,8 +12375,8 @@ async function main(): Promise<void> {
       note: '【测试】PD-24 D-52 非寄养闸夹具',
     }).returning())[0]!;
     const groomerGetG105 = await asErr(trpcQuery('appointment.get', { cookie: groomerCookie, input: { appointmentId: gAppt105.id } }));
-    check('105.2 D-52 闸不回退①：非寄养指派单同店他人 get=NOT_FOUND（staff 分支原口径不动）',
-      groomerGetG105 instanceof TrpcHttpError && groomerGetG105.code === 'NOT_FOUND',
+    check('105.2/PD-73：非寄养执行单同店非派单员工 get=FORBIDDEN',
+      groomerGetG105 instanceof TrpcHttpError && groomerGetG105.code === 'FORBIDDEN',
       groomerGetG105 && { code: groomerGetG105.code });
     /* 闸不回退②：跨店员工读寄养单仍 NOT_FOUND（片 2 裁件①防探测口径） */
     const userB105 = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_d52_staffb', nickname: 'e2e B 店员工', phone: '13900003101' }).returning())[0]!;

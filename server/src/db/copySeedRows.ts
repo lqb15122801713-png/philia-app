@@ -8456,7 +8456,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "auth.seedEmpty",
   "domain": "merchant:auth",
-  "text": "未拉到店主种子用户，请重跑 server 的 db:seed，或手动输入 userId",
+  "text": "未读取到店主演示账号，请检查演示数据，或手动输入用户 ID",
   "screen": "商家·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -8974,7 +8974,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cashier.blindCloseNote",
   "domain": "merchant:cashier",
-  "text": "盲交中——账面已遮罩（server blind 口径不透账面），实点先行，差异提交后揭晓",
+  "text": "盲交中——账面金额已遮罩，实点先行，差异提交后揭晓",
   "screen": "商家·日结·交接班",
   "position": "DayClosePanels 组件内文案"
  },
@@ -9464,7 +9464,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cashier.memberRenewCalcNote",
   "domain": "merchant:cashier",
-  "text": "续费金额=当前档价+既有宠物只数附加费，由 server 实算——先点「计算续费金额」取得应收再收款。",
+  "text": "续费金额按当前档价与既有宠物只数核算，请先点「计算续费金额」确认应收再收款。",
   "screen": "商家·收银台",
   "position": "MembershipPanel 组件内文案"
  },
@@ -10024,7 +10024,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cashier.refundSvNotice",
   "domain": "merchant:cashier",
-  "text": "本单涉储值/次卡：退款须店主办理（负债科目不设阈值，server 同口径拦截）",
+  "text": "本单涉储值/次卡：退款须店主办理（负债科目不设阈值）",
   "screen": "商家·收银流水 / 商家·退款单",
   "position": "RefundDialog 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -10262,7 +10262,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cashier.upgradeQuoteTotal",
   "domain": "merchant:cashier",
-  "text": "补差应收（server 实算）",
+  "text": "补差应收",
   "screen": "商家·收银台",
   "position": "MembershipPanel 组件内文案"
  },
@@ -10864,7 +10864,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cadm.ownerOnlyBody",
   "domain": "merchant:consoleAdmin",
-  "text": "端口配置与发布属店主专属（页内闸门 + server 硬闸门兜底）；请切换店主账号。",
+  "text": "端口配置与发布属店主专属；请切换店主账号。",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -13734,7 +13734,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "inv.marginNote",
   "domain": "merchant:inventory",
-  "text": "进价/成本与毛利=店主/店长视界（server 双层闸）",
+  "text": "进价/成本与毛利仅店主、店长可见",
   "screen": "商家·库存",
   "position": "InventoryPage 页面内文案"
  },
@@ -15127,7 +15127,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "mk.guide.hint",
   "domain": "merchant:marketing",
-  "text": "标签/券/活动配置属管理层视界（server 硬闸门兜底）；请切换店长或店主账号。",
+  "text": "标签/券/活动配置仅管理层可操作；请切换店长或店主账号。",
   "screen": "商家·会员营销 / 商家·营销台账",
   "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
  },
@@ -17248,7 +17248,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "pass.statPendingNote",
   "domain": "merchant:pass",
-  "text": "会员域暂无本店聚合读口（现仅按人查），待 server 开口——不造数",
+  "text": "会员域暂无本店汇总数据（现仅按人查询），暂不展示汇总数值",
   "screen": "商家·会员 · 次卡",
   "position": "PassPage 页面内文案"
  },
@@ -17913,7 +17913,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "payroll.ded.aside",
   "domain": "merchant:payroll",
-  "text": "扣减只扣绩效不扣提成；当月累计达上限 server 硬拒（50% 红线）",
+  "text": "扣减只扣绩效不扣提成；当月累计最多扣 50%",
   "screen": "商家·薪资",
   "position": "PayrollPage 页面内文案"
  },
@@ -19278,7 +19278,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "rpt.embed.outNote",
   "domain": "merchant:report",
-  "text": "出表=瀑布流批（H 表 §方向三清单）；导出 CSV 不对预埋项开放（server 400 明文）",
+  "text": "导出 CSV 仅覆盖已开放报表，预埋项暂不导出",
   "screen": "商家·经营报表",
   "position": "ReportPage 页面内文案"
  },
@@ -19894,7 +19894,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "rpt.sparkNote",
   "domain": "merchant:report",
-  "text": "今日格=截至当前已收 · financeStats 同源口径",
+  "text": "今日格=截至当前已收 · 与财务统计同口径",
   "screen": "商家·财务",
   "position": "FinancePage 页面内文案"
  },
@@ -20790,7 +20790,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "sched.swap.noQueue",
   "domain": "merchant:schedule",
-  "text": "换班队列读口（swapQueue）server 端未透出，审批区待接上；员工发起换班后可在此批准/驳回。",
+  "text": "换班队列暂未接入，审批区待开放。",
   "screen": null,
   "position": "未在页面调用点命中（merchant:schedule 域键表，端口运营复核挂载屏）"
  },
@@ -20972,14 +20972,14 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "set.addrHint",
   "domain": "merchant:settings",
-  "text": "listNearby 距离粗排之用",
+  "text": "用于附近门店的距离排序",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
  {
   "key": "set.autoAcceptHint",
   "domain": "merchant:settings",
-  "text": "S4 口径 · 默认开（无开关项，仅口径展示）",
+  "text": "新预约自动接单 · 默认开启",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
@@ -21014,7 +21014,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "set.entryCopyHint",
   "domain": "merchant:settings",
-  "text": "控制台第七域 · 三端文案后台改",
+  "text": "三端文案统一维护",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
@@ -21049,7 +21049,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "set.entrySlotsHint",
   "domain": "merchant:settings",
-  "text": "控制台第八域 · 素材上传→待审→上线/回退",
+  "text": "素材上传→待审→上线/回退",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
@@ -21126,7 +21126,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "set.notifyNewHint",
   "domain": "merchant:settings",
-  "text": "SSE store 频道 · 声音提醒",
+  "text": "门店新预约实时推送 · 声音提醒",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
@@ -21168,14 +21168,14 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "set.portBornNote",
   "domain": "merchant:settings",
-  "text": "带端口出生，后台可改不动代码",
+  "text": "后台可改，无需改代码",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
  {
   "key": "set.portsAside",
   "domain": "merchant:settings",
-  "text": "owner 专属 · 带端口出生",
+  "text": "店主专属 · 后台可配置",
   "screen": "商家·设置",
   "position": "SettingsPage 页面内文案"
  },
@@ -21238,7 +21238,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "staff.editSkillNote",
   "domain": "merchant:staff",
-  "text": "技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。",
+  "text": "技能标签暂为只读；排班请点员工行右侧的排班摘要编辑。",
   "screen": "商家·员工",
   "position": "EditStaffDialog 组件内文案"
  },
@@ -21441,7 +21441,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "staff.sub",
   "domain": "merchant:staff",
-  "text": "在职 {a} · 美容师 {b} · 前台 {c} · 自动派单按排班+负荷（S4）",
+  "text": "在职 {a} · 美容师 {b} · 前台 {c} · 自动派单按排班与负荷",
   "screen": "商家·员工",
   "position": "StaffPage 页面内文案"
  },
