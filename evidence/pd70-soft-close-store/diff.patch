@@ -1,0 +1,590 @@
+diff --git a/apps/merchant/src/copy/report.ts b/apps/merchant/src/copy/report.ts
+index 622a0a2..406a270 100644
+--- a/apps/merchant/src/copy/report.ts
++++ b/apps/merchant/src/copy/report.ts
+@@ -81,6 +81,9 @@ const REPORT_COPY_TABLE = {
+   'rpt.view.chain': '合计',
+   'rpt.view.storePick': '门店',
+   'rpt.view.chainAside': '店域合计（scope=chain）',
++  /* ---- PD-70 软关店：报表店下拉默认排除 closed；勾「含已关闭」可见 closed＋标识 ---- */
++  'rpt.view.includeClosed': '含已关闭',
++  'rpt.view.closedBadge': '已关闭',
+ 
+   /* ---- D1 营收双口径 ---- */
+   'rpt.d1.cashCard': '收现口径 ①',
+diff --git a/apps/merchant/src/pages/ReportPage.tsx b/apps/merchant/src/pages/ReportPage.tsx
+index ad83649..08b7c91 100644
+--- a/apps/merchant/src/pages/ReportPage.tsx
++++ b/apps/merchant/src/pages/ReportPage.tsx
+@@ -1610,10 +1610,12 @@ export default function ReportPage() {
+      manager 不出现切换（固定本店现状，sheet 查询零入参加回=零回归） */
+   const [view, setView] = useState<ReportView>('store');
+   const [pickedStoreId, setPickedStoreId] = useState<string | null>(null);
++  /* PD-70：报表「含已关闭」默认不勾；勾选后 listMine 带 closed 行（选项挂「已关闭」标识） */
++  const [includeClosed, setIncludeClosed] = useState(false);
+   const mineQ = useQuery({
+     enabled: role.isOwner && valid && isSheet,
+-    queryKey: ['store', 'listMine'],
+-    queryFn: () => trpc.store.listMine.query(),
++    queryKey: ['store', 'listMine', includeClosed],
++    queryFn: () => trpc.store.listMine.query(includeClosed ? { includeClosed: true } : undefined),
+   });
+   const mineStores = mineQ.data?.stores ?? [];
+   const effStoreId =
+@@ -1783,7 +1785,8 @@ export default function ReportPage() {
+               ))}
+             </div>
+           ) : null}
+-          {/* 单店视图门店下拉（listMine 店集合，选中店传 storeId；缺省=当前店） */}
++          {/* 单店视图门店下拉（listMine 店集合，选中店传 storeId；缺省=当前店；
++              PD-70：默认仅 active，勾「含已关闭」后 closed 店入列并挂标识） */}
+           {role.isOwner && isSheet && view === 'store' ? (
+             <label className="flex items-center gap-2 text-caption text-[rgba(44,40,34,.62)]">
+               {rpt('rpt.view.storePick')}
+@@ -1795,12 +1798,24 @@ export default function ReportPage() {
+               >
+                 {mineStores.map((s) => (
+                   <option key={s.id} value={s.id}>
+-                    {s.name}
++                    {s.status === 'closed' ? `${s.name}（${rpt('rpt.view.closedBadge')}）` : s.name}
+                   </option>
+                 ))}
+               </select>
+             </label>
+           ) : null}
++          {/* PD-70：「含已关闭」勾选（默认不勾）——勾选即重取 listMine(includeClosed=true) */}
++          {role.isOwner && isSheet && view === 'store' ? (
++            <label className="flex items-center gap-1 text-caption text-[rgba(44,40,34,.62)]">
++              <input
++                type="checkbox"
++                checked={includeClosed}
++                onChange={(e) => setIncludeClosed(e.target.checked)}
++                data-testid="report-include-closed"
++              />
++              {rpt('rpt.view.includeClosed')}
++            </label>
++          ) : null}
+           {/* 导出 CSV 仅店主可见可点（总规则③；非店主不渲染，server exportCsv 同闸 403） */}
+           {role.isOwner && isSheet ? (
+             <QuietButton
+diff --git a/server/src/routers/__tests__/storeClose.smoke.ts b/server/src/routers/__tests__/storeClose.smoke.ts
+new file mode 100644
+index 0000000..c11de04
+--- /dev/null
++++ b/server/src/routers/__tests__/storeClose.smoke.ts
+@@ -0,0 +1,261 @@
++/**
++ * PD-70 软关店冒烟脚本（store.closeStore / store.reopenStore + 默认排除 + closed 写口闸）
++ *
++ * 运行：npx tsx src/routers/__tests__/storeClose.smoke.ts
++ *
++ * 覆盖：
++ * 1. closeStore 开心路径：active→closed（changed:true），零物理删（店行/他店预约行均在），
++ *    幂等重调 changed:false
++ * 2. 默认排除：listMine 缺省不见 closed；includeClosed:true 可见且行 status=closed；
++ *    chainDashboard 同口径（缺省排除 / includeClosed 含 closed 并透出 status）
++ * 3. hq 硬禁关：storeType=hq → FORBIDDEN「总部门店记录不可关闭」；越店 → NOT_FOUND；
++ *    manager 调 closeStore → FORBIDDEN（owner-only）
++ * 4. 未完成履约强警示（非硬阻断）：未来 confirmed 单在 → 未勾选返回
++ *    requiresAcknowledgement:true 且零写入；勾选 acknowledgeOpenFulfillment 后关店成功
++ * 5. closed 写口闸：cloneStore 拒以 closed 为源（BAD_REQUEST）；cashier.hold 拒新开单
++ *    （BAD_REQUEST）；stock2.transferCreate 拒 closed 目标店（BAD_REQUEST）
++ * 6. reopenStore：closed→active（changed:true），恢复进默认 listMine；幂等重调 changed:false
++ *
++ * 所有夹具均为脚本自建（不动种子数据），finally 里按子表→父表清场，跑完种子原样。
++ */
++
++import assert from 'node:assert/strict';
++import { eq, inArray } from 'drizzle-orm';
++import { ulid } from 'ulid';
++import { client, db, schema } from '../../db';
++import type { Context, SessionUser } from '../../trpc';
++import { storeRouter } from '../store';
++import { cashierRouter } from '../cashier';
++import { stock2Router } from '../stock2';
++
++/* ---------- 测试数据清理登记 ---------- */
++const created = {
++  userIds: [] as string[],
++  storeIds: [] as string[],
++  petIds: [] as string[],
++  serviceIds: [] as string[],
++  appointmentIds: [] as string[],
++};
++
++async function runCleanup() {
++  if (created.appointmentIds.length) {
++    await db.delete(schema.appointments).where(inArray(schema.appointments.id, created.appointmentIds));
++  }
++  if (created.serviceIds.length) {
++    await db.delete(schema.services).where(inArray(schema.services.id, created.serviceIds));
++  }
++  if (created.petIds.length) {
++    await db.delete(schema.pets).where(inArray(schema.pets.id, created.petIds));
++  }
++  if (created.storeIds.length) {
++    await db.delete(schema.stores).where(inArray(schema.stores.id, created.storeIds));
++  }
++  if (created.userIds.length) {
++    await db.delete(schema.notifications).where(inArray(schema.notifications.userId, created.userIds));
++    await db.delete(schema.userRoles).where(inArray(schema.userRoles.userId, created.userIds));
++    await db.delete(schema.users).where(inArray(schema.users.id, created.userIds));
++  }
++}
++
++/* ---------- 小工具 ---------- */
++async function makeUser(nickname: string, roles: string[]): Promise<string> {
++  const [u] = await db
++    .insert(schema.users)
++    .values({ kimiId: `smoke_pd70_${ulid().toLowerCase()}`, nickname })
++    .returning();
++  created.userIds.push(u.id);
++  for (const role of roles) {
++    await db.insert(schema.userRoles).values({ userId: u.id, role });
++  }
++  return u.id;
++}
++
++async function makeStore(ownerId: string, name: string, storeType: 'store' | 'hq' = 'store') {
++  const [s] = await db.insert(schema.stores).values({ ownerId, name, storeType }).returning();
++  created.storeIds.push(s.id);
++  return s;
++}
++
++function ctxOf(user: SessionUser): Context {
++  return { db, user };
++}
++
++const errCode = (err: unknown) => (err as { code?: string }).code;
++
++async function main() {
++  /* ---------- 夹具：用户 / 门店 ---------- */
++  const owner = await makeUser('PD70烟老板', ['merchant_owner']);
++  const manager = await makeUser('PD70烟店长', ['merchant_manager']);
++  const otherOwner = await makeUser('PD70烟外人', ['merchant_owner']);
++  const customer = await makeUser('PD70烟客户', ['customer']);
++
++  const store1 = await makeStore(owner, 'PD70烟门店一');
++  const store2 = await makeStore(owner, 'PD70烟门店二');
++  const hq = await makeStore(owner, 'PD70烟总部', 'hq');
++  const storeOther = await makeStore(otherOwner, 'PD70烟外店');
++
++  const ownerCtx = ctxOf({
++    id: owner,
++    nickname: 'PD70烟老板',
++    roles: ['merchant_owner'],
++    storeId: store1.id,
++    storeIds: [store1.id, store2.id, hq.id],
++  });
++  const managerCtx = ctxOf({ id: manager, nickname: 'PD70烟店长', roles: ['merchant_manager'], storeId: store1.id });
++  const otherCtx = ctxOf({
++    id: otherOwner,
++    nickname: 'PD70烟外人',
++    roles: ['merchant_owner'],
++    storeId: storeOther.id,
++    storeIds: [storeOther.id],
++  });
++  const store = storeRouter.createCaller(ownerCtx);
++
++  /* ---------- 1. closeStore 开心路径 + 零物理删 + 幂等 ---------- */
++  const close1 = await store.closeStore({ storeId: store1.id });
++  assert.equal(close1.closed, true, '关店应成功');
++  assert.equal(close1.changed, true, '首次关店 changed:true');
++  assert.equal(close1.requiresAcknowledgement, false, '无未完成履约不需强警示');
++  assert.equal(close1.openFulfillment.total, 0, '无未完成履约 total=0');
++  assert.equal(close1.store.status, 'closed', '返回行 status=closed');
++  const store1Row = await db.select().from(schema.stores).where(eq(schema.stores.id, store1.id)).then((r) => r[0]);
++  assert.ok(store1Row, '零物理删：店行仍在');
++  assert.equal(store1Row.status, 'closed', '库内 status=closed');
++
++  const closeAgain = await store.closeStore({ storeId: store1.id });
++  assert.equal(closeAgain.closed, true, '已关重调仍 closed:true');
++  assert.equal(closeAgain.changed, false, '已关重调幂等 changed:false');
++  console.log('✅ 1. closeStore 开心路径（active→closed）+ 零物理删 + 幂等');
++
++  /* ---------- 2. 默认排除：listMine / chainDashboard ---------- */
++  const mineDefault = await store.listMine();
++  const mineIds = mineDefault.stores.map((s) => s.id);
++  assert.ok(!mineIds.includes(store1.id), 'listMine 缺省不见 closed 店');
++  assert.ok(mineIds.includes(store2.id), 'listMine 缺省仍见 active 店');
++  const mineAll = await store.listMine({ includeClosed: true });
++  const closedRow = mineAll.stores.find((s) => s.id === store1.id);
++  assert.ok(closedRow, 'includeClosed:true 可见 closed 店');
++  assert.equal(closedRow.status, 'closed', 'closed 行透出 status=closed（前端标识数据源）');
++
++  const chainDefault = await store.chainDashboard();
++  assert.ok(!chainDefault.stores.some((s) => s.storeId === store1.id), 'chainDashboard 缺省排除 closed 店');
++  const chainAll = await store.chainDashboard({ includeClosed: true });
++  const chainClosed = chainAll.stores.find((s) => s.storeId === store1.id);
++  assert.ok(chainClosed, 'chainDashboard includeClosed:true 含 closed 店');
++  assert.equal(chainClosed.status, 'closed', '连锁卡 closed 行透出 status 供标识');
++  console.log('✅ 2. listMine / chainDashboard 默认排除 closed（includeClosed 可含+标识）');
++
++  /* ---------- 3. hq 硬禁关 / 越店 / 非 owner ---------- */
++  await assert.rejects(
++    store.closeStore({ storeId: hq.id }),
++    (e) => errCode(e) === 'FORBIDDEN' && /总部门店记录不可关闭/.test((e as Error).message),
++    'hq 关店应 FORBIDDEN 明文',
++  );
++  await assert.rejects(
++    store.closeStore({ storeId: storeOther.id }),
++    (e) => errCode(e) === 'NOT_FOUND',
++    '越店关店应 NOT_FOUND（防探测口径）',
++  );
++  const storeAsManager = storeRouter.createCaller(managerCtx);
++  await assert.rejects(
++    storeAsManager.closeStore({ storeId: store2.id }),
++    (e) => errCode(e) === 'FORBIDDEN',
++    'manager 关店应 FORBIDDEN（owner-only）',
++  );
++  console.log('✅ 3. hq 硬禁关（FORBIDDEN 明文）/ 越店 NOT_FOUND / manager FORBIDDEN');
++
++  /* ---------- 4. 未完成履约强警示（非硬阻断） ---------- */
++  const [pet] = await db.insert(schema.pets).values({ ownerId: customer, name: 'PD70烟宠', species: 'dog' }).returning();
++  created.petIds.push(pet.id);
++  const [svc] = await db
++    .insert(schema.services)
++    .values({ storeId: store2.id, type: 'grooming', name: 'PD70烟服', priceFen: 100 })
++    .returning();
++  created.serviceIds.push(svc.id);
++  const [appt] = await db
++    .insert(schema.appointments)
++    .values({
++      code: `PD70${ulid()}`,
++      customerId: customer,
++      storeId: store2.id,
++      petId: pet.id,
++      serviceId: svc.id,
++      type: 'grooming',
++      status: 'confirmed',
++      scheduledStart: new Date(Date.now() + 24 * 3600 * 1000),
++      scheduledEnd: new Date(Date.now() + 25 * 3600 * 1000),
++      priceFen: 100,
++    })
++    .returning();
++  created.appointmentIds.push(appt.id);
++
++  const warn = await store.closeStore({ storeId: store2.id });
++  assert.equal(warn.closed, false, '有未完成履约且未勾选 → 不关');
++  assert.equal(warn.requiresAcknowledgement, true, '返回强警示标记');
++  assert.equal(warn.openFulfillment.upcoming, 1, '未来 confirmed 计入待履约');
++  assert.equal(warn.openFulfillment.total, 1, 'total=1');
++  const store2Mid = await db.select().from(schema.stores).where(eq(schema.stores.id, store2.id)).then((r) => r[0]);
++  assert.equal(store2Mid.status, 'active', '强警示分支零写入：仍 active');
++
++  const close2 = await store.closeStore({ storeId: store2.id, acknowledgeOpenFulfillment: true });
++  assert.equal(close2.closed, true, '勾选后可关（非硬阻断）');
++  assert.equal(close2.openFulfillment.total, 1, '关后仍回报当时未完成数');
++  const apptAlive = await db.select().from(schema.appointments).where(eq(schema.appointments.id, appt.id)).then((r) => r[0]);
++  assert.ok(apptAlive, '零物理删：关店后历史预约行仍在');
++  assert.equal(apptAlive.status, 'confirmed', '关店不改写预约状态');
++  console.log('✅ 4. 未完成履约：强警示+勾选后可关（非硬阻断），历史行全保留');
++
++  /* ---------- 5. closed 写口闸：克隆源 / 收银新开单 / 调拨目标 ---------- */
++  await assert.rejects(
++    store.cloneStore({ name: 'PD70烟克隆', sourceStoreId: store2.id }),
++    (e) => errCode(e) === 'BAD_REQUEST' && /已关闭门店不可作为克隆源/.test((e as Error).message),
++    'closed 源克隆应 BAD_REQUEST',
++  );
++  const cashierOnClosed = cashierRouter.createCaller(ctxOf({
++    id: owner,
++    nickname: 'PD70烟老板',
++    roles: ['merchant_owner'],
++    storeId: store2.id,
++    storeIds: [store1.id, store2.id, hq.id],
++  }));
++  await assert.rejects(
++    cashierOnClosed.hold({
++      items: [{ kind: 'custom', refId: 'pd70-custom', qty: 1, customName: '快捷收款', customAmountFen: 100 }],
++      discountType: 'none',
++      discountValue: 0,
++    }),
++    (e) => errCode(e) === 'BAD_REQUEST' && /门店已关闭，不可新开单/.test((e as Error).message),
++    'closed 店新开单应 BAD_REQUEST',
++  );
++  const stock2 = stock2Router.createCaller(ownerCtx);
++  await assert.rejects(
++    stock2.transferCreate({ toStoreId: store2.id, items: [{ productId: 'pd70-none', qty: 1 }] }),
++    (e) => errCode(e) === 'BAD_REQUEST' && /目标门店已关闭，不可调入/.test((e as Error).message),
++    'closed 目标店调拨应 BAD_REQUEST',
++  );
++  console.log('✅ 5. closed 拒：克隆源 / 收银新开单 / 调拨目标');
++
++  /* ---------- 6. reopenStore 对称恢复 + 幂等 ---------- */
++  const reopen1 = await store.reopenStore({ storeId: store1.id });
++  assert.equal(reopen1.reopened, true, '再开成功');
++  assert.equal(reopen1.changed, true, 'closed→active changed:true');
++  const reopenAgain = await store.reopenStore({ storeId: store1.id });
++  assert.equal(reopenAgain.changed, false, 'active 重调幂等 changed:false');
++  const mineAfter = await store.listMine();
++  assert.ok(mineAfter.stores.some((s) => s.id === store1.id), '再开后恢复进默认 listMine');
++  await assert.rejects(
++    storeRouter.createCaller(otherCtx).reopenStore({ storeId: store1.id }),
++    (e) => errCode(e) === 'NOT_FOUND',
++    '越店再开应 NOT_FOUND',
++  );
++  console.log('✅ 6. reopenStore：closed→active 恢复默认可见 + 幂等 + 越店 NOT_FOUND');
++
++  console.log('\n[storeClose.smoke] 全部 6 项通过 🎉');
++}
++
++try {
++  await main();
++} finally {
++  await runCleanup();
++  client.close();
++}
+diff --git a/server/src/routers/cashier.ts b/server/src/routers/cashier.ts
+index 670bf94..bd7f978 100644
+--- a/server/src/routers/cashier.ts
++++ b/server/src/routers/cashier.ts
+@@ -1301,6 +1301,15 @@ export const cashierRouter = router({
+     .input(cartSnapshotSchema)
+     .mutation(async ({ ctx, input }) => {
+       const storeId = ctx.user.storeId!;
++      /* PD-70：closed 店拒新开单（无 billNo=新开单；带 billNo=更新既有单不拦，收尾已开单不卡钱） */
++      if (!input.billNo) {
++        const st = await ctx.db
++          .select({ status: schema.stores.status })
++          .from(schema.stores)
++          .where(eq(schema.stores.id, storeId))
++          .get();
++        if (st?.status !== 'active') badRequest('门店已关闭，不可新开单');
++      }
+       return withCashierWriteLock(async () => {
+         const outboxIds: string[] = [];
+         const result = await ctx.db.transaction(async (tx) => {
+diff --git a/server/src/routers/stock2.ts b/server/src/routers/stock2.ts
+index 8a4b7e7..6634585 100644
+--- a/server/src/routers/stock2.ts
++++ b/server/src/routers/stock2.ts
+@@ -727,6 +727,8 @@ export const stock2Router = router({
+       const toStore = mustGet(await ctx.db.select().from(schema.stores).where(eq(schema.stores.id, input.toStoreId)).get(), '目标门店不存在');
+       if (!scope.includes(toStore.id)) notFound('目标门店不存在');
+       if (toStore.id === storeId) badRequest('调拨目标店不可为本店');
++      /* PD-70：closed 店拒作调拨目标（软关店写口闸；调拨目标下拉同由 listMine 默认排除） */
++      if (toStore.status !== 'active') badRequest('目标门店已关闭，不可调入');
+       const items: Array<{ productId: string; name: string; qty: number }> = [];
+       for (const it of input.items) {
+         const p = await loadProduct(ctx.db, storeId, it.productId);
+diff --git a/server/src/routers/store.ts b/server/src/routers/store.ts
+index 916c3bd..16b5630 100644
+--- a/server/src/routers/store.ts
++++ b/server/src/routers/store.ts
+@@ -34,6 +34,19 @@
+  *   对账一致性：区间服务收入 = 按日序列 serviceFen 之和 = 员工维度 serviceFen 之和
+  *   = 收款方式拆分两桶之和——四者全部由同一份「区间内已收款预约」行集在内存聚合，
+  *   无二次查询，天然相等。
++ *
++ * PD-70 软关店（软关/再开 + 默认排除 + hq 硬禁关；零物理删）：
++ * - store.closeStore / store.reopenStore：owner 写口（店域集合内），status=closed|active
++ *   翻转 + updatedAt；关店不删任何历史行（预约/账/会员/员工全保留）。
++ *   storeType=hq 一律 FORBIDDEN「总部门店记录不可关闭」（本端点为唯一 status 写口，
++ *   store.update 不接 status，其余写口无 status 通路）。
++ *   未完成履约=强警示非硬阻断：盘点 in_service/in_boarding（进行中）+ 未来
++ *   pending/confirmed/cancel_requested（待履约）；>0 且未勾 acknowledgeOpenFulfillment
++ *   时返回 requiresAcknowledgement（零写入），勾选后重调即关。
++ * - 默认排除 closed：listMine / chainDashboard 增 includeClosed（缺省 false=仅 active，
++ *   报表「含已关闭」默认不勾的服务端口径）；listNearby 原本即仅 active。
++ * - closed 店写口闸：cloneStore 拒以 closed 为源；新建预约拒（appointment.create 既有闸）；
++ *   收银新开单拒（cashier.hold）；调拨目标拒（stock2.transferCreate）。
+  */
+ 
+ import { TRPCError } from '@trpc/server';
+@@ -506,24 +519,35 @@ export const storeRouter = router({
+    * 店长/店员=本店单行（staff.store_id 绑定闸同源 storeScopeIds）。
+    * PD-24 D-55：INJECT- 标记族测试店不进现网视图（注入造数纪律件，id/name 前缀同闸；
+    * 闸口径抽 hidesInjectStore 单源——chainDashboard 连锁卡同闸）。
++   * PD-70：默认仅 active（includeClosed 缺省 false）；includeClosed=true 时含 closed
++   * 行（行自带 status，前端渲染「已关闭」标识）——连锁/调拨目标/报表店下拉默认排除
++   * closed 的唯一取数口。
+    */
+-  listMine: merchantProcedure.query(async ({ ctx }) => {
+-    const scope = storeScopeIds(ctx.user);
+-    if (!scope.length) return { stores: [] };
+-    const rows = await ctx.db
+-      .select({
+-        id: schema.stores.id,
+-        name: schema.stores.name,
+-        storeType: schema.stores.storeType,
+-        hqId: schema.stores.hqId,
+-        status: schema.stores.status,
+-        groupName: schema.stores.groupName,
+-      })
+-      .from(schema.stores)
+-      .where(and(inArray(schema.stores.id, scope), injectStoreExclude()))
+-      .orderBy(schema.stores.createdAt);
+-    return { stores: rows };
+-  }),
++  listMine: merchantProcedure
++    .input(z.object({ includeClosed: z.boolean().optional() }).optional())
++    .query(async ({ ctx, input }) => {
++      const scope = storeScopeIds(ctx.user);
++      if (!scope.length) return { stores: [] };
++      const rows = await ctx.db
++        .select({
++          id: schema.stores.id,
++          name: schema.stores.name,
++          storeType: schema.stores.storeType,
++          hqId: schema.stores.hqId,
++          status: schema.stores.status,
++          groupName: schema.stores.groupName,
++        })
++        .from(schema.stores)
++        .where(
++          and(
++            inArray(schema.stores.id, scope),
++            injectStoreExclude(),
++            input?.includeClosed === true ? undefined : eq(schema.stores.status, 'active'),
++          ),
++        )
++        .orderBy(schema.stores.createdAt);
++      return { stores: rows };
++    }),
+ 
+   /** 员工列表 + 技能/排班 + 绩效占位（owner|manager · M1-补2 条件①：员工花名册 clerk 403） */
+   staffList: merchantManagerProcedure.query(async ({ ctx }) => {
+@@ -1084,6 +1108,90 @@ export const storeRouter = router({
+       return { store: updated };
+     }),
+ 
++  /**
++   * PD-70 软关店（owner；店域集合内目标店）：status active→closed + updatedAt，零物理删
++   * （预约/账单/会员/员工行全保留）。storeType=hq 硬禁关（FORBIDDEN 明文）。
++   * 未完成履约强警示（非硬阻断）：进行中=in_service/in_boarding；待履约=未来
++   * pending/confirmed/cancel_requested；合计 >0 且未勾 acknowledgeOpenFulfillment →
++   * 返回 requiresAcknowledgement=true 且零写入，前端弹强警示勾选后重调即关。
++   * 已 closed 重调=幂等（changed:false）。
++   */
++  closeStore: merchantOwnerProcedure
++    .input(
++      z.object({
++        storeId: z.string().min(1),
++        /** 强警示勾选回传：「已知晓仍有未完成履约，仍关闭」 */
++        acknowledgeOpenFulfillment: z.boolean().optional(),
++      }),
++    )
++    .mutation(async ({ ctx, input }) => {
++      const scope = storeScopeIds(ctx.user);
++      const store = await ctx.db
++        .select()
++        .from(schema.stores)
++        .where(eq(schema.stores.id, input.storeId))
++        .limit(1)
++        .then((r) => r[0]);
++      if (!store || !scope.includes(store.id)) {
++        throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
++      }
++      if (store.storeType === 'hq') {
++        throw new TRPCError({ code: 'FORBIDDEN', message: '总部门店记录不可关闭' });
++      }
++      const now = new Date();
++      const appts = await ctx.db
++        .select({ status: schema.appointments.status, scheduledEnd: schema.appointments.scheduledEnd })
++        .from(schema.appointments)
++        .where(eq(schema.appointments.storeId, store.id));
++      const inProgress = appts.filter((a) => a.status === 'in_service' || a.status === 'in_boarding').length;
++      const upcoming = appts.filter(
++        (a) =>
++          (a.status === 'pending' || a.status === 'confirmed' || a.status === 'cancel_requested') &&
++          a.scheduledEnd.getTime() >= now.getTime(),
++      ).length;
++      const openFulfillment = { inProgress, upcoming, total: inProgress + upcoming };
++      if (store.status === 'closed') {
++        return { closed: true as const, changed: false as const, requiresAcknowledgement: false as const, openFulfillment, store };
++      }
++      if (openFulfillment.total > 0 && input.acknowledgeOpenFulfillment !== true) {
++        return { closed: false as const, changed: false as const, requiresAcknowledgement: true as const, openFulfillment, store };
++      }
++      const [updated] = await ctx.db
++        .update(schema.stores)
++        .set({ status: 'closed', updatedAt: now })
++        .where(eq(schema.stores.id, store.id))
++        .returning();
++      return { closed: true as const, changed: true as const, requiresAcknowledgement: false as const, openFulfillment, store: updated };
++    }),
++
++  /**
++   * PD-70 再开店（owner；与 closeStore 对称）：status closed→active + updatedAt；
++   * 恢复进默认 listMine／连锁／客端可约（仍受营业时间等既有闸）。已 active 重调=幂等。
++   */
++  reopenStore: merchantOwnerProcedure
++    .input(z.object({ storeId: z.string().min(1) }))
++    .mutation(async ({ ctx, input }) => {
++      const scope = storeScopeIds(ctx.user);
++      const store = await ctx.db
++        .select()
++        .from(schema.stores)
++        .where(eq(schema.stores.id, input.storeId))
++        .limit(1)
++        .then((r) => r[0]);
++      if (!store || !scope.includes(store.id)) {
++        throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
++      }
++      if (store.status === 'active') {
++        return { reopened: true as const, changed: false as const, store };
++      }
++      const [updated] = await ctx.db
++        .update(schema.stores)
++        .set({ status: 'active', updatedAt: new Date() })
++        .where(eq(schema.stores.id, store.id))
++        .returning();
++      return { reopened: true as const, changed: true as const, store: updated };
++    }),
++
+   /**
+    * 连锁驾驶舱（片 2 · 老板端三店六项日报看板；owner 全域读口）：
+    * 六项=今日营收已收（computeDayTender 同源）/今日预约（dashboardStats 同口径七状态合计）/
+@@ -1092,14 +1200,21 @@ export const storeRouter = router({
+    * 返回=店域内逐店分栏+合计条（聚合不写账，涉钱零新规）。
+    */
+   chainDashboard: merchantOwnerProcedure
+-    .input(z.object({ date: z.date().optional() }).optional())
+-    .query(async ({ ctx }) => {
++    .input(z.object({ date: z.date().optional(), includeClosed: z.boolean().optional() }).optional())
++    .query(async ({ ctx, input }) => {
+       const scope = storeScopeIds(ctx.user);
+       if (!scope.length) return { stores: [], total: null };
+       const storeRows = await ctx.db
+-        .select({ id: schema.stores.id, name: schema.stores.name, groupName: schema.stores.groupName })
++        .select({ id: schema.stores.id, name: schema.stores.name, groupName: schema.stores.groupName, status: schema.stores.status })
+         .from(schema.stores)
+-        .where(and(inArray(schema.stores.id, scope), injectStoreExclude()))
++        .where(
++          and(
++            inArray(schema.stores.id, scope),
++            injectStoreExclude(),
++            /* PD-70：连锁卡默认排除 closed（includeClosed=true 时含 closed 行并透出 status 供标识） */
++            input?.includeClosed === true ? undefined : eq(schema.stores.status, 'active'),
++          ),
++        )
+         .orderBy(schema.stores.createdAt);
+       const now = new Date();
+       const dayStart = storeTodayStart(now);
+@@ -1108,6 +1223,7 @@ export const storeRouter = router({
+         storeId: string;
+         name: string;
+         groupName: string | null;
++        status: string;
+         revenueFen: number;
+         todayCount: number;
+         inBoardingCount: number;
+@@ -1144,6 +1260,7 @@ export const storeRouter = router({
+           storeId: s.id,
+           name: s.name,
+           groupName: s.groupName,
++          status: s.status,
+           revenueFen: tender.receivedTotalFen,
+           todayCount,
+           inBoardingCount,
+@@ -1192,6 +1309,10 @@ export const storeRouter = router({
+       if (!source || !scope.includes(source.id)) {
+         throw new TRPCError({ code: 'NOT_FOUND', message: '源门店不存在' });
+       }
++      /* PD-70：禁以 closed 店为克隆源（软关店写口闸；源店恢复 active 后方可克隆） */
++      if (source.status !== 'active') {
++        throw new TRPCError({ code: 'BAD_REQUEST', message: '已关闭门店不可作为克隆源' });
++      }
+       const cloned = await ctx.db.transaction(async (tx) => {
+         const [newStore] = await tx
+           .insert(schema.stores)

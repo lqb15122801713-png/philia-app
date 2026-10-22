@@ -81,6 +81,9 @@ const REPORT_COPY_TABLE = {
   'rpt.view.chain': '合计',
   'rpt.view.storePick': '门店',
   'rpt.view.chainAside': '店域合计（scope=chain）',
+  /* ---- PD-70 软关店：报表店下拉默认排除 closed；勾「含已关闭」可见 closed＋标识 ---- */
+  'rpt.view.includeClosed': '含已关闭',
+  'rpt.view.closedBadge': '已关闭',
 
   /* ---- D1 营收双口径 ---- */
   'rpt.d1.cashCard': '收现口径 ①',

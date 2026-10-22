@@ -1301,6 +1301,15 @@ export const cashierRouter = router({
     .input(cartSnapshotSchema)
     .mutation(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
+      /* PD-70：closed 店拒新开单（无 billNo=新开单；带 billNo=更新既有单不拦，收尾已开单不卡钱） */
+      if (!input.billNo) {
+        const st = await ctx.db
+          .select({ status: schema.stores.status })
+          .from(schema.stores)
+          .where(eq(schema.stores.id, storeId))
+          .get();
+        if (st?.status !== 'active') badRequest('门店已关闭，不可新开单');
+      }
       return withCashierWriteLock(async () => {
         const outboxIds: string[] = [];
         const result = await ctx.db.transaction(async (tx) => {
