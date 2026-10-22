@@ -32,6 +32,9 @@ export interface WAlertItem {
   count?: number;
   to?: string;
   onClick?: () => void;
+  /** PD-69：附加行行内口径注记（如「不计入待办合计」）——仅传入的行渲染，
+   *  与计入待办合计的行文案分离；不计入口径判断由调用方（countsTowardTodoTotal）给出 */
+  notCountedNote?: string;
   /** PD-26 D-49：可选同语义次动作（如异常待清行内「强制完成」）——仅传入的行渲染，
    *  主动作（去处理/跳转）不动；零 IA 改动（行内加钮非重做） */
   extraAction?: { label: string; onClick: () => void; testId?: string };
@@ -43,6 +46,9 @@ export function WAlert({ items, testId }: { items: WAlertItem[]; testId?: string
       {items.map((it) => (
         <div className="row" key={it.key} data-testid={`wsk-alert-${it.key}`}>
           <span>{it.text}</span>
+          {it.notCountedNote ? (
+            <span className="nn" data-testid={`wsk-alert-${it.key}-notcounted`}>{it.notCountedNote}</span>
+          ) : null}
           {typeof it.count === 'number' ? <span className="n">{it.count}</span> : null}
           {it.extraAction ? (
             <button

@@ -1,0 +1,64 @@
+PD-69 /dashboard DOM 取证（1440×900）
+rows=[
+  {
+    "testid": "wsk-alert-cancel",
+    "text": "取消申请待审",
+    "count": 2,
+    "notCounted": false,
+    "noteText": null
+  },
+  {
+    "testid": "wsk-alert-refund",
+    "text": "客户退款申请",
+    "count": 2,
+    "notCounted": true,
+    "noteText": "不计入待办合计"
+  },
+  {
+    "testid": "wsk-alert-unpaid",
+    "text": "待收款",
+    "count": 74,
+    "notCounted": false,
+    "noteText": null
+  },
+  {
+    "testid": "wsk-alert-unassigned",
+    "text": "待派单",
+    "count": 5,
+    "notCounted": false,
+    "noteText": null
+  },
+  {
+    "testid": "wsk-alert-overdue",
+    "text": "超期寄养",
+    "count": 3,
+    "notCounted": true,
+    "noteText": "不计入待办合计"
+  },
+  {
+    "testid": "wsk-alert-pending",
+    "text": "历史待确认单",
+    "count": 2,
+    "notCounted": false,
+    "noteText": null
+  }
+]
+naiveSum=88 countedSum=83 postcardTodo=83
+chainTotal=今日营业额
+¥0
+今日预约
+27
+在店寄养
+3
+待办合计
+83
+超期寄养
+3
+客户退款申请
+2
+
+--- dash-alert outerHTML ---
+<section code-path="src\components\skeleton\index.tsx:44:5" class="wsk-alert" data-testid="dash-alert"><div code-path="src\components\skeleton\index.tsx:47:9" class="row" data-testid="wsk-alert-cancel"><span code-path="src\components\skeleton\index.tsx:48:11">取消申请待审</span><span code-path="src\components\skeleton\index.tsx:52:43" class="n">2</span><a code-path="src\components\skeleton\index.tsx:66:20" class="go" href="/appointments?status=cancel_requested&amp;from=todo">去处理</a></div><div code-path="src\components\skeleton\index.tsx:47:9" class="row" data-testid="wsk-alert-refund"><span code-path="src\components\skeleton\index.tsx:48:11">客户退款申请</span><span code-path="src\components\skeleton\index.tsx:50:13" class="nn" data-testid="wsk-alert-refund-notcounted">不计入待办合计</span><span code-path="src\components\skeleton\index.tsx:52:43" class="n">2</span><a code-path="src\components\skeleton\index.tsx:66:20" class="go" href="/cashier/refunds">去处理</a></div><div code-path="src\components\skeleton\index.tsx:47:9" class="row" data-testid="wsk-alert-unpaid"><span code-path="src\components\skeleton\index.tsx:48:11">待收款</span><span code-path="src\components\skeleton\index.tsx:52:43" class="n">74</span><a code-path="src\components\skeleton\index.tsx:66:20" class="go" href="/cashier?pull=01M5GP4TEZ6RC27JGET4CVX2KV">去处理</a></div><div code-path="src\components\skeleton\index.tsx:47:9" class="row" data-testid="wsk-alert-unassigned"><span code-path="src\components\skeleton\index.tsx:48:11">待派单</span><span code-path="src\components\skeleton\index.tsx:52:43" class="n">5</span><a code-path="src\components\skeleton\index.tsx:66:20" class="go" href="/appointments?status=confirmed&amp;from=todo">去处理</a></div><div code-path="src\components\skeleton\index.tsx:47:9" class="row" data-testid="wsk-alert-overdue"><span code-path="src\components\skeleton\index.tsx:48:11">超期寄养</span><span code-path="src\components\skeleton\index.tsx:50:13" class="nn" data-testid="wsk-alert-overdue-notcounted">不计入待办合计</span><span code-path="src\components\skeleton\index.tsx:52:43" class="n">3</span><a code-path="src\components\skeleton\index.tsx:66:20" class="go" href="/boarding">去处理</a></div><div code-path="src\components\skeleton\index.tsx:47:9" class="row" data-testid="wsk-alert-pending"><span code-path="src\components\skeleton\index.tsx:48:11">历史待确认单</span><span code-path="src\components\skeleton\index.tsx:52:43" class="n">2</span><a code-path="src\components\skeleton\index.tsx:66:20" class="go" href="/appointments?status=pending&amp;from=todo">去处理</a></div></section>
+
+--- dash-postcard outerHTML ---
+<section code-path="src\components\skeleton\index.tsx:125:5" class="wsk-postcard" data-testid="dash-postcard"><div code-path="src\components\skeleton\index.tsx:126:7" class="eb">MORNING POST</div><div code-path="src\components\skeleton\index.tsx:127:7" class="tt">晨报。</div><div code-path="src\components\skeleton\index.tsx:128:7" class="rules" aria-hidden="true"></div><div code-path="src\components\skeleton\index.tsx:129:7" class="fig">¥0</div><div code-path="src\components\skeleton\index.tsx:130:20" class="figcap">今日营业额 · 实时</div><div code-path="src\components\skeleton\index.tsx:132:9" style="margin-top: 8px;"><div code-path="src\components\skeleton\index.tsx:134:13" class="cr"><span code-path="src\components\skeleton\index.tsx:135:15">在店寄养</span><span code-path="src\components\skeleton\index.tsx:136:15" class="v">3</span></div><div code-path="src\components\skeleton\index.tsx:134:13" class="cr"><span code-path="src\components\skeleton\index.tsx:135:15">待办合计</span><span code-path="src\components\skeleton\index.tsx:136:15" class="v">83</span></div><div code-path="src\components\skeleton\index.tsx:134:13" class="cr"><span code-path="src\components\skeleton\index.tsx:135:15">超期寄养</span><span code-path="src\components\skeleton\index.tsx:136:15" class="v red">3</span></div></div></section>

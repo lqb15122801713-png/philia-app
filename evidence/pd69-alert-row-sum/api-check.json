@@ -1,0 +1,12 @@
+{
+  "todo": {
+    "pending": 2,
+    "unassigned": 5,
+    "cancelRequested": 2,
+    "unpaid": 74,
+    "total": 83
+  },
+  "overdueBoardingCount": 3,
+  "refundPendingSubmitted": 2,
+  "note": "六行朴素和=83(todo.total)+3(超期)+2(退款)=88；refund 计数见 browser-dom.txt 行证据"
+}

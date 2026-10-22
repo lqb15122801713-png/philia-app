@@ -32,6 +32,9 @@ const DASH_COPY_TABLE = {
   'dash.todoOverdueHint': '超过预计退房时间仍在店',
   'dash.todoPendingLabel': '历史待确认单',
   'dash.todoPendingHint': '自动接单已启用 · 仅旧单与改期回退单在此',
+  /* PD-69：告警区附加行（超期/退款/工单/发票/申诉，countsTowardTodoTotal=false）行内注记——
+     与计入「待办合计」的 todo 四件文案分离，防六行朴素和被误读为待办合计 */
+  'dash.alertRowNotCounted': '不计入待办合计',
   /* 客户退款申请待办（批次 C5 审批缝 · 计数=refundRequest.listPending 独立查询挂角标） */
   'dash.todoRefundRequestLabel': '客户退款申请',
   'dash.todoRefundRequestHint': '客户申请退款，待审批',
