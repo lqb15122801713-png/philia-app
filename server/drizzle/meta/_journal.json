@@ -661,6 +661,13 @@
       "breakpoints": true
     },
     {
+      "idx": 118,
+      "version": "6",
+      "when": 1792725600000,
+      "tag": "0118_member_card_token",
+      "breakpoints": true
+    },
+    {
       "idx": 120,
       "version": "6",
       "when": 1792667724796,

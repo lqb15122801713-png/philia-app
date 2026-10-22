@@ -1,0 +1,58 @@
+{
+  "aid": "01M5HQ3GDNHFM9XDP9TF29XHC5",
+  "at": "2026-10-22T11:49:22.144Z",
+  "calls": [
+    {
+      "call": "POST /api/upload（旧 EXIF 图）",
+      "status": 200,
+      "exifTakenAt": 1577844000
+    },
+    {
+      "call": "serviceStep.addPhotos（clientTakenAt=2020 旧图）",
+      "status": 400,
+      "code": "BAD_REQUEST",
+      "message": "照片拍摄时刻不在服务窗口内，须现场拍摄"
+    },
+    {
+      "call": "POST /api/upload（无 EXIF 图）",
+      "status": 200,
+      "exifTakenAt": null
+    },
+    {
+      "call": "serviceStep.addPhotos（无 EXIF=放行留痕）",
+      "status": 200,
+      "added": 1,
+      "totalValid": 1
+    }
+  ],
+  "browserCalls": [
+    {
+      "url": "http://localhost:7262/api/upload",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:7262/trpc/serviceStep.addPhotos?batch=1",
+      "status": 204
+    },
+    {
+      "url": "http://localhost:7262/trpc/serviceStep.addPhotos?batch=1",
+      "status": 400
+    },
+    {
+      "url": "http://localhost:7262/api/upload",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:7262/trpc/serviceStep.addPhotos?batch=1",
+      "status": 400
+    },
+    {
+      "url": "http://localhost:7262/api/upload",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:7262/trpc/serviceStep.addPhotos?batch=1",
+      "status": 200
+    }
+  ]
+}

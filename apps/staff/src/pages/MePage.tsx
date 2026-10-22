@@ -21,6 +21,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SkAppHead, SkIdCard, SkNote, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, SCHEDULE_DAYS, type HistoryItem } from '@/components/today/utils';
+import { useUnreadTotal } from '@/lib/unreadBadge';
 import { ME_COPY } from '@/copy/me';
 import { sdc } from '@/copy/schedule';
 import { skc } from '@/copy/skeleton';
@@ -116,13 +117,8 @@ export default function MePage() {
   });
   const pendingApprovals = exceptionQ.data?.approvals.length ?? 0;
 
-  /* 片 3：未读通知数（协作入口卡区「消息通知」行红点） */
-  const unreadQ = useQuery({
-    queryKey: ['push', 'unreadCount'],
-    queryFn: () => trpc.push.unreadCount.query(),
-    refetchInterval: 60_000,
-  });
-  const unreadTotal = unreadQ.data?.total ?? 0;
+  /* 片 3：未读通知数（协作入口卡区「消息通知」行红点）；PD-76 口径 A：同源 selector 收编 lib/unreadBadge */
+  const unreadTotal = useUnreadTotal();
 
   const doLogout = async () => {
     setLoggingOut(true);

@@ -16,6 +16,10 @@
  * 7. v1.1-b3 B3-1（A-P0-9 结构性）：completed 单打标 → 同事务重开（in_service + 清
  *    completed_at + 末步 reactivate）+ appointment.reopened 三频道事件 + 二次完成
  *    （completed_at 重写、completed 事件再发）；cancelled/pending 维持拒绝且无写库副作用
+ * 8. PD-77 拍照时间窗：拍摄时刻∈[槽起−15min, 槽止+15min] 且 now∈服务日 → 成功；
+ *    窗外拍摄 → BAD_REQUEST＋口语原因＋cause.reasonCode=PHOTO_TIME_OUT_OF_SLOT；
+ *    窗内拍摄但 now 非服务日 → PHOTO_DAY_MISMATCH；缺 EXIF 放行留痕口径不变
+ *    （两道闸同免，flag_reason 落列）
  *
  * 使用独立临时库（PHILIA_DB_URL 指向 %TMP%），跑完清场，不污染 server/data/philia.db。
  */
@@ -591,6 +595,124 @@ try {
     '完成后再 confirmStep（done 步）',
     staffCaller.confirmStep({ appointmentId: APPT, stepKey: 'confirm' }),
     'FORBIDDEN',
+  );
+
+  /* ============================== [8] PD-77 拍照时间窗 ============================== */
+  // 置于 [7] 之前：基线 [7] 段存在未捕获异常（service_certificates 唯一约束，见 PD-77 卷宗
+  // 基线对照），会中断 try 块使后置段落不执行；本段自含夹具，不依赖前文状态。
+  console.log('\n[8] PD-77 拍照时间窗：槽±15min＋当日成功／窗外拒／非服务日拒（原因码透传）');
+  const APPT_W = 'appt-ss0win'; // 今日单：槽 = now+1h ~ now+2h（now∈服务日）
+  const APPT_T = 'appt-ss0tmr'; // 明日单：槽 = now+25h ~ now+26h（now 必非服务日）
+  const winStart = new Date(Date.now() + 3600_000);
+  const tmrStart = new Date(Date.now() + 25 * 3600_000);
+  await db.insert(schema.appointments).values([
+    {
+      id: APPT_W, code: '770001', customerId: CUSTOMER, storeId: STORE, staffId: STAFF,
+      petId: PET, serviceId: SERVICE, type: 'grooming',
+      scheduledStart: winStart, scheduledEnd: new Date(winStart.getTime() + 3600_000),
+      status: 'in_service', checkedInAt: new Date(), priceFen: 12800,
+    },
+    {
+      id: APPT_T, code: '770002', customerId: CUSTOMER, storeId: STORE, staffId: STAFF,
+      petId: PET, serviceId: SERVICE, type: 'grooming',
+      scheduledStart: tmrStart, scheduledEnd: new Date(tmrStart.getTime() + 3600_000),
+      status: 'in_service', checkedInAt: new Date(), priceFen: 12800,
+    },
+  ]);
+  await db.insert(schema.appointmentSteps).values(
+    [APPT_W, APPT_T].flatMap((aid) =>
+      STEP_DEFS.map((d) => ({
+        appointmentId: aid, stepKey: d.stepKey, stepOrder: d.stepOrder,
+        status: d.stepOrder === 1 ? ('active' as const) : ('locked' as const),
+        requiredPhotos: d.minPhotos, startedAt: null,
+      })),
+    ),
+  );
+
+  const wimg = (aid: string, clientTakenAt?: number) => {
+    photoSeq += 1;
+    return {
+      url: `/api/img/smoke/${aid}/${photoSeq}.jpg`,
+      thumbUrl: `/api/img/smoke/${aid}/${photoSeq}_t.jpg`,
+      ...(clientTakenAt !== undefined ? { clientTakenAt } : {}),
+    };
+  };
+  async function expectErrCause(
+    name: string,
+    p: Promise<unknown>,
+    msgPart: string,
+    reasonCode: string,
+  ): Promise<void> {
+    try {
+      await p;
+      check(`${name}：应拒绝（${reasonCode}）`, false, '未抛错');
+    } catch (e) {
+      const err = e as { code?: string; message?: string; cause?: { reasonCode?: string } };
+      check(
+        `${name}：BAD_REQUEST＋提示含「${msgPart}」＋cause.reasonCode=${reasonCode}`,
+        err?.code === 'BAD_REQUEST' &&
+          String(err?.message ?? '').includes(msgPart) &&
+          err?.cause?.reasonCode === reasonCode,
+        { code: err?.code, message: err?.message, cause: err?.cause },
+      );
+    }
+  }
+
+  const winStartSec = Math.floor(winStart.getTime() / 1000);
+  const winEndSec = Math.floor((winStart.getTime() + 3600_000) / 1000);
+  // 窗外拍摄：早于 槽起−15min / 晚于 槽止+15min → PHOTO_TIME_OUT_OF_SLOT（口语原因）
+  await expectErrCause(
+    '窗外拍摄（槽起−16min）',
+    staffCaller.addPhotos({
+      appointmentId: APPT_W, stepKey: 'disinfection',
+      photos: [wimg(APPT_W, winStartSec - 16 * 60)],
+    }),
+    '含±15分钟容差', 'PHOTO_TIME_OUT_OF_SLOT',
+  );
+  await expectErrCause(
+    '窗外拍摄（槽止+16min）',
+    staffCaller.addPhotos({
+      appointmentId: APPT_W, stepKey: 'disinfection',
+      photos: [wimg(APPT_W, winEndSec + 16 * 60)],
+    }),
+    '含±15分钟容差', 'PHOTO_TIME_OUT_OF_SLOT',
+  );
+  // 窗内拍摄但 now 非服务日（明日单）→ PHOTO_DAY_MISMATCH
+  await expectErrCause(
+    'now 非服务日（明日单，拍摄时刻∈槽内）',
+    staffCaller.addPhotos({
+      appointmentId: APPT_T, stepKey: 'disinfection',
+      photos: [wimg(APPT_T, Math.floor(tmrStart.getTime() / 1000))],
+    }),
+    '服务当日', 'PHOTO_DAY_MISMATCH',
+  );
+  // 界内：槽起−15min／槽内／槽止+15min 三临界值一批 → 成功（now∈服务日）
+  const winAdded = await staffCaller.addPhotos({
+    appointmentId: APPT_W, stepKey: 'disinfection',
+    photos: [
+      wimg(APPT_W, winStartSec - 15 * 60),
+      wimg(APPT_W, winStartSec),
+      wimg(APPT_W, winEndSec + 15 * 60),
+    ],
+  });
+  check(
+    '拍摄∈[槽起−15min, 槽止+15min] 且 now∈服务日 → 成功（三临界值全过，totalValid=3）',
+    winAdded.added === 3 && winAdded.totalValid === 3,
+    { added: winAdded.added, totalValid: winAdded.totalValid },
+  );
+  check(
+    '界内照片落库：clientTakenAt 落列且 flagReason 为空',
+    winAdded.photos.every((p) => p.clientTakenAt instanceof Date && p.flagReason === null),
+    winAdded.photos.map((p) => ({ clientTakenAt: p.clientTakenAt, flagReason: p.flagReason })),
+  );
+  // 缺 EXIF 放行留痕口径不变（两道闸同免）：明日单无 clientTakenAt → 放行且落 flag_reason
+  const noExif = await staffCaller.addPhotos({
+    appointmentId: APPT_T, stepKey: 'disinfection', photos: [wimg(APPT_T)],
+  });
+  check(
+    '缺 EXIF 放行留痕（两道闸同免）：明日单也放行且落 flagReason',
+    noExif.added === 1 && noExif.photos[0]!.flagReason === 'EXIF 缺失或未提供',
+    noExif.photos.map((p) => ({ flagReason: p.flagReason })),
   );
 
   /* ============================== [7] B3-1：completed 单打标 → 事务重开 ============================== */

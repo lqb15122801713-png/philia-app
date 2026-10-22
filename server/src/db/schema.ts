@@ -2705,6 +2705,35 @@ export const membershipEvents = sqliteTable(
 );
 
 /**
+ * 会员码不透明引用令牌表（PD-78 · 迁移 0118）：
+ * 客端会员码从「base64 明文 uid|plan|exp + HMAC」伪 JWT 改为不透明引用——
+ * 出示串 = mc1.<nonce>.<hmac_sha256(nonce)>，userId/适用店/时效/已用全部落服务端本表；
+ * 核销 = 验 HMAC + exp + 原子置 used（UPDATE … WHERE used=0 AND exp>=now，防重放）
+ * + store_scope 归属校验（NULL=全店通用，会员卡现行口径），失败统一拒。
+ */
+export const memberCardTokens = sqliteTable(
+  'member_card_tokens',
+  {
+    /** 随机 nonce（≥128bit，base64url 22 字符；不透明引用主键，令牌串组成部分） */
+    nonce: text('nonce').primaryKey(),
+    /** 令牌所属会员用户 ID -> users.id（归属校验源，客端不可改） */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 适用店范围 -> stores.id（NULL=全店通用；非 NULL 时核销店须等于本值） */
+    storeScope: text('store_scope').references(() => stores.id),
+    /** 过期时刻（Unix 秒；= iat + MEMBER_CARD_TTL_SEC） */
+    exp: integer('exp').notNull(),
+    /** 已核销标记（0/1；核销原子 0→1，重放拒） */
+    used: integer('used').notNull().default(0),
+    /** 签发时刻（Unix 秒） */
+    iat: integer('iat').notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_member_card_tokens_user').on(t.userId), index('ix_member_card_tokens_exp').on(t.exp)],
+);
+
+/**
  * 回馈金余额表（R11a §一）：余额只反映已到账（grant 统一次月 5 日到账，见 rebate_settlements）；
  * 三本账物理分离，永不计营业额（与储值/XP 同红线）。
  */

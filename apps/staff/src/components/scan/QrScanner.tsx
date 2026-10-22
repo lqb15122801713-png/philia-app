@@ -11,7 +11,8 @@
  * - 解码成功 → 立即停流 → useCheckin({ qr: 原文 })；处理中防重入；
  *   失败 toast 后自动恢复扫码，成功回调 onCheckedIn
  * - 底部「手动输入核销码」次级入口切换 ManualCodeInput（6 位大写）
- * - 关闭 / 卸载均 stop 全部 tracks；摄像头权限被拒 → 友好错误态 + 引导手动输入 +「重试摄像头」
+ * - 关闭 / 卸载均 stop 全部 tracks；摄像头不可用/权限被拒 → 错误态（手动输入核销码=主钮，
+ *   「重试摄像头」=次级；PD-76 R6-03 去 HTTP/HTTPS 技术词）
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
@@ -109,7 +110,8 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus('error');
-      setErrorMsg('当前环境不支持摄像头（需 HTTPS 或 App 内打开），请改用下方手动输入核销码。');
+      // PD-76 R6-03：去「HTTPS 环境」技术口径，手动输入为主出路
+      setErrorMsg('相机暂不可用，请手动输入核销码。');
       return;
     }
 
@@ -262,17 +264,30 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
             <video ref={videoRef} muted playsInline className="absolute inset-0 h-full w-full object-cover" />
 
             {status === 'error' ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
                 <p className="text-base leading-relaxed text-canvas/90">{errorMsg}</p>
+                {/* PD-76 R6-03：错误态手动输入升主钮，重试摄像头降次级 */}
                 <button
                   type="button"
-                  onClick={() => void startRef.current?.()}
+                  data-testid="scan-error-manual"
+                  onClick={() => {
+                    stopStream();
+                    setMode('manual');
+                  }}
                   className="flex h-14 min-h-[56px] w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-ink text-base font-medium text-[#F6EFDD] transition-opacity active:opacity-85"
                 >
-                  <SwitchCamera className="h-5 w-5" />
+                  <Keyboard className="h-5 w-5" />
+                  手动输入核销码
+                </button>
+                <button
+                  type="button"
+                  data-testid="scan-error-retry"
+                  onClick={() => void startRef.current?.()}
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl border border-canvas/30 px-5 text-sm text-canvas/80 active:bg-canvas/10"
+                >
+                  <SwitchCamera className="h-4 w-4" />
                   重试摄像头
                 </button>
-                <p className="text-sm text-canvas/60">摄像头不可用？点底部「手动输入核销码」报 6 位码照样核销。</p>
               </div>
             ) : (
               <>

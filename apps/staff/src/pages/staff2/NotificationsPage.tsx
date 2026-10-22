@@ -14,9 +14,10 @@ import { useNavigate } from 'react-router-dom';
 import { SkBackBar, SkEmpty, SkNote } from '@/components/skeleton';
 import { nfc } from '@/copy/notifications';
 import { fmtMdHm } from '@/lib/collabPort';
+import { UNREAD_BADGE_CAP, UNREAD_COUNT_KEY, useUnreadTotal } from '@/lib/unreadBadge';
 
 const LIST_KEY = ['push', 'listNotifications', 'staff-center'] as const;
-const UNREAD_KEY = ['push', 'unreadCount'] as const;
+const UNREAD_KEY = UNREAD_COUNT_KEY;
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -29,13 +30,10 @@ export default function NotificationsPage() {
     queryKey: LIST_KEY,
     queryFn: () => trpc.push.listNotifications.query({ limit: 50 }),
   });
-  const unreadQ = useQuery({
-    queryKey: UNREAD_KEY,
-    queryFn: () => trpc.push.unreadCount.query(),
-  });
+  // PD-76 口径 A：未读数与 dock 徽／me 行同源同规则（lib/unreadBadge 唯一 selector）
+  const unreadCount = useUnreadTotal();
 
   const items = useMemo(() => listQ.data?.items ?? [], [listQ.data]);
-  const unreadCount = unreadQ.data?.total ?? 0;
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: LIST_KEY });
@@ -92,6 +90,12 @@ export default function NotificationsPage() {
           {nfc('snt.markAll')}
         </button>
       </div>
+      {/* PD-76 口径 A 一致说明：>99 时底栏徽封顶 99+，本页恒真值 */}
+      {unreadCount > UNREAD_BADGE_CAP ? (
+        <p className="px-[22px] pt-1 text-caption text-ink-placeholder" data-testid="ntf-unread-cap-note">
+          {nfc('snt.unreadCapNote')}
+        </p>
+      ) : null}
 
       <section className="mt-3 px-[22px]" data-testid="ntf-list">
         {listQ.isPending ? (

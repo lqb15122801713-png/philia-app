@@ -4,11 +4,12 @@
  * 跑法：node apps/staff/scripts/offline-queue.smoke.mjs
  * 覆盖：
  *  1) 退避序列 2s/5s/15s/60s 封顶
- *  2) 永久拒绝判定（FORBIDDEN / 状态闸门 BAD_REQUEST）
+ *  2) 永久拒收判定（FORBIDDEN / addPhotos BAD_REQUEST 全口径——PD-76：400 一律转拒收态透传原因）
  *  3) 断网入队 → 上线按 createdAt 顺序自动补齐；每条严格 upload → register → remove
  *  4) 瞬态失败：保序重试同一条（不跳过），退避调度序列正确
- *  5) 永久拒绝：丢记录 + onDropped + 继续后续记录
+ *  5) 永久拒绝（旧径无 markRejected）：丢记录 + onDropped + 继续后续记录
  *  6) upload 成功 register 失败：下轮重传同一条（不丢照片）
+ *  7) PD-76 状态机 rejected 径：标 rejected＋原因留队、不堵后续、下轮跳过该条
  */
 import {
   createFlushEngine,
@@ -37,13 +38,15 @@ assert(flushBackoffDelay(3) === 15000, '第 3 次失败 → 15000ms')
 assert(flushBackoffDelay(4) === 60000, '第 4 次失败 → 60000ms')
 assert(flushBackoffDelay(9) === 60000, '第 9 次失败 → 封顶 60000ms')
 
-/* ---------- 2) 永久拒绝判定 ---------- */
+/* ---------- 2) 永久拒收判定（PD-76：addPhotos 400 全口径转拒收态，判定规则在服务端不改） ---------- */
 console.log('2) isPermanentRegisterError')
 const trpcLike = (code, message) => ({ data: { code }, message })
 assert(isPermanentRegisterError(trpcLike('FORBIDDEN', '「洗护」步骤当前为 done 状态，仅进行中（active）的步骤可上传照片')), 'FORBIDDEN 步骤状态 → 永久')
 assert(isPermanentRegisterError(trpcLike('BAD_REQUEST', '「预检」步骤照片上限 6 张：当前未失效 6 张，本次 1 张超出上限')), 'BAD_REQUEST 超上限 → 永久')
-assert(!isPermanentRegisterError(trpcLike('BAD_REQUEST', '网络抖动')), 'BAD_REQUEST 其他 → 瞬态')
+assert(isPermanentRegisterError(trpcLike('BAD_REQUEST', '照片拍摄时刻不在服务窗口内，须现场拍摄')), 'BAD_REQUEST 拍摄窗口（服务端拒收） → 永久（原因透传，不再长期上传中）')
+assert(isPermanentRegisterError(trpcLike('BAD_REQUEST', '网络抖动')), 'BAD_REQUEST 任意文案 → 永久（400=服务端拒收，原因透传）')
 assert(!isPermanentRegisterError(new Error('fetch failed')), '普通网络错误 → 瞬态')
+assert(!isPermanentRegisterError(trpcLike('INTERNAL_SERVER_ERROR', 'db down')), '5xx → 瞬态可重试')
 
 /* ---------- 内存队列 + 事件日志替身 ---------- */
 function makeWorld() {
@@ -73,6 +76,16 @@ function makeWorld() {
         },
         onChange: () => log.push('onChange'),
         onDropped: (rec, err) => log.push(`dropped:${rec.id}`),
+        // PD-76：behavior.useMarkRejected 时注入新径（标 rejected 留队）；缺省走旧径删记录
+        ...(behavior.useMarkRejected
+          ? {
+              markRejected: async (id, reason) => {
+                log.push(`rejected:${id}:${reason}`)
+                const rec = store.get(id)
+                if (rec) store.set(id, { ...rec, rejected: reason })
+              },
+            }
+          : {}),
         isOnline: () => online,
         setTimeoutFn: (fn, ms) => { scheduled.push(ms); timerCbs.push(fn); return timerCbs.length },
         clearTimeoutFn: () => {},
@@ -162,6 +175,35 @@ console.log('6) upload 成功但 register 瞬态失败：下轮重传同一条�
   const uploadsAfter = w.log.filter((l) => l === 'upload:r1').length
   assert(uploadsBefore === 1 && uploadsAfter === 2, '重试重新 upload 同一条（服务端无双倍登记）')
   assert(!w.store.has('r1'), '最终 register 成功后删除')
+}
+
+/* ---------- 7) PD-76 rejected 径：标留队＋原因透传＋跳过不堵队 ---------- */
+console.log('7) PD-76 状态机：服务端拒收 → rejected 留队（原因透传），不删不堵，下轮跳过')
+{
+  const w = makeWorld()
+  let rejects = 1 // 拒收一次：首次登记被 400 拒，用户重试时服务端放行
+  const engine = createFlushEngine(w.deps({
+    useMarkRejected: true,
+    registerFail: (rid) =>
+      rid === 'r1' && rejects-- > 0
+        ? { data: { code: 'BAD_REQUEST' }, message: '照片拍摄时刻不在服务窗口内，须现场拍摄' }
+        : null,
+  }))
+  w.store.set('r1', rec('r1', 1)); w.store.set('r2', rec('r2', 2))
+  engine.kick()
+  await new Promise((r) => setTimeout(r, 10))
+  assert(w.store.has('r1') && w.store.get('r1').rejected === '照片拍摄时刻不在服务窗口内，须现场拍摄', 'r1 标 rejected＋服务端原因原文留队（不删）')
+  assert(w.log.includes('dropped:r1'), 'onDropped 兼容回调仍触发')
+  assert(w.log.includes('register:r2') && !w.store.has('r2'), 'r2 正常冲完（拒收不堵队）')
+  assert(!w.log.includes('remove:r1'), 'r1 未走删除旧径')
+  engine.kick() // 下一轮：rejected 条被跳过，不再 upload/register
+  await new Promise((r) => setTimeout(r, 10))
+  assert(w.log.filter((l) => l === 'upload:r1').length === 1, 'rejected 条下轮跳过（不自动重试）')
+  // 用户「重试」= 清标记（模拟 retryQueuedPhoto 的清标记效果）→ 补冲成功
+  w.store.set('r1', { ...w.store.get('r1'), rejected: undefined })
+  engine.kick()
+  await new Promise((r) => setTimeout(r, 10))
+  assert(!w.store.has('r1') && w.log.filter((l) => l === 'register:r1').length === 2, '清标记后重试补冲成功（retry 边）')
 }
 
 console.log(`\n结果：${passed} 通过 / ${failed} 失败`)

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useNavigate, useNavigationType } from 'react-router-dom'
 import { CanvasLayoutLoader, CK, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
 import { ErrorState, LoadingBlock } from '../components/home/common'
@@ -8,26 +8,6 @@ import { mc } from '../components/member/copy'
 import { TipCard } from '../components/member/v2'
 import { useMemberCardToken } from '../components/member/useMemberCardToken'
 import { readLastBooking } from '@/lib/bookingPrefill'
-
-async function writeTokenToClipboard(token: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(token)
-    return true
-  } catch {
-    const textarea = document.createElement('textarea')
-    textarea.value = token
-    textarea.setAttribute('readonly', '')
-    textarea.style.position = 'fixed'
-    textarea.style.opacity = '0'
-    document.body.appendChild(textarea)
-    textarea.select()
-    try {
-      return document.execCommand('copy')
-    } finally {
-      textarea.remove()
-    }
-  }
-}
 
 const Q1_DEFAULT_ORDER = ['q1.cardFace', 'q1.code', 'q1.guide', 'q1.pass', 'q1.footer'] as const
 const CARD_BLOCK_KEYS = new Set(['q1.cardFace', 'q1.code'])
@@ -56,19 +36,6 @@ export default function MemberCardPage() {
   const tierLabel = plan ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : mc('me.tagGuest')
   const isMember = !!user && !!membership
   const cardToken = useMemberCardToken(isMember)
-
-  const [copyResult, setCopyResult] = useState<{ status: 'idle' | 'copied' | 'error'; token: string | null }>({ status: 'idle', token: null })
-  const copyToken = async () => {
-    const token = cardToken.token
-    if (!token) return
-    try {
-      const ok = await writeTokenToClipboard(token)
-      setCopyResult({ status: ok ? 'copied' : 'error', token })
-    } catch {
-      setCopyResult({ status: 'error', token })
-    }
-  }
-  const copyStatus = copyResult.token === cardToken.token && !cardToken.countdown.expired ? copyResult.status : 'idle'
 
   const isCanvasPreview = useMemo(
     () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
@@ -123,20 +90,13 @@ export default function MemberCardPage() {
               </button>
             </div>
           ) : cardToken.token ? (
+            /* PD-78：码下不显整串 token、DOM 不留可抽完整令牌——只渲染码图形，撤复制整串入口 */
             <>
               <div className="membercard-qrbox">
                 <MemberQrCode token={cardToken.token} size={140} />
               </div>
-              <button type="button" className="membercard-barcode-button" data-testid="membercard-copy" onClick={copyToken} aria-label={mc('q1.copyToken')}>
-                <MemberBarcode token={cardToken.token} className="membercard-barcode" testId="membercard-barcode" />
-              </button>
+              <MemberBarcode token={cardToken.token} className="membercard-barcode" testId="membercard-barcode" />
               <p className="membercard-scanhint" data-u3-secondary><CK k="q1.scanHint">{mc('q1.scanHint')}</CK></p>
-              <span className="sr-only" data-testid="membercard-token">{cardToken.token}</span>
-              {copyStatus !== 'idle' ? (
-                <span className="sr-only" data-testid="membercard-copy-status" role="status" aria-live="polite">
-                  {copyStatus === 'copied' ? mc('q1.copied') : mc('q1.copyFailed')}
-                </span>
-              ) : null}
             </>
           ) : null
         ) : null}

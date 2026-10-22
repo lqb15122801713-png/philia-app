@@ -371,7 +371,8 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="sk pb-[env(safe-area-inset-bottom)]">
+    // PD-76 R6-04：本页自渲染 58px dock，底部留白 = 底栏高(94=58+36 与 App 壳同口径)＋safe-area，末条不被压
+    <div className="sk pb-[calc(94px+env(safe-area-inset-bottom))]">
       <SkAppHead title={skc('sk.workTitle')} no={skc('sk.workNo')} />
 
       {todayQuery.isPending ? (

@@ -80,6 +80,7 @@ import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { awardXp, loadXpRules } from '../services/xpAward';
 import { StepLabel, type StepKey } from './serviceStep';
+import { storeDayStartMs, storeWallclock } from '../lib/storeClock';
 
 /* ------------------------------------------------------------------ */
 /* 常量与类型                                                            */
@@ -202,31 +203,10 @@ const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /* ------------------------------------------------------------------ */
-/* 门店规范时区（B8-B4）：openHours / 员工排班 / 寄养晚界的墙钟统一按      */
-/* Asia/Shanghai（固定 +8，中国无夏令时）。此前一律用「服务器本地时区」    */
-/* 解释墙钟：VPS 容器为 UTC 时槽位栅格整体偏移 8h，客户端（手机 CST）     */
-/* 本地栅格与服务端可约集错位——上午/下午大面积灰死、点击无响应，仅错位   */
-/* 后碰巧对齐的 17:00-19:30 可点（走查「预约时段首次点击无响应需点两次」  */
-/* 根因；走查单落在 18:00 正因此）。改为固定 +8 后与客户端栅格同帧；      */
-/* +1h 缓冲 / 容量 / 时长连续 / 幂等 等槽位规则不变（仅矫正墙钟参照系）。 */
-const STORE_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
-
-/** instant → 门店规范时区（+8）墙钟部件（位移后用 UTC getter 读取） */
-export function storeWallclock(d: Date): { y: number; m: number; day: number; dow: number; minutes: number } {
-  const s = new Date(d.getTime() + STORE_TZ_OFFSET_MS);
-  return {
-    y: s.getUTCFullYear(),
-    m: s.getUTCMonth() + 1,
-    day: s.getUTCDate(),
-    dow: s.getUTCDay(),
-    minutes: s.getUTCHours() * 60 + s.getUTCMinutes(),
-  };
-}
-
-/** 门店规范时区某日 00:00 的 epoch（槽位栅格合成基准） */
-export function storeDayStartMs(y: number, m1: number, day: number): number {
-  return Date.UTC(y, m1 - 1, day) - STORE_TZ_OFFSET_MS;
-}
+/* 门店规范时区（B8-B4）助手：实现已迁至 ../lib/storeClock（PD-77 抽出共享， */
+/* 供 serviceStep 同帧复用且避免 routers 间循环依赖）；此处再导出，既有     */
+/* import 路径与口径不变。                                               */
+export { storeDayStartMs, storeWallclock } from '../lib/storeClock';
 
 // 注意：必须用 function 声明（而非箭头函数常量），TS 才会把「返回 never 的调用」
 // 当作控制流终止点，从而在 if (!x) badRequest(...) 之后正确收窄 x 为非空。

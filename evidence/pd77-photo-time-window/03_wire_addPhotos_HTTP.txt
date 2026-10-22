@@ -1,0 +1,14 @@
+
+[A 界内] HTTP 200 {"result":{"data":{"json":{"stepId":"01M5HNS8KG9HQKTQTHZFW75RGC","added":1,"totalValid":1,"minPhotos":1,"maxPhotos":3,"photos":[{"id":"01M5HNS9D00YHKVGYEVTGWCZFT","stepId":"01M5HNS8KG9HQKTQTHZFW75RGC","url":"/api/img/pd77-wire/1.jpg","thumbUrl":"/api/img/pd77-wire/1_t.jpg","tag":"normal","takenBy":"
+  ✓ A 拍摄∈[槽起−15min,槽止+15min] 且当日 → 200
+
+[B 窗外] HTTP 400 {"error":{"json":{"message":"拍摄时间不在本次服务时段（含±15分钟容差），请重拍","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"path":"serviceStep.addPhotos","reasonCode":"PHOTO_TIME_OUT_OF_SLOT"}}}}
+  ✓ B 窗外拍摄 → 400＋data.reasonCode=PHOTO_TIME_OUT_OF_SLOT＋口语文案
+
+[C 非当日] HTTP 400 {"error":{"json":{"message":"请在服务当日上传本次服务照片","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"path":"serviceStep.addPhotos","reasonCode":"PHOTO_DAY_MISMATCH"}}}}
+  ✓ C now 非服务日 → 400＋data.reasonCode=PHOTO_DAY_MISMATCH＋口语文案
+
+[D 缺EXIF] HTTP 200 {"result":{"data":{"json":{"stepId":"01M5HNS8KHRRT7ES6BH0XJQ3MG","added":1,"totalValid":1,"minPhotos":1,"maxPhotos":3,"photos":[{"id":"01M5HNS9DTGB5KE0A3HWE0221S","stepId":"01M5HNS8KHRRT7ES6BH0XJQ3MG","url":"/api/img/pd77-wire/4.jpg","thumbUrl":"/api/img/pd77-wire/4_t.jpg","tag":"normal","takenBy":"
+  ✓ D 缺 EXIF → 200 放行留痕（两道闸同免）
+
+网络层实测通过 ✅
