@@ -30,7 +30,7 @@
 
 import { devLogin, devLoginByPhone, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { mc } from '@/components/member/copy'
@@ -460,9 +460,17 @@ export default function DevLoginPage() {
         </p>
       </main>
 
-      {/* 底部协议小字（试样工艺：10px → 字阶取 11 caption-xs） */}
+      {/* 底部协议小字（试样工艺：10px → 字阶取 11 caption-xs）；
+          PD-82 登录协议可点（R17 回归）：协议名=真链 → /agreements 公开页（登录前可读真文） */}
       <footer className="mt-10 px-10 text-center text-caption-xs leading-[1.8] text-ink-placeholder">
-        {dc('devlogin.footerA')}
+        {dc('devlogin.footerAgree')}
+        <Link to="/agreements?doc=user" data-testid="login-agreement-user" className="underline underline-offset-2">
+          {dc('devlogin.footerUser')}
+        </Link>
+        {dc('devlogin.footerAnd')}
+        <Link to="/agreements?doc=privacy" data-testid="login-agreement-privacy" className="underline underline-offset-2">
+          {dc('devlogin.footerPrivacy')}
+        </Link>
         <br />
         {dc('devlogin.footerB')}
       </footer>

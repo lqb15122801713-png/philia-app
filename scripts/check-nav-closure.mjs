@@ -127,6 +127,8 @@ const ROUTES = [
   { app: 'customer', path: '/notifications', expect: 'sub', note: '补缺批片 5 站内信（消息中心）' },
   { app: 'customer', path: '/notifications/prefs', expect: 'sub', note: '补缺批片 5 站内信（订阅管理）' },
   { app: 'customer', path: '/member/checkout', expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）' },
+  { app: 'customer', path: '/member/lottery', expect: 'sub', note: 'PD-82 回馈抽奖真转盘页（首页活动卡换链；PushBar 返回条闭环）' },
+  { app: 'customer', path: '/agreements', expect: 'sub', note: 'PD-82 登录协议可点（R17 回归）：协议中心公开别名，登录前可读' },
   { app: 'customer', path: '/member/renew', expect: 'sub', note: '产品-1010 片 2 线上续费确认页（Mock 通道）' },
   { app: 'customer', path: `/pay/${INVALID_ID}`, expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态须出口' },
   { app: 'customer', path: '/pay/reconcile', expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）' },

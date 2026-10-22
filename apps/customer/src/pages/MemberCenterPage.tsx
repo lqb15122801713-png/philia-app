@@ -638,20 +638,23 @@ function UnusedPerks({ data }: { data: MyUnused | undefined }) {
           <div className="m2-rowx" key={g.id} data-testid={`perk-grant-${g.id}`}>
             <span style={{ fontSize: 12.5, fontWeight: 700 }}>
               {perkKindLabel(g.kind)}
-              {/* 资格徽（发放=资格留痕，候资质批） */}
-              <span
-                className="m2-mono"
-                style={{
-                  marginLeft: 8,
-                  padding: '2px 7px',
-                  borderRadius: 999,
-                  border: '1px solid var(--v2line)',
-                  fontSize: 9,
-                  color: usedUp ? 'var(--v2muted)' : 'var(--v2ink)',
-                }}
-              >
-                {usedUp ? mc('perk.usedUp') : g.status}
-              </span>
+              {/* PD-82 去重复展示：myUnused 仅回 granted 行，逐行裸显同一 status 徽标＝
+                  granted×2 重复噪音；仅「已用完」差异态保留徽标（资格留痕口径不变） */}
+              {usedUp ? (
+                <span
+                  className="m2-mono"
+                  style={{
+                    marginLeft: 8,
+                    padding: '2px 7px',
+                    borderRadius: 999,
+                    border: '1px solid var(--v2line)',
+                    fontSize: 9,
+                    color: 'var(--v2muted)',
+                  }}
+                >
+                  {mc('perk.usedUp')}
+                </span>
+              ) : null}
             </span>
             <span className="m2-mono" style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--v2muted)' }}>
               {g.totalCount != null && g.remainCount != null

@@ -5,6 +5,7 @@ import { CanvasLayoutLoader, CK, ME_PAGE_BLOCK_RANK, ME_PAGE_DEFAULT_ORDER, useC
 import { fenToYuan } from '@/components/booking/format'
 import { readLastBooking } from '@/lib/bookingPrefill'
 import { mc } from '../components/member/copy'
+import { ntf } from '../copy/notify'
 import { MemberBarcode } from '../components/member/MemberCodeVisual'
 import { useMemberCardToken } from '../components/member/useMemberCardToken'
 
@@ -181,6 +182,8 @@ export default function MePage() {
 
     'me.entries': () => (
       <>
+        {/* PD-82 消息主入口（补缺批片 5 原设计回补）：消息行→/notifications */}
+        <ListLink to="/notifications" title={<CK k="ntf.title">{ntf('ntf.title')}</CK>} testId="me-notify-entry" />
         <ListLink to="/me/coupons" title={<CK k="me.gridCoupons">{mc('me.gridCoupons')}</CK>} testId="slot-coupons" />
         <ListLink to="/me/coupons?tab=favs" title={<CK k="me.listFavorite">{mc('me.listFavorite')}</CK>} testId="me-favorites-entry" />
       </>
