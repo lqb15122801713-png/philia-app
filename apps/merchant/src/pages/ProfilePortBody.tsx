@@ -10,7 +10,7 @@ import { useState, type ReactNode } from 'react';
 import { QuietButton } from '../components/MainScaffold';
 import { openHoursLabel } from '../components/dashboard/utils';
 import { errMsg } from '../components/staff-admin/format';
-import { Btn, Field, inputCls, Modal, toast, ToasterMount } from '../components/staff-admin/ui';
+import { Field, inputCls, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cadm } from '../copy/consoleAdmin';
 
 /** 只读行（.set-row 行式工艺：label 左 / 值右，墨 6% 顶线） */
@@ -108,27 +108,6 @@ export function ProfilePortBody() {
     const hit = mineStores.find((s) => s.id === id);
     if (!hit) return id;
     return id === store?.id ? `${hit.name} · ${cadm('cadm.profileHqSelf')}` : hit.name;
-  };
-
-  /* ---- 端口批收尾片 3 · A28 新店克隆（owner；store.cloneStore 硬闸） ---- */
-  const [cloneOpen, setCloneOpen] = useState(false);
-  const [cloneName, setCloneName] = useState('');
-  const [cloning, setCloning] = useState(false);
-
-  const doClone = async () => {
-    if (cloneName.trim() === '') return;
-    setCloning(true);
-    try {
-      await trpc.store.cloneStore.mutate({ name: cloneName.trim() });
-      toast(cadm('cadm.cloneDone'));
-      setCloneOpen(false);
-      setCloneName('');
-      void queryClient.invalidateQueries({ queryKey: ['store', 'listMine'] });
-    } catch (e) {
-      toast(errMsg(e), 'error');
-    } finally {
-      setCloning(false);
-    }
   };
 
   return (
@@ -251,56 +230,16 @@ export function ProfilePortBody() {
         <InfoRow title="分组">{store?.groupName || '—'}</InfoRow>
       </section>
 
-      {/* 端口批收尾片 3 · A28：门店操作区——新店克隆（owner；store.cloneStore 硬闸） */}
+      {/* PD-71：克隆写口迁总部台——本页不再是克隆主写口（钉「改只读说明」一种，
+          禁双主写口长期并存）；写操作请至侧边导航「总部台」(/hq) */}
       <section className="wsk-card" data-testid="console-profile-ops">
         <div className="wsk-hd">
           <span className="t">{cadm('cadm.cloneSectionTitle')}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="min-w-0 flex-1 text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.cloneWarn')}</span>
-          <QuietButton testid="profile-clone-open" onClick={() => { setCloneName(''); setCloneOpen(true); }}>
-            {cadm('cadm.cloneCta')}
-          </QuietButton>
-        </div>
+        <p className="text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="profile-clone-moved">
+          克隆新店请至总部台（侧边导航「总部台」）；门店档案页不再提供克隆写入口。
+        </p>
       </section>
-
-      {/* 克隆确认弹层（新店名+警示） */}
-      <Modal
-        open={cloneOpen}
-        onClose={() => {
-          if (!cloning) setCloneOpen(false);
-        }}
-        title={cadm('cadm.cloneModalTitle')}
-        footer={
-          <>
-            <Btn variant="ghost" onClick={() => setCloneOpen(false)} disabled={cloning}>
-              {cadm('cadm.cloneCancel')}
-            </Btn>
-            <Btn
-              variant="danger"
-              data-testid="profile-clone-submit"
-              disabled={cloning || cloneName.trim() === ''}
-              onClick={() => void doClone()}
-            >
-              {cadm('cadm.cloneConfirmCta')}
-            </Btn>
-          </>
-        }
-      >
-        <div className="space-y-3" data-testid="profile-clone-modal">
-          <p className="rounded-input bg-danger-light px-3 py-2 text-caption text-danger-deep">{cadm('cadm.cloneWarn')}</p>
-          <Field label={cadm('cadm.cloneNameLabel')}>
-            <input
-              className={inputCls}
-              data-testid="profile-clone-name"
-              maxLength={64}
-              value={cloneName}
-              onChange={(e) => setCloneName(e.target.value)}
-              disabled={cloning}
-            />
-          </Field>
-        </div>
-      </Modal>
     </>
   );
 }

@@ -1,0 +1,2 @@
+## server typecheck（tsc --noEmit）：12 错全在基线遗留 src/db/pd66EvidenceFixture.ts（b255876 原样未触；本片改动文件零错）
+     12 src/db/pd66EvidenceFixture.ts

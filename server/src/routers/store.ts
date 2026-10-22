@@ -1359,22 +1359,6 @@ export const storeRouter = router({
       return { store: cloned };
     }),
 
-  /**
-   * 仪表盘统计（merchant 本店 · T4.1 · MERCHANT-CONTRACTS）：
-   * - 今日预约：scheduled_start 落在统计日 [0点, 次日0点) 的预约，分状态计数 + 总数；
-   * - 服务中：in_service + in_boarding 当前在单数（不限今日，寄养可跨天）；
-   * - 今日营业额：paid_at 落在统计日的 paid_fen 合计（到店付收款登记口径，单位分）；
-   * - 待办（本店全量未处理项，不限今日）：待确认 pending 数 / 待派单 confirmed 且无 staff_id 数 /
-   *   取消申请 cancel_requested 数 / 待收款 completed 且未 paid 数，附四项合计 total；
-   *   批次 S4（任务 A · 免商家确认）：create 落库直接 confirmed，新单的「待确认」数恒 0；
-   *   todo.pending 仅计历史 pending 单与客户改期回退 pending 单（不迁移，保留计数与入口），
-   *   商家端「待确认」区随任务 D 改标注「已启用自动接单」（不再作待办驱动）。
-   *   批次 S4（任务 C/D）：todo.unassigned 口径收窄为 grooming——自动派单后 grooming
-   *   单恒有 staff_id（天然恒 0）；boarding 按晚占房无需美容师、不参与派单待办
-   *   （商家仍可经 assign 主动指派，但不作待办驱动）。
-   * - 异常：超期寄养数（status=in_boarding 且 scheduled_end 已过，应退未退）。
-   * 实现：本店预约一次取出在应用层聚合（与 staffList 同模式，v1 数据量级无压力）。
-   */
   dashboardStats: merchantManagerProcedure
     .input(z.object({ date: z.date().optional() }).optional())
     .query(async ({ ctx, input }) => {

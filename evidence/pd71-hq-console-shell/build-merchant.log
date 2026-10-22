@@ -1,0 +1,8 @@
+✓ built in 4.76s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (1757.71 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js

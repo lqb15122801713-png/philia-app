@@ -7,6 +7,7 @@
  * - 经营：总览·驾驶舱 / 门店端·预约 / 寄养 / 收银台 / 日结 / 退款；
  * - 商城：商城订单 / 商品 / 会员·次卡；
  * - 管理（6 口）：员工 / 运营 · 审批中心 / 监控 Hub / 报表 / 权限矩阵 / 门店档案·设置；
+ *   PD-71 追加 owner-only 口「总部台」（/hq 独立连锁经营壳，≠控制台，挂管理组首位）；
  *   （片0 下轨三口：排班/薪资/XP 审核——Ready W-00~W-16 帧表无对应屏，且三口
  *   无 rail 角标负载；路由全部保留可直达不删，排班另经 /settings/schedules 挂在
  *   门店设置域下。保留「运营 · 审批中心」= rail 唯一带 bd 角标口：审批+申诉+库存
@@ -25,6 +26,7 @@ import { NavLink } from 'react-router-dom';
 import { useMemo } from 'react';
 import {
   BookCheck,
+  Building2,
   CalendarDays,
   BedDouble,
   Calculator,
@@ -98,6 +100,10 @@ function groupsFor(role: MerchantRole): RailGroup[] {
       key: 'admin',
       label: cc('wnav.groupAdmin'),
       items: [
+        /* PD-71 总部台立壳：owner-only 口（另路由 /hq，另导航名「总部台」；≠控制台） */
+        ...(role.isOwner
+          ? [{ to: '/hq', key: 'hqConsole', label: cc('wnav.hqConsole'), icon: Building2, testid: 'rail-hq-console', end: true }]
+          : []),
         { to: '/staff', key: 'staff', label: cc('wnav.staff'), icon: Users, testid: 'rail-staff' },
         { to: '/ops', key: 'opsCenter', label: cc('wnav.ops'), icon: ClipboardCheck, testid: 'rail-ops' },
         { to: '/monitor', key: 'monitor', label: cc('wnav.monitor'), icon: MonitorDot, testid: 'rail-monitor' },
