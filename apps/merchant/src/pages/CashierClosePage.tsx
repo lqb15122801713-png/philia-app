@@ -13,6 +13,7 @@
  *   adjustDayClose（备注）/ exportDayCloseCsv（Blob 下载 · owner）；
  * - PD-84 R18-01：dayClose 必经 DayCloseConfirmDialog 独立确认 modal（遮罩＋确认/取消
  *   成对；Esc/取消=中止零提交，禁假 CLEARED——成功 toast 仍只由真返回驱动）；
+ *   PD-85 收口：该 modal 改页面树内联渲染（不走 portal），行为不变、检测零盲区；
  * - R12：当日退款单列面板（RefundDayPanel · refund.dayStats）——笔数+金额+
  *   支付段退款分列+现金段净额（V2：现金已收−现金退款，前端做差；历史封箱不回填只读）；
  * - SSE：cashier.shift 系 / dayClose 系 / billSettled / billReversed /

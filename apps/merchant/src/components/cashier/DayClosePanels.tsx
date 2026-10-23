@@ -20,14 +20,16 @@
  *   + @media print 内联隔离，屏外全隐仅日结单可见——照 ReceiptPage 先例）；
  *   调整备注=adjustDayClose（owner|manager · 只增不改）。
  * - PD-84 R18-01：日结提交必经独立确认 modal（DayCloseConfirmDialog，遮罩+
- *   确认/取消成对，Esc/取消=中止零提交，禁页内直闸、禁假 CLEARED）。
+ *   确认/取消成对，Esc/取消=中止零提交，禁页内直闸、禁假 CLEARED）；
+ *   PD-85 收口：modal 改页面树内联渲染（不走 portal 挂 body——根内扫描检测
+ *   不可见 portal 会假阴性判页内闸），DOM 结构/工艺/行为不变；
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { cc } from '@/copy/cashier'
-import { BookCheck, Download, LogOut, PencilLine, RotateCcw, Wallet } from 'lucide-react'
+import { BookCheck, Download, LogOut, PencilLine, RotateCcw, Wallet, X } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   CASH_MOVE_LIST_KEY,
@@ -425,13 +427,20 @@ export function DayCloseForm({
 
 /* ------------------------------------------------------------------ */
 /* PD-84 R18-01：日结独立确认 modal（遮罩＋确认/取消成对；Esc/遮罩/取消=中止零提交）  */
+/* PD-85 R18-01 收口：改页面树内联渲染（不走 portal），检测零盲区，行为不变     */
 /* ------------------------------------------------------------------ */
 
 /**
- * 点「日结并冻结」先出本弹层（CashierModal 工艺：居中卡 + 墨 28% 遮罩 + Esc 关）：
+ * 点「日结并冻结」先出本弹层（居中卡 + 墨 28% 遮罩 + Esc 关，同工 CashierModal）：
  * - 摘要透出 账面/实点/差异（盲交=账面遮罩、差异提交后揭晓，与表单同口径）；
  * - 「取消」/Esc/点遮罩=中止，不触 dayClose；「确认日结并冻结」才真提交冻结；
  * - 禁假 CLEARED：成功 toast 仍只由 dayClose 真返回驱动（页面既有逻辑不动）。
+ *
+ * PD-85 R18-01 收口：modal 改**页面树内联渲染**（不走 createPortal 挂 body）——
+ * PD-84 复测按应用根内扫描时 portal 内容不可见（dialogCount=0／overlayInfo=[]／
+ * hasCancel=false 假阴性，被判页内闸）；DOM 结构与 class 与 CashierModal 全同
+ * （fixed 满屏层＋role=dialog/aria-modal＋遮罩点关），用户面行为零变化，
+ * 文档级／根内级检测均可命中。Esc 监听照旧挂 window（开时注册，关时卸）。
  */
 export function DayCloseConfirmDialog({
   input,
@@ -452,16 +461,90 @@ export function DayCloseConfirmDialog({
   onConfirm: () => void
   onClose: () => void
 }) {
+  /* Esc=中止（开时注册；hooks 序先于 null 早退） */
+  useEffect(() => {
+    if (!input) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [input, onClose])
+
   if (!input) return null
   const diff = !blind && book !== null ? input.actualCashFen - book : null
   return (
-    <CashierModal
-      open={input !== null}
-      onClose={onClose}
-      title={cc('cashier.dayCloseConfirmTitle')}
-      testid="dayclose-confirm-dialog"
-      footer={
-        <>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid="dayclose-confirm-layer">
+      <div
+        className="absolute inset-0 bg-[rgba(44,40,34,.28)]"
+        onClick={onClose}
+        aria-hidden
+        data-testid="dayclose-confirm-overlay"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        data-testid="dayclose-confirm-dialog"
+        className="relative flex max-h-[85vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[20px] bg-card shadow-[0_8px_40px_rgba(44,40,34,.18)]"
+      >
+        <div className="flex items-center justify-between px-5 pb-2 pt-4">
+          <h3 className="text-title font-semibold">{cc('cashier.dayCloseConfirmTitle')}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="关闭"
+            className="rounded-full p-1 text-ink-placeholder transition-colors hover:bg-[rgba(44,40,34,.06)]"
+          >
+            <X size={18} strokeWidth={1.6} aria-hidden />
+          </button>
+        </div>
+        <div className="overflow-y-auto px-5 py-2">
+          <p className="text-caption leading-relaxed text-ink-secondary">
+            {cc('cashier.dayCloseConfirmBody')}
+          </p>
+          <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3 font-number text-caption tabular-nums">
+            <div className="flex items-center justify-between">
+              <span className="font-sans text-ink-secondary">账面现金（同源）</span>
+              <b data-testid="dayclose-confirm-book">
+                {blind ? '已遮罩（盲交）' : book !== null ? `¥${fenToYuan(book)}` : '…'}
+              </b>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="font-sans text-ink-secondary">实点现金</span>
+              <b data-testid="dayclose-confirm-actual">¥{fenToYuan(input.actualCashFen)}</b>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="font-sans text-ink-secondary">差异（实点 − 账面）</span>
+              <b
+                className={diff !== null && diff !== 0 ? 'text-danger-deep' : ''}
+                data-testid="dayclose-confirm-diff"
+              >
+                {blind
+                  ? '提交后揭晓'
+                  : diff === null
+                    ? '—'
+                    : diff === 0
+                      ? '¥0'
+                      : `${diff > 0 ? '+' : '−'}¥${fenToYuan(Math.abs(diff))}`}
+              </b>
+            </div>
+            {input.actualWechatFen !== undefined || input.actualAlipayFen !== undefined ? (
+              <div className="mt-1.5 flex items-center justify-between">
+                <span className="font-sans text-ink-secondary">实点非现金</span>
+                <b>
+                  微信 ¥{fenToYuan(input.actualWechatFen ?? 0)} · 支付宝 ¥
+                  {fenToYuan(input.actualAlipayFen ?? 0)}
+                </b>
+              </div>
+            ) : null}
+            {overrideShiftId ? (
+              <div className="mt-2 font-sans text-caption-xs text-ink-placeholder">
+                拆箱后重新日结（全日口径）· 追溯班次 {overrideShiftId.slice(-6)}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 px-5 pb-4 pt-2">
           <SheetBtn data-testid="dayclose-confirm-cancel" onClick={onClose}>
             取消
           </SheetBtn>
@@ -473,54 +556,9 @@ export function DayCloseConfirmDialog({
           >
             {pending ? '冻结中…' : cc('cashier.dayCloseConfirmOk')}
           </SheetBtn>
-        </>
-      }
-    >
-      <p className="text-caption leading-relaxed text-ink-secondary">
-        {cc('cashier.dayCloseConfirmBody')}
-      </p>
-      <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3 font-number text-caption tabular-nums">
-        <div className="flex items-center justify-between">
-          <span className="font-sans text-ink-secondary">账面现金（同源）</span>
-          <b data-testid="dayclose-confirm-book">
-            {blind ? '已遮罩（盲交）' : book !== null ? `¥${fenToYuan(book)}` : '…'}
-          </b>
         </div>
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="font-sans text-ink-secondary">实点现金</span>
-          <b data-testid="dayclose-confirm-actual">¥{fenToYuan(input.actualCashFen)}</b>
-        </div>
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="font-sans text-ink-secondary">差异（实点 − 账面）</span>
-          <b
-            className={diff !== null && diff !== 0 ? 'text-danger-deep' : ''}
-            data-testid="dayclose-confirm-diff"
-          >
-            {blind
-              ? '提交后揭晓'
-              : diff === null
-                ? '—'
-                : diff === 0
-                  ? '¥0'
-                  : `${diff > 0 ? '+' : '−'}¥${fenToYuan(Math.abs(diff))}`}
-          </b>
-        </div>
-        {input.actualWechatFen !== undefined || input.actualAlipayFen !== undefined ? (
-          <div className="mt-1.5 flex items-center justify-between">
-            <span className="font-sans text-ink-secondary">实点非现金</span>
-            <b>
-              微信 ¥{fenToYuan(input.actualWechatFen ?? 0)} · 支付宝 ¥
-              {fenToYuan(input.actualAlipayFen ?? 0)}
-            </b>
-          </div>
-        ) : null}
-        {overrideShiftId ? (
-          <div className="mt-2 font-sans text-caption-xs text-ink-placeholder">
-            拆箱后重新日结（全日口径）· 追溯班次 {overrideShiftId.slice(-6)}
-          </div>
-        ) : null}
       </div>
-    </CashierModal>
+    </div>
   )
 }
 
