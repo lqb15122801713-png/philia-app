@@ -379,10 +379,30 @@ export default function FinancePage() {
               {MODE_LABEL[m]}
             </button>
           ))}
+          {/* PD-84：财务页打印入口（PRINT_ENTRY_MISSING 补缺；本页 owner|manager 闸，
+              同页可见即可点；window.print + @media print 隔离 #finance-print-area，屏外全隐） */}
+          <QuietButton testid="finance-print" onClick={() => window.print()}>
+            {fc('fin.printCta')}
+          </QuietButton>
         </div>
       }
       testid="finance-page"
     >
+      {/* PD-84 打印隔离锚：@media print 屏外全隐、仅财务体可见；打印头屏上 display:none */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #finance-print-area, #finance-print-area * { visibility: visible; }
+          #finance-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          #finance-print-area .finance-print-head { display: block; }
+        }
+        .finance-print-head { display: none; }
+      `}</style>
+      <div id="finance-print-area">
+        <div className="finance-print-head">
+          <h2>{fc('fin.title')}</h2>
+          <p>{MODE_LABEL[mode]}</p>
+        </div>
       {statsQuery.isPending ? (
         // 加载中骨架块（animate-pulse，禁转圈）：四格 + 面板 = shared Skeleton 组合
         <div aria-label="加载中">
@@ -613,6 +633,7 @@ export default function FinancePage() {
           </div>
         </>
       ) : null}
+      </div>
 
       {toastEl}
     </MainScaffold>

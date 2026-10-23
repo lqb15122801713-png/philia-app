@@ -1,0 +1,86 @@
+{
+  "window": "PD-84-merchant-dayclose-print",
+  "base": {
+    "server": "http://localhost:7214",
+    "merchant": "http://localhost:7114",
+    "db": "file:E:/KIMI code/pd84-merchant-dayclose-print/.runtime/pd84-1792730177312/philia.db"
+  },
+  "role": {
+    "manager": {
+      "id": "01M9PD84MGR000000000000000",
+      "nickname": "敏慧店长"
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：店长账号就绪（merchant_manager · 临时库）",
+      "detail": "敏慧店长"
+    },
+    {
+      "ok": true,
+      "name": "server 就绪",
+      "detail": "http://localhost:7214"
+    },
+    {
+      "ok": true,
+      "name": "merchant dev 就绪",
+      "detail": "http://localhost:7114"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店长·敏慧走测人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：点「日结」出独立确认 modal（遮罩＋确认/取消成对，portal 挂 body，非页内闸）",
+      "detail": "{\"dialog\":true,\"roleDialog\":true,\"overlay\":true,\"portalBody\":true,\"notInline\":true,\"cancelBtn\":true,\"okBtn\":true,\"actual\":\"¥0\"}"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：Esc 中止——modal 收、零真提交（server 0 单）",
+      "detail": "dialog=false closes=0"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：点遮罩中止——零真提交",
+      "detail": "dialog=false closes=0"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：取消钮中止——零真提交",
+      "detail": "dialog=false closes=0"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：确认「确认日结并冻结」才真冻结（modal 收＋frozen 单×1）",
+      "detail": "rows=1 status=frozen"
+    },
+    {
+      "ok": true,
+      "name": "打印①：日结单详情「打印日结单」店长可见可浅点（打桩计数=1，禁真送打）",
+      "detail": "{\"dialog\":true,\"printBtn\":true,\"printCalls\":1}"
+    },
+    {
+      "ok": true,
+      "name": "打印②：报表 D1「打印」店长可达可浅点；「导出 CSV」店长不渲染（总规则③不动）",
+      "detail": "{\"printBtn\":true,\"exportBtn\":false,\"printArea\":true,\"printCalls\":1}"
+    },
+    {
+      "ok": true,
+      "name": "打印②：报表打印隔离生效（打印头亮出／钮区隐藏）",
+      "detail": "{\"headDisplay\":\"block\",\"printBtnHidden\":true}"
+    },
+    {
+      "ok": true,
+      "name": "打印③：财务页头「打印」店长可达可浅点（打桩计数=1）",
+      "detail": "{\"printBtn\":true,\"printArea\":true,\"printCalls\":1}"
+    },
+    {
+      "ok": true,
+      "name": "打印③：财务打印隔离生效（打印头亮出／钮区隐藏）",
+      "detail": "{\"headDisplay\":\"block\",\"printBtnHidden\":true}"
+    }
+  ]
+}

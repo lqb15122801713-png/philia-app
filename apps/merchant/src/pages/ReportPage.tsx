@@ -9,7 +9,7 @@
  * 页骨架=MainScaffold（title=报表名）+ 月份选择器（input type=month，默认当月，
  * 预埋页不渲染）+「导出 CSV」钮（**仅店主可见**——useMerchantRole().isOwner；
  * report.exportCsv+Blob 下载工艺照 CashierRefundsPage 先例；非店主不渲染）+
- * 「打印」钮（PD-81 EXPORT_ENTRY_MISSING 补缺 · 仅店主同导出闸；window.print
+ * 「打印」钮（PD-84 放宽 owner|manager 管理层；window.print
  * + @media print 隔离 #report-print-area，屏外全隐、打印头亮出表名+月份）+
  * 数据区（u3-tbl 表/u3-stat 卡照 FinancePage 惯例）+ 口径注记行（server note 透出）。
  * 大批片 2 · 三视图（owner 页头切换）：单店=门店下拉（listMine，选中店传 storeId）/
@@ -1828,9 +1828,9 @@ export default function ReportPage() {
               {exporting ? rpt('rpt.page.exporting') : rpt('rpt.page.exportCta')}
             </QuietButton>
           ) : null}
-          {/* PD-81：打印入口（EXPORT_ENTRY_MISSING 补缺 · 仅店主同导出闸口径不动；
-              window.print + @media print 隔离 #report-print-area，屏外全隐） */}
-          {role.isOwner && isSheet ? (
+          {/* PD-84：打印入口放宽 owner|manager（PRINT_ENTRY_MISSING 补缺；导出仍仅店主
+              总规则③不动；window.print + @media print 隔离 #report-print-area，屏外全隐） */}
+          {role.canManage && isSheet ? (
             <QuietButton testid="report-print" onClick={() => window.print()}>
               {rpt('rpt.page.printCta')}
             </QuietButton>

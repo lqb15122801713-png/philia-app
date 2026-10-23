@@ -11,6 +11,8 @@
  *   listDayCloses（日结单+冲正关联单双向可查）；
  * - 动作：closeShift（交接班）/ dayClose（冻结）/ reverseDayClose（拆箱 · owner）/
  *   adjustDayClose（备注）/ exportDayCloseCsv（Blob 下载 · owner）；
+ * - PD-84 R18-01：dayClose 必经 DayCloseConfirmDialog 独立确认 modal（遮罩＋确认/取消
+ *   成对；Esc/取消=中止零提交，禁假 CLEARED——成功 toast 仍只由真返回驱动）；
  * - R12：当日退款单列面板（RefundDayPanel · refund.dayStats）——笔数+金额+
  *   支付段退款分列+现金段净额（V2：现金已收−现金退款，前端做差；历史封箱不回填只读）；
  * - SSE：cashier.shift 系 / dayClose 系 / billSettled / billReversed /
@@ -33,12 +35,14 @@ import {
 import {
   CloseReasonDialog,
   CashMovePanel,
+  DayCloseConfirmDialog,
   DayCloseDetailDialog,
   DayCloseForm,
   DayCloseList,
   RefundDayPanel,
   ShiftCard,
   TenderSplitPanel,
+  type DayCloseSubmitInput,
 } from '@/components/cashier/DayClosePanels'
 import ImportLedgerPanel from '@/components/cashier/ImportLedgerPanel'
 import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund'
@@ -120,6 +124,8 @@ export default function CashierClosePage() {
   const [overrideShiftId, setOverrideShiftId] = useState<string | null>(null)
   const [exportingId, setExportingId] = useState<string | null>(null)
   const [confirmCloseShift, setConfirmCloseShift] = useState(false)
+  /* PD-84 R18-01：日结待确认入参（非 null=独立确认 modal 开着；确认才真提交，取消/Esc=中止零提交） */
+  const [pendingDayClose, setPendingDayClose] = useState<DayCloseSubmitInput | null>(null)
   /* 片 3 B6-3：交接班四节表单（在洗清单=server 自动快照只读注记，三区注记+接棒人手填） */
   const [hvKeys, setHvKeys] = useState('')
   const [hvCash, setHvCash] = useState('')
@@ -185,15 +191,9 @@ export default function CashierClosePage() {
 
   /* 片 3：dayClose 入参扩 actualWechatFen/actualAlipayFen/diffNote（实点非现金对账+
      长短款差异说明）；400 含「须填差异说明」→ 错误原文下传表单聚焦（输入保留），
-     成功才递增清零信号 */
+     成功才递增清零信号；PD-84 R18-01：仅由确认 modal「确认」触发，成败均收 modal */
   const dayCloseM = useMutation({
-    mutationFn: (input: {
-      actualCashFen: number
-      actualWechatFen?: number
-      actualAlipayFen?: number
-      diffNote?: string
-      note?: string
-    }) =>
+    mutationFn: (input: DayCloseSubmitInput) =>
       trpc.cashier.dayClose.mutate({
         ...(overrideShiftId ? { shiftId: overrideShiftId } : {}),
         actualCashFen: input.actualCashFen,
@@ -203,6 +203,7 @@ export default function CashierClosePage() {
         ...(input.note ? { note: input.note } : {}),
       }),
     onSuccess: (r) => {
+      setPendingDayClose(null)
       setDayCloseError(null)
       setDayCloseClear((n) => n + 1)
       const c = r.close
@@ -213,6 +214,8 @@ export default function CashierClosePage() {
       invalidateAll()
     },
     onError: (e) => {
+      /* PD-84：失败收 modal 回表单（400「须填差异说明」聚焦保留输入的既有行为不动） */
+      setPendingDayClose(null)
       const msg = errMsg(e)
       setDayCloseError(msg)
       toast.error(msg)
@@ -308,7 +311,7 @@ export default function CashierClosePage() {
           clearSignal={dayCloseClear}
           blind={blind}
           onBlindChange={setBlind}
-          onSubmit={(input) => dayCloseM.mutate(input)}
+          onSubmit={(input) => setPendingDayClose(input)}
           onCancelOverride={() => setOverrideShiftId(null)}
         />
 
@@ -439,8 +442,21 @@ export default function CashierClosePage() {
         </div>
       ) : null}
 
+      {/* PD-84 R18-01：日结独立确认 modal（遮罩+确认/取消成对；Esc/取消=中止零提交） */}
+      <DayCloseConfirmDialog
+        input={pendingDayClose}
+        book={tender?.tender.cashFen ?? null}
+        blind={blind}
+        overrideShiftId={overrideShiftId}
+        pending={dayCloseM.isPending}
+        onConfirm={() => {
+          if (pendingDayClose) dayCloseM.mutate(pendingDayClose)
+        }}
+        onClose={() => setPendingDayClose(null)}
+      />
+
       {/* 详情 / 原因弹层 */}
-      <DayCloseDetailDialog row={detailRow} isOwner={role.isOwner} onClose={() => setDetailRow(null)} />
+      <DayCloseDetailDialog row={detailRow} canPrint={role.canManage} onClose={() => setDetailRow(null)} />
       <CloseReasonDialog
         target={reasonTarget?.row ?? null}
         mode={reasonTarget?.mode ?? 'reverse'}
