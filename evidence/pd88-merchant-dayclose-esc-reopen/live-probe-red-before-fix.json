@@ -1,0 +1,151 @@
+{
+  "window": "PD-88-merchant-dayclose-esc-reopen",
+  "base": "http://120.53.102.45:7202",
+  "role": {
+    "id": "01M2SEEDMGR000000000000001",
+    "kind": "merchant_manager",
+    "persona": "敏慧店长"
+  },
+  "bundle": {
+    "js": "index-CN4nyHT8.js",
+    "url": "http://120.53.102.45:7202/assets/index-CN4nyHT8.js",
+    "len": 1661530,
+    "sha256": "1b427104769c7e6eb1afa15a105649445bb38cdcfef77957b85191b390901ede",
+    "isTipBundle": true,
+    "expectedTipBundle": "index-CN4nyHT8.js"
+  },
+  "noFill": true,
+  "closesBefore": 21,
+  "closesAfter": 21,
+  "blockedDayCloseCalls": 0,
+  "forwardedDayCloseCalls": 0,
+  "realDayCloseSubmit": false,
+  "abortAllThree": false,
+  "escBoth": false,
+  "noReopenFail": false,
+  "abortResults": {
+    "cancel": {
+      "acted": true,
+      "closed": true,
+      "escPressed": false,
+      "afterDialogCount": 0,
+      "pendingDayCloseNull": true,
+      "blockedDayCloseCalls": 0,
+      "forwardedDayCloseCalls": 0,
+      "realDayCloseSubmit": false,
+      "closeCount": 21,
+      "clearedToast": false,
+      "detail": null,
+      "ok": false,
+      "reopenDialogCount": 0,
+      "reopenOpened": false
+    },
+    "esc": {
+      "acted": false,
+      "closed": false,
+      "escPressed": false,
+      "detail": "no-modal-reopen-fail",
+      "afterDialogCount": 0,
+      "reopenDialogCount": 0,
+      "reopenOpened": false,
+      "ok": false
+    },
+    "escSynthetic": {
+      "acted": false,
+      "closed": false,
+      "escPressed": false,
+      "detail": "no-modal-reopen-fail",
+      "afterDialogCount": 0,
+      "reopenDialogCount": 0,
+      "reopenOpened": false,
+      "ok": false
+    },
+    "overlay": {
+      "acted": false,
+      "closed": false,
+      "escPressed": false,
+      "detail": "no-modal-reopen-fail",
+      "afterDialogCount": 0,
+      "reopenDialogCount": 0,
+      "reopenOpened": false,
+      "ok": false
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "现网商家包与指定 tip 对齐",
+      "detail": "index-CN4nyHT8.js len=1661530 sha256=1b427104769c7e6eb1afa15a105649445bb38cdcfef77957b85191b390901ede"
+    },
+    {
+      "ok": true,
+      "name": "敏慧店长人设 dev-login（merchant_manager）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "/cashier/close 表单就绪",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "首开前等待账面默认同步＋canSubmit=true（无 FILL）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "initial：无 FILL 点 dayclose-submit 后 dialogCount≥1",
+      "detail": "{\"pre\":{\"actualValue\":\"0\",\"submitDisabled\":false,\"bookText\":\"¥0\"},\"click\":{\"acted\":true,\"disabled\":false},\"view\":{\"dialogCount\":1,\"rootDialogCount\":1,\"nativeOpenCount\":1,\"hasConfirmLayer\":true,\"layerOpen\":true,\"hasModalPair\":true,\"hasCancel\":true,\"hasConfirm\":true,\"pendingDayCloseNull\":false},\"detail\":null}"
+    },
+    {
+      "ok": true,
+      "name": "cancel：acted=true＋closed=true＋pendingDayClose=null＋零真提交",
+      "detail": "{\"acted\":true,\"closed\":true,\"escPressed\":false,\"afterDialogCount\":0,\"pendingDayCloseNull\":true,\"blockedDayCloseCalls\":0,\"forwardedDayCloseCalls\":0,\"realDayCloseSubmit\":false,\"closeCount\":21,\"clearedToast\":false,\"detail\":null,\"ok\":true}"
+    },
+    {
+      "ok": false,
+      "name": "cancel 后重开：无 FILL 点 dayclose-submit 后 dialogCount≥1",
+      "detail": "{\"pre\":{\"actualValue\":\"\",\"submitDisabled\":true,\"bookText\":\"…\"},\"click\":{\"acted\":true,\"disabled\":true},\"view\":{\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0,\"hasConfirmLayer\":false,\"layerOpen\":false,\"hasModalPair\":false,\"hasCancel\":false,\"hasConfirm\":false,\"pendingDayCloseNull\":true},\"detail\":\"no-modal-reopen-fail\"}"
+    },
+    {
+      "ok": false,
+      "name": "esc：未开闸，禁止把撤销记为已执行",
+      "detail": "{\"acted\":false,\"closed\":false,\"escPressed\":false,\"detail\":\"no-modal-reopen-fail\",\"afterDialogCount\":0}"
+    },
+    {
+      "ok": false,
+      "name": "esc 后重开：无 FILL 点 dayclose-submit 后 dialogCount≥1",
+      "detail": "{\"pre\":{\"actualValue\":\"\",\"submitDisabled\":true,\"bookText\":\"…\"},\"click\":{\"acted\":true,\"disabled\":true},\"view\":{\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0,\"hasConfirmLayer\":false,\"layerOpen\":false,\"hasModalPair\":false,\"hasCancel\":false,\"hasConfirm\":false,\"pendingDayCloseNull\":true},\"detail\":\"no-modal-reopen-fail\"}"
+    },
+    {
+      "ok": false,
+      "name": "escSynthetic：未开闸，禁止把撤销记为已执行",
+      "detail": "{\"acted\":false,\"closed\":false,\"escPressed\":false,\"detail\":\"no-modal-reopen-fail\",\"afterDialogCount\":0}"
+    },
+    {
+      "ok": false,
+      "name": "escSynthetic 后重开：无 FILL 点 dayclose-submit 后 dialogCount≥1",
+      "detail": "{\"pre\":{\"actualValue\":\"\",\"submitDisabled\":true,\"bookText\":\"…\"},\"click\":{\"acted\":true,\"disabled\":true},\"view\":{\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0,\"hasConfirmLayer\":false,\"layerOpen\":false,\"hasModalPair\":false,\"hasCancel\":false,\"hasConfirm\":false,\"pendingDayCloseNull\":true},\"detail\":\"no-modal-reopen-fail\"}"
+    },
+    {
+      "ok": false,
+      "name": "overlay：未开闸，禁止把撤销记为已执行",
+      "detail": "{\"acted\":false,\"closed\":false,\"escPressed\":false,\"detail\":\"no-modal-reopen-fail\",\"afterDialogCount\":0}"
+    },
+    {
+      "ok": false,
+      "name": "overlay 后重开：无 FILL 点 dayclose-submit 后 dialogCount≥1",
+      "detail": "{\"pre\":{\"actualValue\":\"\",\"submitDisabled\":true,\"bookText\":\"…\"},\"click\":{\"acted\":true,\"disabled\":true},\"view\":{\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0,\"hasConfirmLayer\":false,\"layerOpen\":false,\"hasModalPair\":false,\"hasCancel\":false,\"hasConfirm\":false,\"pendingDayCloseNull\":true},\"detail\":\"no-modal-reopen-fail\"}"
+    },
+    {
+      "ok": true,
+      "name": "零真日结：计数不变＋写请求安全闸零触发",
+      "detail": "before=21 after=21 blocked=0 forwarded=0"
+    },
+    {
+      "ok": false,
+      "name": "PD-88 总结：三撤＋Esc 双路＋每次重开均通，无 reopen-fail",
+      "detail": "{\"abortAllThree\":false,\"escBoth\":false,\"noReopenFail\":false}"
+    }
+  ]
+}
