@@ -4,8 +4,8 @@
  * 规格书 §5 + 试样 .bd-form：标题「今日打卡 · M月d日」+ 副行「提交后实时推送给家长
  * （照片+文字）」；喂食 segment（未喂/1/2/3 餐，墨底选中）；遛狗 − N ＋ stepper
  * （副行「次 · 每次约 15 分钟」）；今日照片 ≥1 张（缩略 64×48 + ＋拍照虚线槽）；
- * 备注选填多行（提示家长可见）；吸底淡黄主钮「提交今日打卡」（副行「同日重复提交=
- * 更新当日记录（幂等）」；已打卡则主钮文案「更新今日打卡」）。
+ * 备注选填多行（提示家长可见）；吸底淡黄主钮「提交今日打卡」（副行「当天再次提交，
+ * 会更新今天的打卡记录」；已打卡则主钮文案「更新今日打卡」）。
  *
  * 数据口径注记：server mealItem.food 必填（min 1）——segment 餐次映射为
  * N × { time: 提交时刻, food: '正餐' }（餐次计数语义，食物明细 v1 不采，规格书同）；
@@ -237,13 +237,13 @@ export default function DailyLogForm({
         <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={onFiles} />
       </section>
 
-      {/* 吸底淡黄主钮=本屏唯一 cream（此刻要做；幂等副行随钮，页边距 22） */}
+      {/* 吸底淡黄主钮=本屏唯一 cream（此刻要做；副行随钮，页边距 22） */}
       <div className="sticky bottom-0 mt-3 bg-card px-[22px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(44,40,34,.06)]">
         <SkBtnAction
           testId="daily-submit"
           onClick={submit}
           disabled={submitting || anyUploading}
-          sub="同日重复提交=更新当日记录（幂等）"
+          sub="当天再次提交，会更新今天的打卡记录"
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <Camera className="h-4 w-4" strokeWidth={1.8} />

@@ -1,0 +1,82 @@
+--- a/apps/staff/src/pages/BoardingCheckinPage.tsx
++++ b/apps/staff/src/pages/BoardingCheckinPage.tsx
+@@ -30,6 +30,10 @@
+  * staffProcedure（仅员工可退房，商家/客户在中间件层即被拒）；员工端相应补上
+  * 退房入口——stay 已登记且未完成时显示「办理退房」按钮（二次确认内联展开），
+  * 成功后预约转 completed；商家端收款仍走财务页 markPaid。
++ *
++ * PD-83：已超期单整页停写（overdue=true）——「修改／＋拍照／提交今日打卡／办理退房」
++ * 等写 CTA 一律不渲染（等价只读；超期横幅已指引提醒商家安排退房）；
++ * 历史打卡 DailyLogList 只读保留。
+  */
+ 
+ import {
+@@ -496,7 +500,7 @@
+           onSubmit={(input) => checkinMutation.mutate(input)}
+           onError={showToast}
+         />
+-      ) : editingStay && !completed ? (
++      ) : editingStay && !completed && !overdue ? (
+         <CheckinForm
+           key={`edit-${stay.id}`}
+           appointmentId={aid!}
+@@ -510,15 +514,15 @@
+       ) : (
+         <StayInfoCard
+           stay={stay}
+-          onEdit={completed ? undefined : () => setEditingStay(true)}
++          onEdit={completed || overdue ? undefined : () => setEditingStay(true)}
+           onPhotoClick={openViewer}
+         />
+       )}
+ 
+-      {/* 每日打卡段（stay 已登记后显示；已完成为只读历史） */}
++      {/* 每日打卡段（stay 已登记后显示；已完成／已超期为只读历史——PD-83 超期停写） */}
+       {stay !== null ? (
+         <>
+-          {!completed && !editingStay ? (
++          {!completed && !editingStay && !overdue ? (
+             <DailyLogForm
+               appointmentId={aid!}
+               stayId={stay.id}
+@@ -533,8 +537,9 @@
+         </>
+       ) : null}
+ 
+-      {/* 退房（员工权限，内联二次确认，幂等；U5：确认主行动 cream→SkBtnInk，cream 让位今日打卡提交） */}
+-      {!completed && stay !== null && appt.status === 'in_boarding' ? (
++      {/* 退房（员工权限，内联二次确认，幂等；U5：确认主行动 cream→SkBtnInk，cream 让位今日打卡提交；
++          PD-83：已超期不渲染——整页停写，由横幅指引提醒商家安排退房） */}
++      {!completed && !overdue && stay !== null && appt.status === 'in_boarding' ? (
+         confirmingCheckout ? (
+           <div className="sk-panel">
+             <p className="text-body-sm font-semibold text-ink">{BOARDING_COPY['boarding.checkout.confirmTitle']}</p>
+--- a/apps/staff/src/components/boarding/DailyLogForm.tsx
++++ b/apps/staff/src/components/boarding/DailyLogForm.tsx
+@@ -4,8 +4,8 @@
+  * 规格书 §5 + 试样 .bd-form：标题「今日打卡 · M月d日」+ 副行「提交后实时推送给家长
+  * （照片+文字）」；喂食 segment（未喂/1/2/3 餐，墨底选中）；遛狗 − N ＋ stepper
+  * （副行「次 · 每次约 15 分钟」）；今日照片 ≥1 张（缩略 64×48 + ＋拍照虚线槽）；
+- * 备注选填多行（提示家长可见）；吸底淡黄主钮「提交今日打卡」（副行「同日重复提交=
+- * 更新当日记录（幂等）」；已打卡则主钮文案「更新今日打卡」）。
++ * 备注选填多行（提示家长可见）；吸底淡黄主钮「提交今日打卡」（副行「当天再次提交，
++ * 会更新今天的打卡记录」；已打卡则主钮文案「更新今日打卡」）。
+  *
+  * 数据口径注记：server mealItem.food 必填（min 1）——segment 餐次映射为
+  * N × { time: 提交时刻, food: '正餐' }（餐次计数语义，食物明细 v1 不采，规格书同）；
+@@ -237,13 +237,13 @@
+         <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={onFiles} />
+       </section>
+ 
+-      {/* 吸底淡黄主钮=本屏唯一 cream（此刻要做；幂等副行随钮，页边距 22） */}
++      {/* 吸底淡黄主钮=本屏唯一 cream（此刻要做；副行随钮，页边距 22） */}
+       <div className="sticky bottom-0 mt-3 bg-card px-[22px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(44,40,34,.06)]">
+         <SkBtnAction
+           testId="daily-submit"
+           onClick={submit}
+           disabled={submitting || anyUploading}
+-          sub="同日重复提交=更新当日记录（幂等）"
++          sub="当天再次提交，会更新今天的打卡记录"
+         >
+           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+             <Camera className="h-4 w-4" strokeWidth={1.8} />

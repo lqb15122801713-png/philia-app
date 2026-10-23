@@ -30,6 +30,10 @@
  * staffProcedure（仅员工可退房，商家/客户在中间件层即被拒）；员工端相应补上
  * 退房入口——stay 已登记且未完成时显示「办理退房」按钮（二次确认内联展开），
  * 成功后预约转 completed；商家端收款仍走财务页 markPaid。
+ *
+ * PD-83：已超期单整页停写（overdue=true）——「修改／＋拍照／提交今日打卡／办理退房」
+ * 等写 CTA 一律不渲染（等价只读；超期横幅已指引提醒商家安排退房）；
+ * 历史打卡 DailyLogList 只读保留。
  */
 
 import {
@@ -496,7 +500,7 @@ export default function BoardingCheckinPage() {
           onSubmit={(input) => checkinMutation.mutate(input)}
           onError={showToast}
         />
-      ) : editingStay && !completed ? (
+      ) : editingStay && !completed && !overdue ? (
         <CheckinForm
           key={`edit-${stay.id}`}
           appointmentId={aid!}
@@ -510,15 +514,15 @@ export default function BoardingCheckinPage() {
       ) : (
         <StayInfoCard
           stay={stay}
-          onEdit={completed ? undefined : () => setEditingStay(true)}
+          onEdit={completed || overdue ? undefined : () => setEditingStay(true)}
           onPhotoClick={openViewer}
         />
       )}
 
-      {/* 每日打卡段（stay 已登记后显示；已完成为只读历史） */}
+      {/* 每日打卡段（stay 已登记后显示；已完成／已超期为只读历史——PD-83 超期停写） */}
       {stay !== null ? (
         <>
-          {!completed && !editingStay ? (
+          {!completed && !editingStay && !overdue ? (
             <DailyLogForm
               appointmentId={aid!}
               stayId={stay.id}
@@ -533,8 +537,9 @@ export default function BoardingCheckinPage() {
         </>
       ) : null}
 
-      {/* 退房（员工权限，内联二次确认，幂等；U5：确认主行动 cream→SkBtnInk，cream 让位今日打卡提交） */}
-      {!completed && stay !== null && appt.status === 'in_boarding' ? (
+      {/* 退房（员工权限，内联二次确认，幂等；U5：确认主行动 cream→SkBtnInk，cream 让位今日打卡提交；
+          PD-83：已超期不渲染——整页停写，由横幅指引提醒商家安排退房） */}
+      {!completed && !overdue && stay !== null && appt.status === 'in_boarding' ? (
         confirmingCheckout ? (
           <div className="sk-panel">
             <p className="text-body-sm font-semibold text-ink">{BOARDING_COPY['boarding.checkout.confirmTitle']}</p>
