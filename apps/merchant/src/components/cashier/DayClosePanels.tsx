@@ -16,9 +16,11 @@
  *   原单 reversed 挂 reversalId）；详情=字段行 + 冲正前后值快照 + 调整记录；
  * - 反结账（拆箱）=reverseDayClose（仅 owner · 强制原因弹层）；
  *   导出 CSV=exportDayCloseCsv（仅 owner · Blob 浏览器下载）；
- *   打印日结单=详情弹层「打印」钮（PD-81 · 仅 owner 同导出闸；window.print
+ *   打印日结单=详情弹层「打印」钮（PD-84 放宽 owner|manager；window.print
  *   + @media print 内联隔离，屏外全隐仅日结单可见——照 ReceiptPage 先例）；
  *   调整备注=adjustDayClose（owner|manager · 只增不改）。
+ * - PD-84 R18-01：日结提交必经独立确认 modal（DayCloseConfirmDialog，遮罩+
+ *   确认/取消成对，Esc/取消=中止零提交，禁页内直闸、禁假 CLEARED）。
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -188,6 +190,15 @@ export function TenderSplitPanel({
 /* 日结表单（账面 vs 实点 · 差异红字 · 分列）                                  */
 /* ------------------------------------------------------------------ */
 
+/** 日结提交入参（DayCloseForm → 页面；PD-84：先入独立确认 modal，确认才真提交） */
+export interface DayCloseSubmitInput {
+  actualCashFen: number
+  actualWechatFen?: number
+  actualAlipayFen?: number
+  diffNote?: string
+  note?: string
+}
+
 export function DayCloseForm({
   tender,
   shift,
@@ -213,13 +224,8 @@ export function DayCloseForm({
   /** 片 3 盲交开关：开=dayClosePreview({blind:true}) 不透账面，实点先行，差异提交后揭晓 */
   blind: boolean
   onBlindChange: (on: boolean) => void
-  onSubmit: (input: {
-    actualCashFen: number
-    actualWechatFen?: number
-    actualAlipayFen?: number
-    diffNote?: string
-    note?: string
-  }) => void
+  /** PD-84 R18-01：点击「日结」不直接提交——上抛入参由页面开独立确认 modal */
+  onSubmit: (input: DayCloseSubmitInput) => void
   onCancelOverride: () => void
 }) {
   const { trpc } = usePhiliaClient()
@@ -414,6 +420,107 @@ export function DayCloseForm({
         ) : null}
       </div>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* PD-84 R18-01：日结独立确认 modal（遮罩＋确认/取消成对；Esc/遮罩/取消=中止零提交）  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 点「日结并冻结」先出本弹层（CashierModal 工艺：居中卡 + 墨 28% 遮罩 + Esc 关）：
+ * - 摘要透出 账面/实点/差异（盲交=账面遮罩、差异提交后揭晓，与表单同口径）；
+ * - 「取消」/Esc/点遮罩=中止，不触 dayClose；「确认日结并冻结」才真提交冻结；
+ * - 禁假 CLEARED：成功 toast 仍只由 dayClose 真返回驱动（页面既有逻辑不动）。
+ */
+export function DayCloseConfirmDialog({
+  input,
+  book,
+  blind,
+  overrideShiftId,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  /** 待确认提交入参（null=不开） */
+  input: DayCloseSubmitInput | null
+  /** 账面现金（分，todayTenderStats 同源；null=未加载/遮罩） */
+  book: number | null
+  blind: boolean
+  overrideShiftId: string | null
+  pending: boolean
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  if (!input) return null
+  const diff = !blind && book !== null ? input.actualCashFen - book : null
+  return (
+    <CashierModal
+      open={input !== null}
+      onClose={onClose}
+      title={cc('cashier.dayCloseConfirmTitle')}
+      testid="dayclose-confirm-dialog"
+      footer={
+        <>
+          <SheetBtn data-testid="dayclose-confirm-cancel" onClick={onClose}>
+            取消
+          </SheetBtn>
+          <SheetBtn
+            variant="primary"
+            data-testid="dayclose-confirm-ok"
+            disabled={pending}
+            onClick={onConfirm}
+          >
+            {pending ? '冻结中…' : cc('cashier.dayCloseConfirmOk')}
+          </SheetBtn>
+        </>
+      }
+    >
+      <p className="text-caption leading-relaxed text-ink-secondary">
+        {cc('cashier.dayCloseConfirmBody')}
+      </p>
+      <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3 font-number text-caption tabular-nums">
+        <div className="flex items-center justify-between">
+          <span className="font-sans text-ink-secondary">账面现金（同源）</span>
+          <b data-testid="dayclose-confirm-book">
+            {blind ? '已遮罩（盲交）' : book !== null ? `¥${fenToYuan(book)}` : '…'}
+          </b>
+        </div>
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="font-sans text-ink-secondary">实点现金</span>
+          <b data-testid="dayclose-confirm-actual">¥{fenToYuan(input.actualCashFen)}</b>
+        </div>
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="font-sans text-ink-secondary">差异（实点 − 账面）</span>
+          <b
+            className={diff !== null && diff !== 0 ? 'text-danger-deep' : ''}
+            data-testid="dayclose-confirm-diff"
+          >
+            {blind
+              ? '提交后揭晓'
+              : diff === null
+                ? '—'
+                : diff === 0
+                  ? '¥0'
+                  : `${diff > 0 ? '+' : '−'}¥${fenToYuan(Math.abs(diff))}`}
+          </b>
+        </div>
+        {input.actualWechatFen !== undefined || input.actualAlipayFen !== undefined ? (
+          <div className="mt-1.5 flex items-center justify-between">
+            <span className="font-sans text-ink-secondary">实点非现金</span>
+            <b>
+              微信 ¥{fenToYuan(input.actualWechatFen ?? 0)} · 支付宝 ¥
+              {fenToYuan(input.actualAlipayFen ?? 0)}
+            </b>
+          </div>
+        ) : null}
+        {overrideShiftId ? (
+          <div className="mt-2 font-sans text-caption-xs text-ink-placeholder">
+            拆箱后重新日结（全日口径）· 追溯班次 {overrideShiftId.slice(-6)}
+          </div>
+        ) : null}
+      </div>
+    </CashierModal>
   )
 }
 
@@ -936,12 +1043,12 @@ interface CloseSnapshot {
 
 export function DayCloseDetailDialog({
   row,
-  isOwner,
+  canPrint,
   onClose,
 }: {
   row: DayCloseRow | null
-  /** PD-81：打印日结单入口（仅店主，与导出 CSV 同闸——总规则③口径不动） */
-  isOwner: boolean
+  /** PD-84：打印日结单入口放宽 owner|manager（管理层同本页闸；导出 CSV 仍仅 owner——总规则③不动） */
+  canPrint: boolean
   onClose: () => void
 }) {
   if (!row) return null
@@ -961,10 +1068,10 @@ export function DayCloseDetailDialog({
       testid="dayclose-detail"
       footer={
         <>
-          {/* PD-81：日结单打印入口（EXPORT_ENTRY_MISSING 补缺 · 仅店主同导出闸；
+          {/* PD-84：日结单打印入口（PRINT_ENTRY_MISSING 补缺 · 放宽 owner|manager；
               window.print() + @media print 内联隔离，屏外全隐仅日结单可见——
-              工艺照 ReceiptPage 小票先例） */}
-          {isOwner ? (
+              工艺照 ReceiptPage 小票先例；导出 CSV 仍仅 owner 不动） */}
+          {canPrint ? (
             <SheetBtn data-testid="dayclose-print" onClick={() => window.print()}>
               {cc('cashier.dayClosePrint')}
             </SheetBtn>

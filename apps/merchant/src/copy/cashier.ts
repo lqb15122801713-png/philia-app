@@ -82,6 +82,11 @@ const CASHIER_COPY_TABLE = {
   'cashier.closeShiftConfirmTitle': '交接班确认',
   'cashier.closeShiftConfirmBody':
     '交接班=关闭当前班次（不冻结账目）；下一笔收银将自动开新班。 如需冻结当班账目，请用「日结」。',
+  /* ---- PD-84 R18-01：日结独立确认 modal（点「日结」先出遮罩弹层，确认才提交冻结；Esc/取消中止零提交） ---- */
+  'cashier.dayCloseConfirmTitle': '确认日结',
+  'cashier.dayCloseConfirmBody':
+    '日结＝冻结全日账目（一日一结，冻结值与账面预览同源同值）。冻结后原单永存不涂改，仅可挂「已冲正」；拆箱仅店主。',
+  'cashier.dayCloseConfirmOk': '确认日结并冻结',
   'cashier.shiftEmpty': '当前无开班班次 —— 首笔收银将自动开班（懒建）',
   'cashier.dayCloseFullNote': '全日口径：当前无开班班次也可日结（账面按当日全部支付段计）',
   /* ---- W-07 序位：M5 四分列前置（todayTenderStats 同源出口） ---- */
@@ -239,7 +244,7 @@ const CASHIER_COPY_TABLE = {
   'cashier.receiptNightLine': '共{total}晚 · 已住{occ}晚 · 剩{rem}晚 · 晚单价 ¥{per}',
   'cashier.receiptThanks': '谢谢惠顾 · 单据留痕可查',
 
-  /* ---- PD-81：日结单打印（详情弹层 · 仅店主同导出闸） ---- */
+  /* ---- PD-84：日结单打印（详情弹层 · owner|manager；导出 CSV 仍仅店主） ---- */
   'cashier.dayClosePrint': '打印日结单',
 
   /* ---- 片 3：台账专页 /ledger ---- */

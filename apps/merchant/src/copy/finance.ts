@@ -25,6 +25,8 @@ const FIN_COPY_TABLE = {
   'fin.ledgerTitle': '收款流水',
   'fin.ledgerAside': '按时间倒序',
   'fin.ledgerEmpty': '{period}还没有收款',
+  /* PD-84：财务页打印入口（PRINT_ENTRY_MISSING 补缺；本页 owner|manager 闸，同页可见即可点） */
+  'fin.printCta': '打印',
 } as const;
 
 export const FIN_COPY = withCopyOverrides(FIN_COPY_TABLE);
