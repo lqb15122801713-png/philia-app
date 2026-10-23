@@ -1,0 +1,48 @@
+{
+  "window": "PD-86-merchant-dayclose-modal",
+  "base": "http://120.53.102.45:7202",
+  "role": "merchant_manager(演示店长)",
+  "discipline": "零写：不点确认日结；muts 仅 dev-login；撤后 closes 计数须等于基线",
+  "results": [
+    {
+      "ok": true,
+      "name": "现网 bundle（全新档首载实读）",
+      "detail": "http://120.53.102.45:7202/assets/index-DZLPpaKN.js"
+    },
+    {
+      "ok": true,
+      "name": "dev-login 演示店长（merchant_manager · 口令门）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "/cashier/close 表单就绪（店长走测正例入口）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "日结单基线计数（撤后须不变＝realDayCloseSubmit=false）",
+      "detail": "before=21"
+    },
+    {
+      "ok": true,
+      "name": "R18-01 开闸探测：dialogCount(#root 内外)≥1／role+aria-modal／遮罩／确认取消成对",
+      "detail": "{\"dialogCount\":1,\"rootDialogCount\":1,\"nativeOpenDialogs\":0,\"ariaModalCount\":1,\"layer\":true,\"layerTag\":\"DIV\",\"card\":true,\"cardRoleDialog\":true,\"cardInRoot\":true,\"hasConfirm\":true,\"hasCancel\":true,\"hasModalPair\":true,\"overlayInfo\":[{\"testid\":\"dayclose-confirm-overlay\",\"fixedFullScreen\":true}],\"fixedFullLayers\":[\"dayclose-confirm-layer\"],\"bundle\":\"http://120.53.102.45:7202/assets/index-DZLPpaKN.js\"}"
+    },
+    {
+      "ok": true,
+      "name": "撤①Esc：modal 收＋日结单计数不变＋零成功 toast（realDayCloseSubmit=false）",
+      "detail": "open=false closes=21(基线21) toast=0"
+    },
+    {
+      "ok": true,
+      "name": "撤②点遮罩：modal 收＋日结单计数不变",
+      "detail": "open=false closes=21(基线21)"
+    },
+    {
+      "ok": true,
+      "name": "撤③取消钮：modal 收＋日结单计数不变",
+      "detail": "open=false closes=21(基线21)"
+    }
+  ]
+}
