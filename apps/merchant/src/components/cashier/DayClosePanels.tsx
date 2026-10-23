@@ -31,6 +31,11 @@
  *   时跟随账面现金元字符串（0→字面 '0'，非 0→fenToYuanInput），诚实
  *   「实点＝账面」日默认 canSubmit=true 可直点开闸；手输/清空后不冲；
  *   盲交遮罩期不透账面（不同步）。dialog 壳（PD-86 原生 dialog）不动；
+ * PD-89：开闸就绪闸落在页面层（账面预览未就绪不挂本表单、骨架占位）——本组件契约
+ *   不变：book=null 时实点空、canSubmit=false、钮 disabled 点击无副作用；就绪后首绘
+ *   即 actualInput=null→实点默认同步账面→无 FILL 直点必出确认 dialog；abort 仅
+ *   setPendingDayClose(null)，tender 缓存不回退，同页再点必重开；Esc 双路（原生
+ *   cancel＋window keydown 兜底）与遮罩／取消主交互一行未动；
  */
 
 import { useEffect, useRef, useState } from 'react'

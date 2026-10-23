@@ -1,0 +1,60 @@
+{
+  "window": "PD-89-merchant-dayclose-gate-ready",
+  "leg": "现网 :7202 活钉＋缺陷复现（合部前现网 tip · 全新档 · 零写）",
+  "base": "http://120.53.102.45:7202",
+  "role": "merchant_manager(演示店长/敏慧走测人设)",
+  "noFill": true,
+  "raceThrottleMs": 1500,
+  "bundle": {
+    "js": "index-CN4nyHT8.js",
+    "url": "http://120.53.102.45:7202/assets/index-CN4nyHT8.js",
+    "sha256": "1b427104769c7e6eb1afa15a105649445bb38cdcfef77957b85191b390901ede",
+    "isLiveTipBundleCN4nyHT8": true,
+    "len": 1661530,
+    "sha256Method": "curl 实读计算（页面内 crypto.subtle 于非安全上下文 http 不可用）",
+    "matchesRegistryPin": true
+  },
+  "note": "现网仍为 PD-88 零产品代码包（CN4nyHT8），竞态缺陷实锤复现＝预期红；修复绿证见 equiv-probe.json（等价现网腿，新包 index-B2Y5Z7e4.js）",
+  "results": [
+    {
+      "ok": true,
+      "name": "现网 bundle 钉齐（全新档首载实读＝合部前现网 tip 钉包 index-CN4nyHT8.js）",
+      "detail": "http://120.53.102.45:7202/assets/index-CN4nyHT8.js sha256=null"
+    },
+    {
+      "ok": true,
+      "name": "dev-login 演示店长（merchant_manager · 口令门）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "/cashier/close 表单出现（延迟仿真竞态窗口内）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "缺陷复现（现网修前码）：账面未齐 actual=\"\"＋钮 disabled，直点不置 pendingDayClose → dialogCount=0（NO_MODAL 与敏慧复测-R 同签名）",
+      "detail": "pre={\"actualValue\":\"\",\"submitDisabled\":true,\"bookText\":\"…\"} probe={\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0,\"hasConfirmLayer\":false,\"layerOpen\":false,\"hasCancel\":false,\"hasOk\":false}"
+    },
+    {
+      "ok": true,
+      "name": "对照：关延迟仿真后账面就绪（actual 默认同步账面＋钮 enabled）",
+      "detail": "pre={\"actualValue\":\"0\",\"submitDisabled\":false,\"bookText\":\"¥0\"}"
+    },
+    {
+      "ok": true,
+      "name": "对照：同包就绪后点闸出真 dialog（dialog[open][dayclose-confirm-layer]）——非错包、非 Esc 缺失，触发差＝就绪态",
+      "detail": "{\"dialogCount\":1,\"rootDialogCount\":1,\"nativeOpenCount\":1,\"hasConfirmLayer\":true,\"layerOpen\":true,\"hasCancel\":true,\"hasOk\":true}"
+    },
+    {
+      "ok": true,
+      "name": "对照：取消关闸（acted+closed，零提交）",
+      "detail": "{\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0,\"hasConfirmLayer\":false,\"layerOpen\":false,\"hasCancel\":false,\"hasOk\":false}"
+    },
+    {
+      "ok": true,
+      "name": "零写纪律：探针全程未落日结（closes 计数不变；未点确认）",
+      "detail": "before=21 after=21"
+    }
+  ]
+}
