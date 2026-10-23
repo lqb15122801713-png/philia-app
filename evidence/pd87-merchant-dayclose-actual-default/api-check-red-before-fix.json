@@ -1,0 +1,93 @@
+{
+  "window": "PD-87-merchant-dayclose-actual-default",
+  "base": {
+    "server": "http://localhost:7287",
+    "merchant": "http://localhost:7187",
+    "db": "file:E:/KIMI code/pd87-merchant-dayclose-actual-default/.runtime/pd87-1792748281961/philia.db",
+    "serve": "vite preview（生产 dist，VITE_API_BASE 注入临时 server）"
+  },
+  "role": {
+    "manager": {
+      "id": "01M9PD87MGR000000000000000",
+      "nickname": "敏慧店长"
+    }
+  },
+  "bookCashFen": null,
+  "expectedDefault": null,
+  "preConfirmModal": {
+    "dialog": false
+  },
+  "noFill": true,
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：店长账号就绪（merchant_manager · 临时库）",
+      "detail": "敏慧店长"
+    },
+    {
+      "ok": true,
+      "name": "静态闸：tsc -b ＋ vite build 绿（生产包）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "server 就绪",
+      "detail": "http://localhost:7287"
+    },
+    {
+      "ok": true,
+      "name": "merchant preview 就绪（生产 dist）",
+      "detail": "http://localhost:7187"
+    },
+    {
+      "ok": false,
+      "name": "账面预览就绪（todayTenderStats 同源）",
+      "detail": "bookCashFen=null → 期望实点默认串 'null'"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店长·敏慧走测人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": false,
+      "name": "PD-87 默认同步：账面就绪后实点框＝账面元串（零 FILL 零手填）＋提交钮 enabled（canSubmit=true）",
+      "detail": "actualValue=\"\" 期望='null' placeholder=0.00 book=¥0 disabled=true"
+    },
+    {
+      "ok": false,
+      "name": "无 FILL 直点 [data-testid=dayclose-submit] → pendingDayClose 置位 → 真 dialog（dialog[open]=dayclose-confirm-layer＋[role=dialog]=dayclose-confirm-dialog 成对；dialogCount≥1 双域；遮罩＋确认/取消成对；非页内闸非 portal）",
+      "detail": "{\"dialog\":false}"
+    },
+    {
+      "ok": true,
+      "name": "拦：开闸未确认——dayClose 调用=0（未确认不得落日结）",
+      "detail": "calls=0"
+    },
+    {
+      "ok": true,
+      "name": "撤①Esc（可信键路→原生 cancel）：modal 收、零真提交、零假 CLEARED toast（server 0 单）",
+      "detail": "open=false calls=0 closes=0 clearedToast=false"
+    },
+    {
+      "ok": true,
+      "name": "撤②点遮罩（可信鼠标路 12,12）：modal 收、零真提交",
+      "detail": "open=false calls=0 closes=0"
+    },
+    {
+      "ok": true,
+      "name": "撤③取消钮：modal 收、零真提交、零假 CLEARED toast",
+      "detail": "open=false calls=0 closes=0 clearedToast=false"
+    },
+    {
+      "ok": false,
+      "name": "盲交互斥：开盲交→实点框清空不透账面（canSubmit=false 实点先行）；关盲交→重新同步账面默认",
+      "detail": "blindOn.value=\"\" disabled=true；blindOff.value=\"\" disabled=true"
+    },
+    {
+      "ok": false,
+      "name": "确认「确认日结并冻结」才真冻结（modal 收＋dayClose 调用=1＋frozen 单×1＋成功 toast 真返回驱动）",
+      "detail": "calls=0 rows=0 status=— clearedToast=false"
+    }
+  ]
+}
