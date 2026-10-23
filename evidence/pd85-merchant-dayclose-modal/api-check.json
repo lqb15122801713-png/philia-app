@@ -1,0 +1,67 @@
+{
+  "window": "PD-85-merchant-dayclose-modal",
+  "base": {
+    "server": "http://localhost:7226",
+    "merchant": "http://localhost:7126",
+    "db": "file:E:/KIMI code/pd85-merchant-dayclose-modal/.runtime/pd85-1792738357854/philia.db",
+    "serve": "vite preview（生产 dist，VITE_API_BASE 注入临时 server）"
+  },
+  "role": {
+    "manager": {
+      "id": "01M9PD85MGR000000000000000",
+      "nickname": "敏慧店长"
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：店长账号就绪（merchant_manager · 临时库）",
+      "detail": "敏慧店长"
+    },
+    {
+      "ok": true,
+      "name": "静态闸：tsc -b ＋ vite build 绿（生产包）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "server 就绪",
+      "detail": "http://localhost:7226"
+    },
+    {
+      "ok": true,
+      "name": "merchant preview 就绪（生产 dist）",
+      "detail": "http://localhost:7126"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店长·敏慧走测人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：点「日结」出独立确认 modal（遮罩＋确认/取消成对；PD-85 #root 内联可检、非 portal 直连 body、非页内闸）",
+      "detail": "{\"dialog\":true,\"roleDialog\":true,\"overlay\":true,\"inlineInRoot\":true,\"notPortalToBody\":true,\"notInline\":true,\"cancelBtn\":true,\"okBtn\":true,\"actual\":\"¥0\"}"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：Esc 中止——modal 收、零真提交、零假 CLEARED toast（server 0 单）",
+      "detail": "dialog=false closes=0 clearedToast=false"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：点遮罩中止——零真提交、零假 CLEARED toast",
+      "detail": "dialog=false closes=0"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：取消钮中止——零真提交、零假 CLEARED toast",
+      "detail": "dialog=false closes=0"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：确认「确认日结并冻结」才真冻结（modal 收＋frozen 单×1＋成功 toast 由真返回驱动）",
+      "detail": "rows=1 status=frozen clearedToast=true"
+    }
+  ]
+}
