@@ -1,0 +1,110 @@
+{
+  "at": "2026-10-23T04:35:09.502Z",
+  "apiBase": "http://localhost:7283",
+  "staffUrl": "http://localhost:7183",
+  "overdueAid": "appt_pd83_01M5KG7YXV05TESTEB9GVHA8R6",
+  "controlAid": "appt_pd83_01M5KG7YY8HBBQVYG9RRTE2K68",
+  "staffUserId": "01M5KG68R732Y0RR4W4FEXK9SE",
+  "probe": {
+    "overdue": {
+      "editBtn": false,
+      "checkoutBtn": false,
+      "logForm": false,
+      "addPhoto": false,
+      "dailySubmit": false,
+      "logList": true,
+      "logRows": 1,
+      "overdueBanner": true,
+      "jargonIdem": false,
+      "jargonRepeat": false,
+      "newSub": false,
+      "unavailable": false
+    },
+    "control": {
+      "editBtn": true,
+      "checkoutBtn": true,
+      "logForm": true,
+      "addPhoto": true,
+      "dailySubmit": true,
+      "logList": true,
+      "logRows": 1,
+      "overdueBanner": false,
+      "jargonIdem": false,
+      "jargonRepeat": false,
+      "newSub": true,
+      "unavailable": false
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "员工 dev-login",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "超期页加载（寄养打卡＋超期横幅/历史列表就位）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧① 超期横幅在（已超期，请提醒商家安排退房）",
+      "detail": "{\"banner\":true}"
+    },
+    {
+      "ok": true,
+      "name": "帧② 「修改」写 CTA 缺席（入住信息卡纯只读）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧③ 今日打卡表单＋＋拍照＋提交今日打卡 全缺席",
+      "detail": "{\"logForm\":false,\"addPhoto\":false,\"dailySubmit\":false}"
+    },
+    {
+      "ok": true,
+      "name": "帧④ 「办理退房」写 CTA 缺席",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧⑤ 历史打卡只读保留",
+      "detail": "rows=1"
+    },
+    {
+      "ok": true,
+      "name": "帧⑥ 正文无「幂等／同日重复提交」工程腔",
+      "detail": "{\"idem\":false,\"repeat\":false}"
+    },
+    {
+      "ok": true,
+      "name": "对照页加载（今日打卡表单就位）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧⑦ 对照页无超期横幅（未超期不误标）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧⑧ 对照页「修改」仍在",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧⑨ 对照页 打卡表单＋＋拍照＋提交钮 仍在",
+      "detail": "{\"logForm\":true,\"addPhoto\":true,\"dailySubmit\":true}"
+    },
+    {
+      "ok": true,
+      "name": "帧⑩ 对照页「办理退房」仍在",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "帧⑪ 提交钮副行=人话新文案，工程腔清零",
+      "detail": "{\"newSub\":true,\"idem\":false,\"repeat\":false}"
+    }
+  ]
+}
