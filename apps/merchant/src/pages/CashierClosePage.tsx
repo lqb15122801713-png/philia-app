@@ -18,13 +18,18 @@
  *   dialog：top layer／背景 inert／Esc 原生 cancel），行为不变、双域可检；
  * - R12：当日退款单列面板（RefundDayPanel · refund.dayStats）——笔数+金额+
  *   支付段退款分列+现金段净额（V2：现金已收−现金退款，前端做差；历史封箱不回填只读）；
+ * - PD-89 开闸就绪闸：账面预览（todayTenderStats）未就绪时不挂日结表单（骨架占位，
+ *   dayclose-submit 不挂＝点击无处落、零副作用、竞态结构性消除）；表单一出现即账面已齐
+ *   （actualInput=null→实点默认同步账面→canSubmit=true），无 FILL 直点必出确认 dialog；
+ *   abort 后 tender 已缓存不回退，同页再点必重开（产品态保证，不靠测脚本 wait）；
+ *   查询失败／restricted 回落既有表单（手输仍可用），Esc 双路与 dialog 壳不动；
  * - SSE：cashier.shift 系 / dayClose 系 / billSettled / billReversed /
  *   refund.executed / refund.settled / refund.rejected → 全量对齐；
  * - R5b：页面底部 owner-only 储值台账导入卡（ImportLedgerPanel，只交付不执行，
  *   演示台账试导可标记清除）。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared'
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -305,18 +310,36 @@ export default function CashierClosePage() {
         <TenderSplitPanel tender={tender} />
 
         {/* 日结表单（账面 vs 实点 · 差异红字 · 分列；片 3：盲交/实点非现金/差异说明） */}
-        <DayCloseForm
-          tender={tender}
-          shift={shiftQ.data?.shift}
-          overrideShiftId={overrideShiftId}
-          submitting={dayCloseM.isPending}
-          submitError={dayCloseError}
-          clearSignal={dayCloseClear}
-          blind={blind}
-          onBlindChange={setBlind}
-          onSubmit={(input) => setPendingDayClose(input)}
-          onCancelOverride={() => setOverrideShiftId(null)}
-        />
+        {/* PD-89 开闸就绪闸：账面预览 isPending 时不挂日结表单（骨架占位，
+            dayclose-submit 不挂＝点击无处落零副作用，竞态结构性消除）；表单出现即
+            账面已齐，无 FILL 直点必出确认 dialog；abort 后 tender 缓存不回退，
+            同页再点必重开；查询失败／restricted 回落既有表单（手输路径保留） */}
+        {tenderQ.isPending ? (
+          <div className="u3-panel" data-testid="dayclose-form-loading">
+            <div className="u3-panel-head">
+              <h3>日结（冻结全日账目）</h3>
+              <span className="aside">账面=今日收款同源预览 · 冻结与预览同值 · 一日一结</span>
+            </div>
+            <div className="space-y-2 px-[17px] pb-4">
+              <Skeleton className="h-8" />
+              <Skeleton className="h-8" />
+              <Skeleton className="h-11" />
+            </div>
+          </div>
+        ) : (
+          <DayCloseForm
+            tender={tender}
+            shift={shiftQ.data?.shift}
+            overrideShiftId={overrideShiftId}
+            submitting={dayCloseM.isPending}
+            submitError={dayCloseError}
+            clearSignal={dayCloseClear}
+            blind={blind}
+            onBlindChange={setBlind}
+            onSubmit={(input) => setPendingDayClose(input)}
+            onCancelOverride={() => setOverrideShiftId(null)}
+          />
+        )}
 
         {/* 片 3 交接班族：现金收支录入（paid in/out）+ 本班流水 */}
         <CashMovePanel shift={shiftQ.data?.shift} />

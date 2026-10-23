@@ -1,0 +1,120 @@
+{
+  "window": "PD-89-merchant-dayclose-gate-ready",
+  "leg": "等价现网（server 静态托管同源链 · SERVE_STATIC=1 · Host m.localhost→merchant dist · 非 vite preview）",
+  "base": "http://m.localhost:7489",
+  "db": "file:E:/KIMI code/pd89-merchant-dayclose-gate-ready/.runtime/pd89eq-1792762640909/philia.db",
+  "role": "merchant_manager(敏慧店长 · 临时库夹具)",
+  "bundle": {
+    "js": "index-B2Y5Z7e4.js",
+    "len": 1677008,
+    "sha256": "4823ff0f41f1282ef064d45a483e7bb2b87f29d3f00930c6a83ca780b1d1e365",
+    "differsFromOldTipBundleCN4nyHT8": true,
+    "note": "本窗新构建包；合部后即新 tip 包"
+  },
+  "noFill": true,
+  "shortWaitMs": 150,
+  "realDayCloseSubmit": false,
+  "discipline": "临时库测完即删；涉钱 mock（不点确认）；Fetch 拦阻仅钉死未就绪窗口",
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：店长账号就绪（merchant_manager · 临时库随库自删）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "server 就绪（SERVE_STATIC=1 · Host 分发＝现网同链）",
+      "detail": ":7489"
+    },
+    {
+      "ok": true,
+      "name": "商家新构建包钉齐（文件名 ≠ 旧 tip 钉包 index-CN4nyHT8.js → 非零产品代码）",
+      "detail": "js=index-B2Y5Z7e4.js len=1677008 sha256=4823ff0f41f1…b1d1e365"
+    },
+    {
+      "ok": true,
+      "name": "实读包内含 PD-89 就绪闸＋日结开闸 testid（dayclose-form-loading／dayclose-submit／dayclose-confirm-layer）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "浏览器实载 js＝钉包一致（m.localhost 同源链）",
+      "detail": "http://m.localhost:7489/assets/index-B2Y5Z7e4.js"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店长·敏慧走测人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "①未就绪不得假开闸：账面请求被拦阻 → 骨架在场＋dayclose-submit 不挂 → 点击无处落 → dialogCount=0 零副作用",
+      "detail": "gate={\"loadingSkeleton\":true,\"formMounted\":false,\"submitBtnCount\":0} probe={\"dialog\":false,\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenCount\":0}"
+    },
+    {
+      "ok": true,
+      "name": "表单首绘即就绪：实点默认同步账面（¥0→字面 \"0\"）＋提交钮 enabled（actualInput=null 未手输）",
+      "detail": "actualValue=\"0\" book=¥0 disabled=false"
+    },
+    {
+      "ok": true,
+      "name": "②无 FILL 故意短等直点 dayclose-submit → 真 dialog（dialog[open]＋[role=dialog] 成对 · dialogCount≥1 双域）",
+      "detail": "{\"dialog\":true,\"layerTag\":\"DIALOG\",\"layerIsNativeDialog\":true,\"nativeOpenCount\":1,\"layerMatchesOpen\":true,\"roleDialog\":true,\"dialogCount\":1,\"rootDialogCount\":1,\"overlay\":true,\"inlineInRoot\":true,\"notPortalToBody\":true,\"cancelBtn\":true,\"okBtn\":true,\"actual\":\"¥0\"}"
+    },
+    {
+      "ok": true,
+      "name": "拦：开闸未确认 dayClose 调用=0",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "撤·cancel：acted=true＋closed（零提交＋零假 toast＋closes 不变）",
+      "detail": "closed=true calls=0 closes=0(基线0) toast=0"
+    },
+    {
+      "ok": true,
+      "name": "撤后同页立即重开（cancel 后）：dialogCount≥1 无 reopen-fail",
+      "detail": "dialogCount=1 nativeOpen=1"
+    },
+    {
+      "ok": true,
+      "name": "撤·esc-trusted：acted=true＋closed（零提交＋零假 toast＋closes 不变）",
+      "detail": "closed=true calls=0 closes=0(基线0) toast=0"
+    },
+    {
+      "ok": true,
+      "name": "撤后同页立即重开（esc-trusted 后）：dialogCount≥1 无 reopen-fail",
+      "detail": "dialogCount=1 nativeOpen=1"
+    },
+    {
+      "ok": true,
+      "name": "撤·esc-synthetic：acted=true＋closed（零提交＋零假 toast＋closes 不变）",
+      "detail": "closed=true calls=0 closes=0(基线0) toast=0"
+    },
+    {
+      "ok": true,
+      "name": "撤后同页立即重开（esc-synthetic 后）：dialogCount≥1 无 reopen-fail",
+      "detail": "dialogCount=1 nativeOpen=1"
+    },
+    {
+      "ok": true,
+      "name": "撤·overlay：acted=true＋closed（零提交＋零假 toast＋closes 不变）",
+      "detail": "closed=true calls=0 closes=0(基线0) toast=0"
+    },
+    {
+      "ok": true,
+      "name": "撤后同页立即重开（overlay 后）：dialogCount≥1 无 reopen-fail",
+      "detail": "dialogCount=1 nativeOpen=1"
+    },
+    {
+      "ok": true,
+      "name": "③④四路撤＋撤后即开全通（Esc 双路保持；无 REOPEN_FAIL_before_esc）",
+      "detail": "cancel=true escTrusted=true escSynthetic=true overlay=true"
+    },
+    {
+      "ok": true,
+      "name": "零真日结：全程 dayClose 调用=0＋closes 计数不变（realDayCloseSubmit=false；涉钱 mock）",
+      "detail": "calls=0 closes=0(基线0)"
+    }
+  ]
+}
