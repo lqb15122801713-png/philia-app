@@ -1,0 +1,48 @@
+{
+  "window": "PD-87-merchant-dayclose-actual-default",
+  "leg": "现网 :7202 活钉＋缺陷复现（修前 tip · 全新档 · 零写）",
+  "base": "http://120.53.102.45:7202",
+  "role": "merchant_manager(演示店长)",
+  "bundle": {
+    "js": "index-DZBFUYia.js",
+    "url": "http://120.53.102.45:7202/assets/index-DZBFUYia.js",
+    "sha256": "2805a72e67dcb9981fb7301e08cb7dbaafaa24efaf449851fbaaf4c7e089fe39",
+    "isTipBundleDZBFUYia": true,
+    "len": 1661486,
+    "sha256Via": "curl 实读现网 /assets/index-DZBFUYia.js（页面侧 crypto.subtle 在非安全上下文不可用）"
+  },
+  "noFill": true,
+  "note": "现网 tip＝PD-86 修前码，本腿预期复现缺陷（红签名）；修复绿证见 equiv-probe.json（等价现网链）",
+  "results": [
+    {
+      "ok": true,
+      "name": "现网 bundle 钉齐（全新档首载实读＝tip 钉包 index-DZBFUYia.js）",
+      "detail": "http://120.53.102.45:7202/assets/index-DZBFUYia.js sha256=null"
+    },
+    {
+      "ok": true,
+      "name": "dev-login 演示店长（merchant_manager · 口令门）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "/cashier/close 表单就绪",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "缺陷复现①：账面就绪但实点框空（placeholder 0.00 伪装）＋提交钮 disabled（canSubmit=false）",
+      "detail": "actualValue=\"\" placeholder=0.00 book=¥0 disabled=true"
+    },
+    {
+      "ok": true,
+      "name": "缺陷复现②：无 FILL 直点 dayclose-submit → pendingDayClose 未置 → dialogCount=0（与敏慧复测-R 同签名）",
+      "detail": "{\"dialogCount\":0,\"rootDialogCount\":0,\"nativeOpenDialogs\":0,\"layer\":false,\"layerTag\":null,\"card\":false,\"hasCancel\":false,\"hasOk\":false}"
+    },
+    {
+      "ok": true,
+      "name": "零写纪律：探针全程未落日结（closes 计数不变）",
+      "detail": "before=21 after=21"
+    }
+  ]
+}

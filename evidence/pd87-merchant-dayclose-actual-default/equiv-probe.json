@@ -1,0 +1,83 @@
+{
+  "window": "PD-87-merchant-dayclose-actual-default",
+  "leg": "等价现网（server 静态托管同源链 · SERVE_STATIC=1 · Host m.localhost→merchant dist · 非 vite preview）",
+  "base": "http://m.localhost:7487",
+  "db": "file:E:/KIMI code/pd87-merchant-dayclose-actual-default/.runtime/pd87eq-1792748859263/philia.db",
+  "role": "merchant_manager(敏慧店长 · 临时库夹具)",
+  "bundle": {
+    "js": "index-ku-VXgnB.js",
+    "len": 1676099,
+    "sha256": "c36cecfa4cf0f9ad735198d2d17255091f520c436643f86ff2943767a42b4a54",
+    "isTipBundleDZBFUYia": false,
+    "note": "本窗新构建包；合部后即新 tip 包"
+  },
+  "noFill": true,
+  "discipline": "临时库测完即删；涉钱 mock（实点=账面 ¥0）；末段确认仅在临时库",
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：店长账号就绪（merchant_manager · 临时库）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "server 就绪（SERVE_STATIC=1 · Host 分发＝现网同链）",
+      "detail": ":7487"
+    },
+    {
+      "ok": true,
+      "name": "等价现网商家长尾钉包：本窗新构建（≠ 旧 tip 钉包 index-DZBFUYia.js，合部后将成新 tip 包）",
+      "detail": "js=index-ku-VXgnB.js len=1676099 sha256=c36cecfa4cf0…a42b4a54"
+    },
+    {
+      "ok": true,
+      "name": "实读包内含日结开闸 testid 字符串（dayclose-submit／dayclose-confirm-layer）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "浏览器实载 js＝钉包一致（m.localhost 同源链）",
+      "detail": "http://m.localhost:7487/assets/index-ku-VXgnB.js"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店长·敏慧走测人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "无 FILL：账面就绪→实点默认同步账面（¥0→字面 \"0\"）＋提交钮 enabled",
+      "detail": "actualValue=\"0\" book=¥0 disabled=false"
+    },
+    {
+      "ok": true,
+      "name": "无 FILL 直点 dayclose-submit → 真 dialog（dialog[open]＋[role=dialog] 成对 · dialogCount≥1 双域）",
+      "detail": "{\"dialog\":true,\"layerTag\":\"DIALOG\",\"layerIsNativeDialog\":true,\"nativeOpenCount\":1,\"layerMatchesOpen\":true,\"roleDialog\":true,\"dialogCount\":1,\"rootDialogCount\":1,\"overlay\":true,\"inlineInRoot\":true,\"notPortalToBody\":true,\"cancelBtn\":true,\"okBtn\":true,\"actual\":\"¥0\"}"
+    },
+    {
+      "ok": true,
+      "name": "拦：开闸未确认 dayClose 调用=0",
+      "detail": "calls=0"
+    },
+    {
+      "ok": true,
+      "name": "撤①Esc（可信键路）：收＋零提交＋零假 toast",
+      "detail": "open=false calls=0 closes=0(基线0)"
+    },
+    {
+      "ok": true,
+      "name": "撤②点遮罩（可信鼠标 12,12）：收＋零提交",
+      "detail": "open=false calls=0 closes=0"
+    },
+    {
+      "ok": true,
+      "name": "撤③取消钮：收＋零提交＋零假 toast",
+      "detail": "open=false calls=0 closes=0"
+    },
+    {
+      "ok": true,
+      "name": "确认才真冻结（调用=1＋frozen×1＋toast 真返回驱动）",
+      "detail": "calls=1 closes=1 toast=1"
+    }
+  ]
+}

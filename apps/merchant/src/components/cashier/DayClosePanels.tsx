@@ -27,6 +27,10 @@
  *   浏览器真 dialog：top layer 渲染、背景 inert、Esc 原生 cancel、焦点圈禁；
  *   DOM 仍落 #root 内，`dialog[open]` 与 [role=dialog] 双域可检），挂载口径/
  *   遮罩/成对钮/三撤行为不变；
+ * - PD-87：实点现金默认同步账面——账面预览就绪后 actualInput 未手输（null）
+ *   时跟随账面现金元字符串（0→字面 '0'，非 0→fenToYuanInput），诚实
+ *   「实点＝账面」日默认 canSubmit=true 可直点开闸；手输/清空后不冲；
+ *   盲交遮罩期不透账面（不同步）。dialog 壳（PD-86 原生 dialog）不动；
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -46,7 +50,7 @@ import {
   type TodayTenderStats,
 } from './model'
 import type { RefundDayStats } from './refund'
-import { errMsg, fenToYuan, yuanToFen, fmtDateTime } from '@/components/mall-admin/format'
+import { errMsg, fenToYuan, fenToYuanInput, yuanToFen, fmtDateTime } from '@/components/mall-admin/format'
 import { AmortizationDayLine } from '../member/amortization'
 import { CashierModal, SheetBtn } from './dialogs'
 
@@ -235,14 +239,19 @@ export function DayCloseForm({
   onCancelOverride: () => void
 }) {
   const { trpc } = usePhiliaClient()
-  const [actualInput, setActualInput] = useState('')
+  /* PD-87：null=未手输——实点跟随账面默认（账面就绪后默认同步）；手输/清空后为串，同步不再冲 */
+  const [actualInput, setActualInput] = useState<string | null>(null)
   const [actualWechatInput, setActualWechatInput] = useState('')
   const [actualAlipayInput, setActualAlipayInput] = useState('')
   const [diffNote, setDiffNote] = useState('')
   const [note, setNote] = useState('')
   const diffNoteRef = useRef<HTMLInputElement>(null)
   const book = tender?.tender.cashFen ?? null
-  const actualFen = yuanToFen(actualInput)
+  /* PD-87：实点默认同步账面现金（诚实「实点＝账面」日默认 canSubmit=true；placeholder「0.00」
+     不再伪装已填）——未手输时输入框直显账面元串（账面 0→字面 '0'，非 0→fenToYuanInput）；
+     盲交遮罩期不透账面（显示空，实点先行手输）；手输/清空/成功清零后保持用户值不被冲 */
+  const actualShown = actualInput ?? (blind || book === null ? '' : book === 0 ? '0' : fenToYuanInput(book))
+  const actualFen = yuanToFen(actualShown)
   const actualWechatFen = yuanToFen(actualWechatInput)
   const actualAlipayFen = yuanToFen(actualAlipayInput)
   const diff = !blind && book !== null && actualFen !== null ? actualFen - book : null
@@ -320,7 +329,7 @@ export function DayCloseForm({
                 data-testid="dayclose-actual-input"
                 inputMode="decimal"
                 placeholder="0.00"
-                value={actualInput}
+                value={actualShown}
                 onChange={(e) => setActualInput(e.target.value)}
                 className="w-full rounded-[8px] bg-card px-2.5 py-1.5 font-number text-[17px] font-bold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
               />
