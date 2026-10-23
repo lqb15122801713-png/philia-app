@@ -23,6 +23,10 @@
  *   确认/取消成对，Esc/取消=中止零提交，禁页内直闸、禁假 CLEARED）；
  *   PD-85 收口：modal 改页面树内联渲染（不走 portal 挂 body——根内扫描检测
  *   不可见 portal 会假阴性判页内闸），DOM 结构/工艺/行为不变；
+ *   PD-86 收口：外层满屏层由 <div> 升原生 <dialog>（showModal() 顶层模态——
+ *   浏览器真 dialog：top layer 渲染、背景 inert、Esc 原生 cancel、焦点圈禁；
+ *   DOM 仍落 #root 内，`dialog[open]` 与 [role=dialog] 双域可检），挂载口径/
+ *   遮罩/成对钮/三撤行为不变；
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -428,6 +432,7 @@ export function DayCloseForm({
 /* ------------------------------------------------------------------ */
 /* PD-84 R18-01：日结独立确认 modal（遮罩＋确认/取消成对；Esc/遮罩/取消=中止零提交）  */
 /* PD-85 R18-01 收口：改页面树内联渲染（不走 portal），检测零盲区，行为不变     */
+/* PD-86 R18-01 真收口：满屏层升原生 <dialog> showModal 顶层模态——真独立 dialog  */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -438,9 +443,15 @@ export function DayCloseForm({
  *
  * PD-85 R18-01 收口：modal 改**页面树内联渲染**（不走 createPortal 挂 body）——
  * PD-84 复测按应用根内扫描时 portal 内容不可见（dialogCount=0／overlayInfo=[]／
- * hasCancel=false 假阴性，被判页内闸）；DOM 结构与 class 与 CashierModal 全同
- * （fixed 满屏层＋role=dialog/aria-modal＋遮罩点关），用户面行为零变化，
- * 文档级／根内级检测均可命中。Esc 监听照旧挂 window（开时注册，关时卸）。
+ * hasCancel=false 假阴性，被判页内闸）。
+ *
+ * PD-86 R18-01 真收口：外层满屏层由 <div> 升**原生 <dialog> 元素**（showModal()
+ * 顶层模态）——浏览器平台真 dialog：top layer 渲染（免疫祖先叠放/溢出裁剪）、
+ * 背景 inert（非模态区不可点不可焦）、Esc 走原生 cancel 事件、关后焦点自动归还。
+ * DOM 结构/挂载口径（#root 内联、非 portal 直连 body）/遮罩/成对钮/testid 全保
+ * PD-85 不变：`dialog[open]` 与 [role=dialog]（document 与 #root 两域）均可检，
+ * dialogCount≥1；Esc 另保 window keydown 兜底（合成事件路）；点遮罩=遮罩 div
+ * onClick（可信/合成两路均可）。禁页内闸假弹——满屏遮罩顶层模态，非表单流内联件。
  */
 export function DayCloseConfirmDialog({
   input,
@@ -461,7 +472,22 @@ export function DayCloseConfirmDialog({
   onConfirm: () => void
   onClose: () => void
 }) {
-  /* Esc=中止（开时注册；hooks 序先于 null 早退） */
+  const layerRef = useRef<HTMLDialogElement | null>(null)
+
+  /* PD-86：原生 <dialog> showModal() 顶层模态——input 就绪且层已挂载时开；
+     关=React 状态归 null 直接卸载（onCancel preventDefault 后同走此路，无双开缝） */
+  useEffect(() => {
+    const el = layerRef.current
+    if (!input || !el || el.open) return
+    try {
+      el.showModal()
+    } catch {
+      /* 已开/瞬时未挂载防御（正常路径不可达） */
+    }
+  }, [input])
+
+  /* Esc=中止双路：原生 cancel 事件（可信键路，onCancel preventDefault 改走 React
+     状态关）＋ window keydown 兜底（合成事件路）；hooks 序先于 null 早退 */
   useEffect(() => {
     if (!input) return
     const onKey = (e: KeyboardEvent) => {
@@ -474,7 +500,17 @@ export function DayCloseConfirmDialog({
   if (!input) return null
   const diff = !blind && book !== null ? input.actualCashFen - book : null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid="dayclose-confirm-layer">
+    <dialog
+      ref={layerRef}
+      data-testid="dayclose-confirm-layer"
+      aria-label={cc('cashier.dayCloseConfirmTitle')}
+      onCancel={(e) => {
+        e.preventDefault()
+        onClose()
+      }}
+      onClose={() => onClose()}
+      className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center overflow-visible border-0 bg-transparent p-4 backdrop:bg-transparent"
+    >
       <div
         className="absolute inset-0 bg-[rgba(44,40,34,.28)]"
         onClick={onClose}
@@ -558,7 +594,7 @@ export function DayCloseConfirmDialog({
           </SheetBtn>
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }
 

@@ -1,0 +1,82 @@
+{
+  "window": "PD-86-merchant-dayclose-modal",
+  "base": {
+    "server": "http://localhost:7227",
+    "merchant": "http://localhost:7127",
+    "db": "file:E:/KIMI code/pd86-merchant-dayclose-modal/.runtime/pd86-1792743789715/philia.db",
+    "serve": "vite preview（生产 dist，VITE_API_BASE 注入临时 server）"
+  },
+  "role": {
+    "manager": {
+      "id": "01M9PD86MGR000000000000000",
+      "nickname": "敏慧店长"
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "夹具：店长账号就绪（merchant_manager · 临时库）",
+      "detail": "敏慧店长"
+    },
+    {
+      "ok": true,
+      "name": "静态闸：tsc -b ＋ vite build 绿（生产包）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "server 就绪",
+      "detail": "http://localhost:7227"
+    },
+    {
+      "ok": true,
+      "name": "merchant preview 就绪（生产 dist）",
+      "detail": "http://localhost:7127"
+    },
+    {
+      "ok": true,
+      "name": "浏览器 dev-login（店长·敏慧走测人设）",
+      "detail": "HTTP 200"
+    },
+    {
+      "ok": true,
+      "name": "R18-01：点「日结」出真独立确认 dialog（原生 <dialog> showModal 顶层模态；role=dialog/aria-modal；遮罩＋确认/取消成对；#root 内外 dialogCount≥1；非页内闸非 portal）",
+      "detail": "{\"dialog\":true,\"layerTag\":\"DIALOG\",\"layerIsNativeDialog\":true,\"nativeOpenCount\":1,\"layerMatchesOpen\":true,\"roleDialog\":true,\"dialogCount\":1,\"rootDialogCount\":1,\"overlay\":true,\"inlineInRoot\":true,\"notPortalToBody\":true,\"notInline\":true,\"cancelBtn\":true,\"okBtn\":true,\"actual\":\"¥0\"}"
+    },
+    {
+      "ok": true,
+      "name": "拦：开闸未确认——dayClose 调用=0（未确认不得落日结，禁页内闸假弹）",
+      "detail": "calls=0"
+    },
+    {
+      "ok": true,
+      "name": "撤①Esc（可信键路→原生 cancel）：modal 收、零真提交、零假 CLEARED toast（server 0 单）",
+      "detail": "open=false calls=0 closes=0 clearedToast=false"
+    },
+    {
+      "ok": true,
+      "name": "撤②Esc（合成事件→window keydown 兜底）：modal 收、零真提交",
+      "detail": "open=false calls=0 closes=0"
+    },
+    {
+      "ok": true,
+      "name": "撤③点遮罩（可信鼠标路 12,12）：modal 收、零真提交",
+      "detail": "open=false calls=0 closes=0"
+    },
+    {
+      "ok": true,
+      "name": "撤④点遮罩（合成 click 元素派发）：modal 收、零真提交",
+      "detail": "open=false calls=0 closes=0"
+    },
+    {
+      "ok": true,
+      "name": "撤⑤取消钮：modal 收、零真提交、零假 CLEARED toast",
+      "detail": "open=false calls=0 closes=0 clearedToast=false"
+    },
+    {
+      "ok": true,
+      "name": "确认「确认日结并冻结」才真冻结（modal 收＋dayClose 调用=1＋frozen 单×1＋成功 toast 由真返回驱动）",
+      "detail": "calls=1 rows=1 status=frozen clearedToast=true"
+    }
+  ]
+}
