@@ -75,6 +75,7 @@
   transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
 .sk-btn-ghost:active { transform: scale(.94); }
+.sk-btn-ghost.on { background: var(--ink); border-color: var(--ink); color: #FAF7F0; }
 /* 深棕主行动钮（U5：不占 cream 预算的提交/主行动；形随 G2，深棕底米白字） */
 .sk-btn-ink {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
