@@ -1,0 +1,17 @@
+{
+  "mode": "Kimi Code Desktop built-in browser",
+  "url": "http://127.0.0.1:7191/orders",
+  "mockOnly": true,
+  "hit": false,
+  "checks": [
+    { "name": "row click opened first independent dialog", "pass": true, "evidence": "dialog=1；title=发货 · PD91-MOCK-PAID-001" },
+    { "name": "form advanced to second independent confirmation", "pass": true, "evidence": "确认后将订单标记为已发货。 visible" },
+    { "name": "paired CTA in frame", "pass": true, "evidence": "button refs: 取消 + 确认发货" },
+    { "name": "no ship before confirmation", "pass": true, "evidence": "GET /__mock/state => {\"shipCalls\":[]}" },
+    { "name": "confirmation cancel returned to form", "pass": true, "evidence": "客户将在客户端看到该单号 visible" },
+    { "name": "cancel path closed all layers", "pass": true, "evidence": "role=dialog hidden; count=0" },
+    { "name": "order remained pending", "pass": true, "evidence": "PD91-MOCK-PAID-001 row still contains 待发货" },
+    { "name": "no ship after cancel", "pass": true, "evidence": "GET /__mock/state => {\"shipCalls\":[]}" }
+  ],
+  "shipMutationCalls": []
+}

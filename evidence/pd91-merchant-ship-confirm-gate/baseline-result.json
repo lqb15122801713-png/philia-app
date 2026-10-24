@@ -1,0 +1,59 @@
+{
+  "phase": "baseline",
+  "ok": false,
+  "url": "http://127.0.0.1:7191/orders",
+  "mockOnly": true,
+  "failure": "form confirm is held before ship mutation",
+  "error": null,
+  "checks": [
+    {
+      "name": "row click opens one independent dialog",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "first layer has cancel CTA",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "first layer has confirm CTA",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "first layer does not ship",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "first-layer cancel closes dialog",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "first-layer cancel does not ship",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "form confirm is held before ship mutation",
+      "pass": false,
+      "actual": 1,
+      "expected": 0
+    }
+  ],
+  "shipMutationCalls": [
+    {
+      "at": "2026-10-24T05:08:01.360Z",
+      "body": "{\"0\":{\"json\":{\"orderId\":\"01PD91MOCK0000000000000001\",\"trackingNo\":\"SF-PD91-MOCK-ONLY\"}}}"
+    }
+  ],
+  "screenshots": "E:\\KIMI code\\pd91-merchant-ship-confirm-gate\\evidence\\pd91-merchant-ship-confirm-gate\\shots\\baseline"
+}

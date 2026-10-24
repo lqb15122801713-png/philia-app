@@ -1,0 +1,43 @@
+{
+  "baseline": "6eb5bf0241d5d5ba7249af87d9353a120f01519e",
+  "rootBuild": {
+    "command": "npm run build",
+    "ok": true,
+    "merchantJs": "index-B8zXBmuD.js",
+    "merchantJsSha256": "4778d848bd3217ad02367053d6cfacd204311fa86e7506ceeac1b61ba71f6e77",
+    "tipPackage": false
+  },
+  "merchantUnit": {
+    "command": "npx tsx --test src/pages/appointmentDetail.utils.test.ts src/components/mall-admin/format.test.ts src/components/dashboard/utils.test.ts src/components/cashier/model.test.ts",
+    "cwd": "apps/merchant",
+    "passed": 10,
+    "failed": 0
+  },
+  "changedFileLint": {
+    "ShipOrderDialog": "pass",
+    "uiExcludingPreexistingNumStyleRule": "pass",
+    "preexistingUiRule": "react-refresh/only-export-components at numStyle; present in baseline"
+  },
+  "merchantLint": {
+    "command": "npm run lint -w @philia/merchant",
+    "baseline": { "errors": 47, "warnings": 5, "ok": false },
+    "after": { "errors": 47, "warnings": 5, "ok": false },
+    "newErrors": 0
+  },
+  "browserRegression": {
+    "baseline": { "expectedFailure": "form confirm is held before ship mutation", "shipMutationCalls": 1 },
+    "after": { "passed": 20, "failed": 0, "shipMutationCalls": 0 },
+    "reviewRed": { "expectedFailure": "pending disables header close", "actual": false },
+    "finalize": { "passed": 16, "failed": 0, "successfulMockCalls": 1, "rejectedMockCalls": 1 },
+    "desktop": { "passed": 8, "failed": 0, "shipMutationCalls": 0 }
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "note": "复核两项 Important 关闭；未重跑会写证据文件的命令"
+  },
+  "diffCheck": "pass",
+  "schemaChanges": 0,
+  "migration0132": "故意空留",
+  "liveHit": "not-run; merge/deploy forbidden in this packet"
+}

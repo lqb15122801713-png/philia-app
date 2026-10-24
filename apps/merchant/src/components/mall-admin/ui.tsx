@@ -144,6 +144,7 @@ export function Modal({
   children,
   footer,
   widthClass = 'max-w-lg',
+  closeDisabled = false,
 }: {
   open: boolean
   onClose: () => void
@@ -151,21 +152,22 @@ export function Modal({
   children: ReactNode
   footer?: ReactNode
   widthClass?: string
+  closeDisabled?: boolean
 }) {
   // Esc 关闭
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape' && !closeDisabled) onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, closeDisabled])
 
   if (!open) return null
   return createPortal(
     <div className="fixed inset-0 z-modal flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-ink/40" onClick={closeDisabled ? undefined : onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
@@ -177,7 +179,8 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="关闭"
-            className="rounded-full p-1 text-ink-secondary transition-colors hover:bg-sunken hover:text-ink"
+            disabled={closeDisabled}
+            className="rounded-full p-1 text-ink-secondary transition-colors hover:bg-sunken hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={20} strokeWidth={1.5} />
           </button>
