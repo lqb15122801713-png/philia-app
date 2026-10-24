@@ -2,7 +2,8 @@
  * PD-76 · AE-STAFF-04 角标口径 A（已裁）：未读通知数三处同源同规则。
  *
  * - 同源：唯一 selector = tRPC `push.unreadCount` 的 `total`（react-query 键 ['push','unreadCount']，
- *   60s 轮询兜底；SSE 事件由各页 invalidate 同一键）。dock／me 行／通知头一律经 useUnreadTotal 取数，禁另计。
+ *   60s 轮询兜底；SSE 事件由各页 invalidate 同一键）。dock／me 行经 useUnreadTotal 取数；
+ *   通知头经 useUnreadCountQuery 保留同步／失败态，未返回不得冒充真 0。
  * - 同规则：底栏 dock 徽标封顶显示 99+（badgeCapText），aria-label 持真值（badgeAriaText）；
  *   me 行／通知头直显真值；通知头在 >99 时附一致说明（见 copy/notifications.ts snt.unreadCapNote）。
  */
@@ -27,13 +28,17 @@ export function badgeAriaText(n: number): string {
 }
 
 /** 唯一取数 selector：push.unreadCount.total（60s 轮询兜底；enabled 供登录态门控） */
-export function useUnreadTotal(enabled = true): number {
+export function useUnreadCountQuery(enabled = true) {
   const { trpc } = usePhiliaClient();
-  const q = useQuery({
+  return useQuery({
     queryKey: UNREAD_COUNT_KEY,
     queryFn: () => trpc.push.unreadCount.query(),
     refetchInterval: 60_000,
     enabled,
   });
+}
+
+export function useUnreadTotal(enabled = true): number {
+  const q = useUnreadCountQuery(enabled);
   return q.data?.total ?? 0;
 }

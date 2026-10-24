@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { SkBackBar, SkEmpty, SkNote } from '@/components/skeleton';
 import { nfc } from '@/copy/notifications';
 import { fmtMdHm } from '@/lib/collabPort';
-import { UNREAD_BADGE_CAP, UNREAD_COUNT_KEY, useUnreadTotal } from '@/lib/unreadBadge';
+import { UNREAD_BADGE_CAP, UNREAD_COUNT_KEY, useUnreadCountQuery } from '@/lib/unreadBadge';
 
 const LIST_KEY = ['push', 'listNotifications', 'staff-center'] as const;
 const UNREAD_KEY = UNREAD_COUNT_KEY;
@@ -30,8 +30,10 @@ export default function NotificationsPage() {
     queryKey: LIST_KEY,
     queryFn: () => trpc.push.listNotifications.query({ limit: 50 }),
   });
-  // PD-76 口径 A：未读数与 dock 徽／me 行同源同规则（lib/unreadBadge 唯一 selector）
-  const unreadCount = useUnreadTotal();
+  // 同源计数保留 query 状态：未返回／失败不得冒充真 0；后台刷新保留旧值，失败则不沿用它
+  const unreadQ = useUnreadCountQuery();
+  const unreadKnown = unreadQ.isSuccess;
+  const unreadCount = unreadKnown ? unreadQ.data?.total ?? 0 : 0;
 
   const items = useMemo(() => listQ.data?.items ?? [], [listQ.data]);
 
@@ -58,7 +60,7 @@ export default function NotificationsPage() {
   };
 
   const markAll = async () => {
-    if (allBusy || unreadCount === 0) return;
+    if (allBusy || !unreadKnown || unreadCount === 0) return;
     setAllBusy(true);
     try {
       await trpc.push.markAllRead.mutate({});
@@ -77,12 +79,25 @@ export default function NotificationsPage() {
 
       {/* 未读计数 + 全部已读 */}
       <div className="flex items-center gap-2 px-[22px] pt-3">
-        <span className="text-caption text-ink-secondary" data-testid="ntf-unread-count">
-          {nfc('snt.unreadLead', { n: unreadCount })}
+        <span className="text-caption text-ink-secondary" data-testid="ntf-unread-count" role="status" aria-atomic="true">
+          {!unreadKnown
+            ? nfc(unreadQ.isError ? 'snt.unreadUnavailable' : 'snt.unreadSyncing')
+            : nfc('snt.unreadLead', { n: unreadCount })}
         </span>
+        {unreadQ.isError ? (
+          <button
+            type="button"
+            disabled={allBusy || unreadQ.isFetching}
+            onClick={() => void unreadQ.refetch()}
+            data-testid="ntf-unread-retry"
+            className="h-9 rounded-control bg-sunken px-3 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+          >
+            {nfc('snt.unreadRetry')}
+          </button>
+        ) : null}
         <button
           type="button"
-          disabled={allBusy || unreadCount === 0}
+          disabled={allBusy || !unreadKnown || unreadCount === 0}
           onClick={() => void markAll()}
           data-testid="ntf-mark-all"
           className="ml-auto h-9 rounded-control bg-sunken px-3 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
@@ -91,7 +106,7 @@ export default function NotificationsPage() {
         </button>
       </div>
       {/* PD-76 口径 A 一致说明：>99 时底栏徽封顶 99+，本页恒真值 */}
-      {unreadCount > UNREAD_BADGE_CAP ? (
+      {unreadKnown && unreadCount > UNREAD_BADGE_CAP ? (
         <p className="px-[22px] pt-1 text-caption text-ink-placeholder" data-testid="ntf-unread-cap-note">
           {nfc('snt.unreadCapNote')}
         </p>

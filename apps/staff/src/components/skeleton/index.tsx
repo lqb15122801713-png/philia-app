@@ -110,9 +110,9 @@ export function SkModal({
 
 /* ---- G1 选择片 chips（trailing=行尾追加件，如 S-02 的日历 input chip） ---- */
 export function SkChips<T extends string>({
-  options, value, onChange, testId, trailing,
+  options, value, onChange, testId, trailing, selectedIndicator = false,
 }: {
-  options: Array<{ key: T; label: string }>; value: T; onChange: (k: T) => void; testId?: string; trailing?: ReactNode;
+  options: Array<{ key: T; label: string }>; value: T; onChange: (k: T) => void; testId?: string; trailing?: ReactNode; selectedIndicator?: boolean;
 }) {
   return (
     <div className="sk-chips" data-testid={testId} role="tablist">
@@ -126,6 +126,9 @@ export function SkChips<T extends string>({
           data-testid={`${testId ?? 'sk-chip'}-${o.key}`}
           onClick={() => onChange(o.key)}
         >
+          {selectedIndicator && value === o.key ? (
+            <span aria-hidden="true" className="sk-chip-selected-mark" data-testid={`${testId ?? 'sk-chip'}-${o.key}-selected`}>✓</span>
+          ) : null}
           {o.label}
         </button>
       ))}
