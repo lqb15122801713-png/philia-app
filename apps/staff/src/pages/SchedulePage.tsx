@@ -256,6 +256,7 @@ export default function SchedulePage() {
       <SkChips
         testId="sk-daychip"
         value={chipValue}
+        selectedIndicator
         onChange={(k) => {
           const d = new Date(today);
           d.setDate(d.getDate() + (k === 'yesterday' ? -1 : k === 'tomorrow' ? 1 : 0));

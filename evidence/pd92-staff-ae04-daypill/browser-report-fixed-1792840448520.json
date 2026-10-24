@@ -1,0 +1,709 @@
+{
+  "runId": "fixed-1792840448520",
+  "at": "2026-10-24T11:14:22.575Z",
+  "scope": "真实员工 dist＋只读 tRPC mock 的功能／像素验证；不是现网合部 HIT",
+  "bundle": {
+    "name": "index-sVI36xOB.js",
+    "sha256": "1733f2727938103377047d835181f6aa93abee3f83299caeffd9f8eeb940d76e",
+    "nameDiffersFromControl": true
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 2
+  },
+  "states": {
+    "01-today": {
+      "buttons": [
+        {
+          "key": "yesterday",
+          "className": "sk-chip",
+          "ariaSelected": "false",
+          "marker": false,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 74.5,
+            "width": 59,
+            "height": 36
+          }
+        },
+        {
+          "key": "today",
+          "className": "sk-chip on",
+          "ariaSelected": "true",
+          "marker": true,
+          "backgroundColor": "rgb(44, 40, 34)",
+          "borderColor": "rgb(44, 40, 34)",
+          "borderWidth": "2px",
+          "color": "rgb(250, 247, 240)",
+          "rect": {
+            "x": 89,
+            "y": 74.5,
+            "width": 75.3125,
+            "height": 36
+          }
+        },
+        {
+          "key": "tomorrow",
+          "className": "sk-chip",
+          "ariaSelected": "false",
+          "marker": false,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 172.3125,
+            "y": 74.5,
+            "width": 59,
+            "height": 36
+          }
+        }
+      ],
+      "dateRect": {
+        "x": 239.3125,
+        "y": 74.5,
+        "width": 148,
+        "height": 36
+      },
+      "inputValue": "2026-10-24",
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "mockMutations": [],
+      "selected": {
+        "key": "today",
+        "className": "sk-chip on",
+        "ariaSelected": "true",
+        "marker": true,
+        "backgroundColor": "rgb(44, 40, 34)",
+        "borderColor": "rgb(44, 40, 34)",
+        "borderWidth": "2px",
+        "color": "rgb(250, 247, 240)",
+        "rect": {
+          "x": 89,
+          "y": 74.5,
+          "width": 75.3125,
+          "height": 36
+        }
+      },
+      "stripClip": {
+        "x": 16,
+        "y": 69,
+        "width": 377,
+        "height": 48
+      },
+      "containsPills": true,
+      "files": {
+        "page": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\01-today-page.png",
+        "strip": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\01-today-pills.png",
+        "pills": {
+          "today": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\01-today-pill-today.png",
+          "tomorrow": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\01-today-pill-tomorrow.png"
+        },
+        "samples": {
+          "today": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\01-today-sample-today.png",
+          "tomorrow": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\01-today-sample-tomorrow.png"
+        }
+      }
+    },
+    "02-tomorrow": {
+      "buttons": [
+        {
+          "key": "yesterday",
+          "className": "sk-chip",
+          "ariaSelected": "false",
+          "marker": false,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 74.5,
+            "width": 59,
+            "height": 36
+          }
+        },
+        {
+          "key": "today",
+          "className": "sk-chip",
+          "ariaSelected": "false",
+          "marker": false,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 89,
+            "y": 74.5,
+            "width": 59,
+            "height": 36
+          }
+        },
+        {
+          "key": "tomorrow",
+          "className": "sk-chip on",
+          "ariaSelected": "true",
+          "marker": true,
+          "backgroundColor": "rgb(44, 40, 34)",
+          "borderColor": "rgb(44, 40, 34)",
+          "borderWidth": "2px",
+          "color": "rgb(250, 247, 240)",
+          "rect": {
+            "x": 156,
+            "y": 74.5,
+            "width": 75.3125,
+            "height": 36
+          }
+        }
+      ],
+      "dateRect": {
+        "x": 239.3125,
+        "y": 74.5,
+        "width": 148,
+        "height": 36
+      },
+      "inputValue": "2026-10-25",
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "mockMutations": [],
+      "selected": {
+        "key": "tomorrow",
+        "className": "sk-chip on",
+        "ariaSelected": "true",
+        "marker": true,
+        "backgroundColor": "rgb(44, 40, 34)",
+        "borderColor": "rgb(44, 40, 34)",
+        "borderWidth": "2px",
+        "color": "rgb(250, 247, 240)",
+        "rect": {
+          "x": 156,
+          "y": 74.5,
+          "width": 75.3125,
+          "height": 36
+        }
+      },
+      "stripClip": {
+        "x": 16,
+        "y": 69,
+        "width": 377,
+        "height": 48
+      },
+      "containsPills": true,
+      "files": {
+        "page": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\02-tomorrow-page.png",
+        "strip": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\02-tomorrow-pills.png",
+        "pills": {
+          "today": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\02-tomorrow-pill-today.png",
+          "tomorrow": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\02-tomorrow-pill-tomorrow.png"
+        },
+        "samples": {
+          "today": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\02-tomorrow-sample-today.png",
+          "tomorrow": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\02-tomorrow-sample-tomorrow.png"
+        }
+      }
+    },
+    "03-return-today": {
+      "buttons": [
+        {
+          "key": "yesterday",
+          "className": "sk-chip",
+          "ariaSelected": "false",
+          "marker": false,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 74.5,
+            "width": 59,
+            "height": 36
+          }
+        },
+        {
+          "key": "today",
+          "className": "sk-chip on",
+          "ariaSelected": "true",
+          "marker": true,
+          "backgroundColor": "rgb(44, 40, 34)",
+          "borderColor": "rgb(44, 40, 34)",
+          "borderWidth": "2px",
+          "color": "rgb(250, 247, 240)",
+          "rect": {
+            "x": 89,
+            "y": 74.5,
+            "width": 75.3125,
+            "height": 36
+          }
+        },
+        {
+          "key": "tomorrow",
+          "className": "sk-chip",
+          "ariaSelected": "false",
+          "marker": false,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 172.3125,
+            "y": 74.5,
+            "width": 59,
+            "height": 36
+          }
+        }
+      ],
+      "dateRect": {
+        "x": 239.3125,
+        "y": 74.5,
+        "width": 148,
+        "height": 36
+      },
+      "inputValue": "2026-10-24",
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "mockMutations": [],
+      "selected": {
+        "key": "today",
+        "className": "sk-chip on",
+        "ariaSelected": "true",
+        "marker": true,
+        "backgroundColor": "rgb(44, 40, 34)",
+        "borderColor": "rgb(44, 40, 34)",
+        "borderWidth": "2px",
+        "color": "rgb(250, 247, 240)",
+        "rect": {
+          "x": 89,
+          "y": 74.5,
+          "width": 75.3125,
+          "height": 36
+        }
+      },
+      "stripClip": {
+        "x": 16,
+        "y": 69,
+        "width": 377,
+        "height": 48
+      },
+      "containsPills": true,
+      "files": {
+        "page": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\03-return-today-page.png",
+        "strip": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\03-return-today-pills.png",
+        "pills": {
+          "today": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\03-return-today-pill-today.png",
+          "tomorrow": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\03-return-today-pill-tomorrow.png"
+        },
+        "samples": {
+          "today": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\03-return-today-sample-today.png",
+          "tomorrow": "E:\\KIMI code\\pd92-staff-ae04-daypill\\evidence\\pd92-staff-ae04-daypill\\shots\\fixed-1792840448520\\03-return-today-sample-tomorrow.png"
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "today": {
+      "comparable": true,
+      "size": [
+        112,
+        96
+      ],
+      "md5A": "0cd6d3572d2852b9413aff5874586e46",
+      "md5B": "80009de106552a06b2d51980e9ce71ef",
+      "md5Equal": false,
+      "meanAbs": 136.3914310515873,
+      "changedPixels": 7615,
+      "totalPixels": 10752,
+      "selected": {
+        "key": "today",
+        "className": "sk-chip on",
+        "ariaSelected": "true",
+        "marker": true,
+        "backgroundColor": "rgb(44, 40, 34)",
+        "borderColor": "rgb(44, 40, 34)",
+        "borderWidth": "2px",
+        "color": "rgb(250, 247, 240)",
+        "rect": {
+          "x": 89,
+          "y": 74.5,
+          "width": 75.3125,
+          "height": 36
+        }
+      },
+      "unselected": {
+        "key": "today",
+        "className": "sk-chip",
+        "ariaSelected": "false",
+        "marker": false,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgba(44, 40, 34, 0.14)",
+        "borderWidth": "1px",
+        "color": "rgb(44, 40, 34)",
+        "rect": {
+          "x": 89,
+          "y": 74.5,
+          "width": 59,
+          "height": 36
+        }
+      },
+      "styleChanged": true,
+      "borderChanged": true
+    },
+    "tomorrow": {
+      "comparable": true,
+      "size": [
+        112,
+        96
+      ],
+      "md5A": "419cc18c3d5e48fa11bb6030a911f578",
+      "md5B": "f933f5454a5690efcbafac64d56b72f9",
+      "md5Equal": false,
+      "meanAbs": 134.7158668154762,
+      "changedPixels": 7618,
+      "totalPixels": 10752,
+      "selected": {
+        "key": "tomorrow",
+        "className": "sk-chip on",
+        "ariaSelected": "true",
+        "marker": true,
+        "backgroundColor": "rgb(44, 40, 34)",
+        "borderColor": "rgb(44, 40, 34)",
+        "borderWidth": "2px",
+        "color": "rgb(250, 247, 240)",
+        "rect": {
+          "x": 156,
+          "y": 74.5,
+          "width": 75.3125,
+          "height": 36
+        }
+      },
+      "unselected": {
+        "key": "tomorrow",
+        "className": "sk-chip",
+        "ariaSelected": "false",
+        "marker": false,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgba(44, 40, 34, 0.14)",
+        "borderWidth": "1px",
+        "color": "rgb(44, 40, 34)",
+        "rect": {
+          "x": 172.3125,
+          "y": 74.5,
+          "width": 59,
+          "height": 36
+        }
+      },
+      "styleChanged": true,
+      "borderChanged": true
+    }
+  },
+  "ae04": {
+    "meBefore": {
+      "header": null,
+      "retry": false,
+      "markAllDisabled": null,
+      "meText": "消息通知派单 · 系统消息 · 未读高亮15",
+      "dockText": "15",
+      "dockAria": "15 条未读",
+      "unreadRequests": 1,
+      "mockUnknown": [],
+      "mockMutations": []
+    },
+    "errorState": {
+      "header": "未读暂不可用",
+      "retry": true,
+      "markAllDisabled": true,
+      "meText": null,
+      "dockText": null,
+      "dockAria": null,
+      "unreadRequests": 3,
+      "mockUnknown": [],
+      "mockMutations": []
+    },
+    "aligned": {
+      "header": "未读 15 条",
+      "retry": false,
+      "markAllDisabled": false,
+      "meText": null,
+      "dockText": null,
+      "dockAria": null,
+      "unreadRequests": 4,
+      "mockUnknown": [],
+      "mockMutations": []
+    },
+    "meAfter": {
+      "header": null,
+      "retry": false,
+      "markAllDisabled": null,
+      "meText": "消息通知派单 · 系统消息 · 未读高亮15",
+      "dockText": "15",
+      "dockAria": "15 条未读",
+      "unreadRequests": 1,
+      "mockUnknown": [],
+      "mockMutations": []
+    },
+    "markAllClicked": false
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "真实 /schedule 完成加载，非加载壳",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "01-today 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "01-today 只读查询零 mutation",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "01-today 唯一选中 pill=today",
+      "detail": [
+        "today"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "01-today 选中勾标唯一且随态移动",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "01-today 专裁帧完整包含三颗 pill 本体",
+      "detail": {
+        "x": 16,
+        "y": 69,
+        "width": 377,
+        "height": 48
+      }
+    },
+    {
+      "ok": true,
+      "name": "真鼠标点击明天后 aria-selected 随点切换",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "02-tomorrow 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "02-tomorrow 只读查询零 mutation",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "02-tomorrow 唯一选中 pill=tomorrow",
+      "detail": [
+        "tomorrow"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "02-tomorrow 选中勾标唯一且随态移动",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "02-tomorrow 专裁帧完整包含三颗 pill 本体",
+      "detail": {
+        "x": 16,
+        "y": 69,
+        "width": 377,
+        "height": 48
+      }
+    },
+    {
+      "ok": true,
+      "name": "真鼠标再点回今天可撤可回",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "03-return-today 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "03-return-today 只读查询零 mutation",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "03-return-today 唯一选中 pill=today",
+      "detail": [
+        "today"
+      ]
+    },
+    {
+      "ok": true,
+      "name": "03-return-today 选中勾标唯一且随态移动",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "03-return-today 专裁帧完整包含三颗 pill 本体",
+      "detail": {
+        "x": 16,
+        "y": 69,
+        "width": 377,
+        "height": 48
+      }
+    },
+    {
+      "ok": true,
+      "name": "点回今天恢复原日期",
+      "detail": {
+        "before": "2026-10-24",
+        "returned": "2026-10-24"
+      }
+    },
+    {
+      "ok": true,
+      "name": "同一 today pill 目标内像素差＋选中 2px／未选 1px（非正文差）",
+      "detail": {
+        "meanAbs": 136.3914310515873,
+        "changedPixels": 7615,
+        "styleChanged": true,
+        "borderChanged": true,
+        "selected": {
+          "backgroundColor": "rgb(44, 40, 34)",
+          "borderColor": "rgb(44, 40, 34)",
+          "borderWidth": "2px"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "name": "同一 tomorrow pill 目标内像素差＋选中 2px／未选 1px（非正文差）",
+      "detail": {
+        "meanAbs": 134.7158668154762,
+        "changedPixels": 7618,
+        "styleChanged": true,
+        "borderChanged": true,
+        "selected": {
+          "backgroundColor": "rgb(44, 40, 34)",
+          "borderColor": "rgb(44, 40, 34)",
+          "borderWidth": "2px"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "borderWidth": "1px"
+        }
+      }
+    },
+    {
+      "ok": true,
+      "name": "AE-04「我的」与 dock 同源 15",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "AE-04 我的页 mock 全已知且零 mutation",
+      "detail": {
+        "header": null,
+        "retry": false,
+        "markAllDisabled": null,
+        "meText": "消息通知派单 · 系统消息 · 未读高亮15",
+        "dockText": "15",
+        "dockAria": "15 条未读",
+        "unreadRequests": 1,
+        "mockUnknown": [],
+        "mockMutations": []
+      }
+    },
+    {
+      "ok": true,
+      "name": "AE-04 未读缓存已超过全局 staleTime 10s",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "AE-04 Me→通知使用真实 SPA 导航并保留查询缓存",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "AE-04 缓存正数重取失败后显示不可用与重新对齐，不沿用旧值",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "AE-04 失败态可解释，全部已读保持未点",
+      "detail": {
+        "header": "未读暂不可用",
+        "retry": true,
+        "markAllDisabled": true,
+        "meText": null,
+        "dockText": null,
+        "dockAria": null,
+        "unreadRequests": 3,
+        "mockUnknown": [],
+        "mockMutations": []
+      }
+    },
+    {
+      "ok": true,
+      "name": "AE-04 点重新对齐后同源恢复 15",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "AE-04 自救来自 unreadCount 重取而非全部已读／业务写",
+      "detail": {
+        "header": "未读 15 条",
+        "retry": false,
+        "markAllDisabled": false,
+        "meText": null,
+        "dockText": null,
+        "dockAria": null,
+        "unreadRequests": 4,
+        "mockUnknown": [],
+        "mockMutations": []
+      }
+    },
+    {
+      "ok": true,
+      "name": "AE-04 自救后我的行与 dock 同步 15",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "AE-04 通知头／我的行／dock 三处对齐 15",
+      "detail": {
+        "notificationHeader": "未读 15 条",
+        "meAfter": {
+          "header": null,
+          "retry": false,
+          "markAllDisabled": null,
+          "meText": "消息通知派单 · 系统消息 · 未读高亮15",
+          "dockText": "15",
+          "dockAria": "15 条未读",
+          "unreadRequests": 1,
+          "mockUnknown": [],
+          "mockMutations": []
+        }
+      }
+    }
+  ],
+  "failures": 0
+}
