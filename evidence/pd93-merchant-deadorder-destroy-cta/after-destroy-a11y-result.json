@@ -1,0 +1,25 @@
+{
+  "phase": "after",
+  "scenario": "destroy-a11y",
+  "ok": true,
+  "mockOnly": true,
+  "hit": false,
+  "checks": [
+    {
+      "name": "destroy dialog has an accessible name",
+      "pass": true,
+      "actual": "销毁登记",
+      "expected": "销毁登记"
+    },
+    {
+      "name": "accessible-name check makes no destroy mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\after\\destroy-a11y"
+}
