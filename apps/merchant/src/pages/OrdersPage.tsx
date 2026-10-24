@@ -10,8 +10,8 @@
  * 已完成队列接口（零新接口红线）——「已完成」chip 不渲染，不造归档假数据。
  * 售后退款队列只读展示：退款操作=冻结项不做（行末无动作）。
  * 搜索=纯前端按 orderNo / customerNickname 过滤当前队列。
- * PD-81：夹具死单前台隐藏（isDeadOrderDisplayHidden 显示层过滤，禁删库/
- * 禁直改库——库内行保留；三队列计数 chips/副行与列表同源剔除）。
+ * PD-93：夹具死单留在原队列与计数中，以 isDeadOrderReadOnly 落死单字面、
+ * 只读灰态及禁发禁退；禁删库/禁直改库，正常订单发货确认层不变。
  *
  * 数据与 SSE 口径不变（T5.2 原样保留）：
  * - STORE_ORDERS_KEY 与 TabBar 红点共用查询键，invalidate 互通；60s 轮询兜底；
@@ -31,7 +31,7 @@ import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider
 import OrderRow from '@/components/mall-admin/OrderCard'
 import ShipOrderDialog from '@/components/mall-admin/ShipOrderDialog'
 import { od } from '@/copy/orders'
-import { errMsg, isDeadOrderDisplayHidden, STORE_ORDERS_KEY, type StoreOrder } from '@/components/mall-admin/format'
+import { errMsg, isDeadOrderReadOnly, STORE_ORDERS_KEY, type StoreOrder } from '@/components/mall-admin/format'
 
 type QueueKey = 'paid' | 'shipped' | 'refunding'
 
@@ -94,17 +94,8 @@ export default function OrdersPage() {
   // 断线重连全量对齐
   useEffect(() => events.onReconnect(() => void invalidate()), [events, invalidate])
 
-  /* PD-81：死单前台隐藏（显示层过滤 · 禁删库/禁直改库——库内行保留，仅本端队列
-     剔除；三队列计数 chips/副行与列表同源同步） */
-  const groups = useMemo(() => {
-    const g = ordersQuery.data?.groups
-    if (!g) return g
-    return {
-      paid: g.paid.filter((o) => !isDeadOrderDisplayHidden(o)),
-      shipped: g.shipped.filter((o) => !isDeadOrderDisplayHidden(o)),
-      refunding: g.refunding.filter((o) => !isDeadOrderDisplayHidden(o)),
-    }
-  }, [ordersQuery.data])
+  /* 死单留在原队列计数与列表中，由行组件提供只读禁发禁退态 */
+  const groups = ordersQuery.data?.groups
   const countOf = (key: QueueKey) => groups?.[key].length ?? 0
   const allEmpty =
     !!groups && groups.paid.length === 0 && groups.shipped.length === 0 && groups.refunding.length === 0
@@ -216,6 +207,7 @@ export default function OrdersPage() {
                     key={o.id}
                     order={o}
                     onShip={tab === 'paid' ? setShipTarget : undefined}
+                    readOnly={isDeadOrderReadOnly(o)}
                   />
                 ))}
               </tbody>

@@ -143,6 +143,7 @@ export function Modal({
   children,
   footer,
   widthClass = 'max-w-lg',
+  ariaLabel,
 }: {
   open: boolean;
   onClose: () => void;
@@ -150,6 +151,7 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
   widthClass?: string;
+  ariaLabel?: string;
 }) {
   // Esc 关闭
   useEffect(() => {
@@ -168,6 +170,7 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={ariaLabel}
         className={`relative flex max-h-[85vh] w-full ${widthClass} flex-col overflow-hidden rounded-panel bg-card shadow-elevated ring-1 ring-line-ring`}
       >
         <div className="flex items-center justify-between border-b border-line-divider px-5 py-4">

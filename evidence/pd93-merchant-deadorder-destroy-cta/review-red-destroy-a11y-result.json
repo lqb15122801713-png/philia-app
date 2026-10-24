@@ -1,0 +1,21 @@
+{
+  "phase": "review-red",
+  "scenario": "destroy-a11y",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "failure": "destroy dialog has an accessible name",
+  "error": null,
+  "checks": [
+    {
+      "name": "destroy dialog has an accessible name",
+      "pass": false,
+      "actual": null,
+      "expected": "销毁登记"
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\review-red\\destroy-a11y"
+}

@@ -1,0 +1,63 @@
+{
+  "baseline": {
+    "sha": "73b5e82f005ee52fde5af54e48eb9aa2790a692e",
+    "deploy": "20261024153113",
+    "liveMerchantJsFromFrozenEvidence": "index-B18kiVeF.js",
+    "dead": { "result": "baseline-dead-result.json", "failure": "DEAD_ORDER_ID_NOT_SEEN", "actual": false },
+    "destroy": { "result": "baseline-destroy-result.json", "failure": "DESTROY_CTA_NOT_SEEN", "actual": false }
+  },
+  "reviewRed": {
+    "destroyFilter": { "result": "review-red-destroy-result.json", "failure": "destroy candidates ignore the unrelated batch filter", "actual": false },
+    "accessibleName": { "result": "review-red-destroy-a11y-result.json", "actual": null, "expected": "销毁登记" }
+  },
+  "after": {
+    "dead": { "result": "after-dead-result.json", "passed": 11, "failed": 0 },
+    "destroy": { "result": "after-destroy-result.json", "passed": 16, "failed": 0, "cancel": "acted+closed" },
+    "destroyA11y": { "result": "after-destroy-a11y-result.json", "passed": 2, "failed": 0 },
+    "shipCalls": [],
+    "destroyCalls": [],
+    "quarantineCalls": [],
+    "realShipment": false,
+    "realDestruction": false,
+    "realQuarantine": false,
+    "mockOnly": true,
+    "hit": false
+  },
+  "desktop": {
+    "persona": "敏慧店长（Mock）",
+    "deadLiteral": "P261022YKNXD2",
+    "deadStatus": "死单 · 只读",
+    "deadShipDisabled": true,
+    "deadRefundDisabled": true,
+    "destroyBatch": "PD93-EXPIRED-001",
+    "destroyCancelClosed": true,
+    "finalConfirmClicked": false,
+    "liveHit": false
+  },
+  "unit": { "command": "npx tsx --test src/pages/appointmentDetail.utils.test.ts src/components/mall-admin/format.test.ts src/components/dashboard/utils.test.ts src/components/cashier/model.test.ts", "cwd": "apps/merchant", "passed": 10, "failed": 0 },
+  "lint": {
+    "targetedOriginalSixFiles": { "errors": 0, "warnings": 0 },
+    "fullMerchant": { "errors": 47, "warnings": 5, "status": "pre-existing failures outside this task", "newErrorsFromThisChange": 0 },
+    "sharedModalNote": "staff-admin/ui.tsx retains two pre-existing only-export-components findings elsewhere in the file; the three added ariaLabel lines introduced no finding"
+  },
+  "build": {
+    "command": "npm run build",
+    "customer": "completed",
+    "merchant": "completed",
+    "staff": "completed",
+    "merchantJs": "index-wv31ao1w.js",
+    "merchantJsSha256": "59fb983bfae76a1a1decad0f6c740e62f2eb0d9a71cf8599fcd6db6b2bffa151",
+    "candidateDiffersFromLiveBaseline": true,
+    "candidateIsLiveTipPackage": false
+  },
+  "review": { "criticalRemaining": 0, "importantRemaining": 0, "verdict": "Ready to merge after filter-coupling correction; live HIT excluded" },
+  "schema": { "changed": false, "migrationFilesCreated": 0, "reserved": "0134 故意空留" },
+  "hit": {
+    "routineStarted": false,
+    "reason": "HIT 例程未贴出；PR 只开不合、不部署",
+    "liveAfterMergeJs": "pending",
+    "liveDeadOrderEvidence": "pending",
+    "liveDestroyEvidence": "pending",
+    "localhostCountsAsHitPass": false
+  }
+}

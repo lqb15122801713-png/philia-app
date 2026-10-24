@@ -1,0 +1,27 @@
+{
+  "phase": "baseline",
+  "scenario": "destroy",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "failure": "DESTROY_CTA_NOT_SEEN",
+  "error": null,
+  "checks": [
+    {
+      "name": "expiry board is the reported empty state",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "DESTROY_CTA_NOT_SEEN",
+      "pass": false,
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\baseline\\destroy"
+}
