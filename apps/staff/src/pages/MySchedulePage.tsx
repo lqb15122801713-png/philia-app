@@ -13,7 +13,7 @@
 
 import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SkBackBar, SkBtnInk, SkChips, SkEmpty, SkRow, SkRows } from '@/components/skeleton';
 import { weekdayLabel } from '@/components/today/utils';
 import { sdc } from '@/copy/schedule';
@@ -57,8 +57,23 @@ export default function MySchedulePage() {
   const myStaffId = meQuery.data?.staff?.id ?? null;
 
   /* ---- 周选择（周一起算） ---- */
-  const thisWeekStart = useMemo(() => dateStr(mondayOf(new Date())), []);
+  const [thisWeekStart, setThisWeekStart] = useState(() => dateStr(mondayOf(new Date())));
   const [weekStart, setWeekStart] = useState(thisWeekStart);
+  useEffect(() => {
+    const syncCurrentWeek = () => {
+      const current = dateStr(mondayOf(new Date()));
+      setThisWeekStart(current);
+      setWeekStart((displayed) => displayed === thisWeekStart ? current : displayed);
+    };
+    const timer = window.setInterval(syncCurrentWeek, 60_000);
+    document.addEventListener('visibilitychange', syncCurrentWeek);
+    window.addEventListener('focus', syncCurrentWeek);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', syncCurrentWeek);
+      window.removeEventListener('focus', syncCurrentWeek);
+    };
+  }, [thisWeekStart]);
   const previousWeekStart = dateStr(addDays(new Date(`${thisWeekStart}T00:00:00`), -7));
   const nextWeekStart = dateStr(addDays(new Date(`${thisWeekStart}T00:00:00`), 7));
   const weekChoice = weekStart === thisWeekStart ? 'this' : weekStart === previousWeekStart ? 'prev' : weekStart === nextWeekStart ? 'next' : null;
@@ -211,7 +226,17 @@ export default function MySchedulePage() {
           <button type="button" className={`sk-btn-ghost${weekChoice === 'prev' ? ' on' : ''}`} aria-pressed={weekChoice === 'prev'} onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), -7)))}>
             {sdc('sched.myweek.prev')}
           </button>
-          <button type="button" className={`sk-btn-ghost${weekChoice === 'this' ? ' on' : ''}`} aria-pressed={weekChoice === 'this'} onClick={() => setWeekStart(thisWeekStart)} data-testid="mysched-week-this">
+          <button
+            type="button"
+            className={`sk-btn-ghost${weekChoice === 'this' ? ' on' : ''}`}
+            aria-pressed={weekChoice === 'this'}
+            onClick={() => {
+              const current = dateStr(mondayOf(new Date()));
+              setThisWeekStart(current);
+              setWeekStart(current);
+            }}
+            data-testid="mysched-week-this"
+          >
             {sdc('sched.week.this')}
           </button>
           <button type="button" className={`sk-btn-ghost${weekChoice === 'next' ? ' on' : ''}`} aria-pressed={weekChoice === 'next'} onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), 7)))}>

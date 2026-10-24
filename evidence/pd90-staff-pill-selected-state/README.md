@@ -16,9 +16,9 @@
 
 基线 `MySchedulePage` 的三个周按钮恒为 `sk-btn-ghost`，`weekStart` 只驱动查询和区间正文，没有选中 class 或 ARIA 状态；PD-80 的区间正文变化不构成 pill 选中态。
 
-- `apps/staff/src/pages/MySchedulePage.tsx`：以同一 `thisWeekStart／weekStart` 推导 `prev／this／next` 唯一 `weekChoice`；按钮据此获得 `on` 与 `aria-pressed`，本周回切也复用同一 `thisWeekStart`。上周／下周的相对导航行为不变；超出这三周时不伪造选中 pill。
+- `apps/staff/src/pages/MySchedulePage.tsx`：以同一 `thisWeekStart／weekStart` 推导 `prev／this／next` 唯一 `weekChoice`；按钮据此获得 `on` 与 `aria-pressed`。上周／下周的相对导航行为不变；超出这三周时不伪造选中 pill。审查补钉：本周锚点每分钟及页面可见／聚焦时刷新，只看旧本周时随新周前进，其他周不强跳；点击本周亦现场重算周一，避免跨周日驻留误标旧周。
 - `apps/staff/src/styles/skeleton.css`：新增一条 `.sk-btn-ghost.on`，复用既有 `--ink` 深底、米白字与同色描边。
-- 产品代码仅 2 文件、10 insertions／5 deletions；另增本卷宗与可复跑像素闸门 `apps/staff/scripts/pd90-week-pill-shots.mjs`。
+- 产品代码仅 2 文件、36 insertions／6 deletions；另增本卷宗与可复跑像素闸门 `apps/staff/scripts/pd90-week-pill-shots.mjs`。
 
 ## 基线复现（RED）
 
@@ -34,7 +34,9 @@
 
 ## 修复后双像素证据（GREEN）
 
-`fixed-pixel-report.json`：**29/29 断言绿、0 失败**。五态均有且仅有一个正确 `on` 与 `aria-pressed=true`；所有帧 `rangeOutsideStrip=true`，未以 20c／410 正文差或 DOM 文本差充当状态证据。
+`fixed-pixel-report.json`：**86/86 断言绿、0 失败**。五态均有且仅有一个正确 `on` 与 `aria-pressed=true`；所有帧按实际 `stripClip` 判定 `rangeOutsideStrip=true`，未以 20c／410 正文差或 DOM 文本差充当状态证据。每态另断言精确区间与七日日卡，mutation 数由实际请求记录得出为 0。
+
+审查补钉 RED→GREEN：`cross-red-pixel-report.json` 在跨周改动前精确失败 4 项（周日→周一驻留的旧区间／旧日卡，以及跨周后点击本周仍回旧周）；改动后两项均恢复正确新周。另有双向超三周 `weekChoice=null`、全部 `aria-pressed=false` 及反向导航回三周的断言。
 
 ### strip 整体差分
 
@@ -65,7 +67,7 @@
 - `npm run build`：customer／merchant／staff 三端 EXIT 0。
 - `npx eslint src/pages/MySchedulePage.tsx`（cwd `apps/staff`）：EXIT 0。
 - `node --check apps/staff/scripts/pd90-week-pill-shots.mjs`：EXIT 0。
-- `PHASE=baseline node apps/staff/scripts/pd90-week-pill-shots.mjs`：按预期 RED 16 项（缺陷复现）；`PHASE=fixed ...`：29/29 GREEN。
+- `PHASE=baseline node apps/staff/scripts/pd90-week-pill-shots.mjs`：按预期 RED 16 项（原缺陷复现）；`PHASE=cross-red ...`：跨周改动前 RED 4 项；`PHASE=fixed ...`：86/86 GREEN。
 - 员工全量 `npm run lint -w @philia/staff`：修复前后同为 **25 errors／1 warning** 的基线债，本单未新增计数；不作全量 lint 绿色声明。
 - `cd server && npm run typecheck`：基线既有 `src/db/pd66EvidenceFixture.ts` 顶层 await／TS1375 错误，本单 server 零改动；不作 server typecheck 绿色声明。
 - Windows 根 `npm ci` 的 postinstall 在本机递归失败；改为先 `npm --prefix server ci` 再 `npm ci --ignore-scripts` 安装同一 lockfile 依赖，未改安装脚本或依赖版本。
@@ -75,11 +77,11 @@
 
 | 原缺陷／门槛 | 证据 | 状态 |
 |---|---|---|
-| 三周无选中态 | 基线 RED＋修复后 29/29 GREEN；strip＋pill 双像素证据见上 | 本分支点验绿 |
+| 三周无选中态 | 基线 RED＋修复后 86/86 GREEN；strip＋pill 双像素证据见上 | 本分支点验绿 |
 | 禁 MD5／meanAbs≡0 | 三组 strip 与三组 pill 对照均 MD5 不同、meanAbs>0 | 本分支点验绿 |
 | 禁正文差冒充 | 所有 strip 裁片排除区间正文；pill 同文字独立裁片；无 20c／410 正文差充证 | 已遵守 |
-| 点回本周可撤可回 | 两条回切路径 strip MD5 与初始本周一致、区间一致 | 本分支点验绿 |
+| 点回本周可撤可回 | 两条回切路径 strip MD5 与初始本周一致、区间一致；跨周驻留／点击补钉见上 | 本分支点验绿 |
 | daypill 可轻挂 | 未轻挂、零产品 diff、无清项声明 | 不在本单交付 |
 | 现网员工包 | 2026-10-24 只读 `http://120.53.102.45:7203/my-schedule` 的 index 仍引用 **`index-W3JjVPYl.js`**，SHA-256 `d4b310c5e7d3fde6416b91f943699cca7c19186b7dc17d562f8e9d1dcf78d472` | 合部前现网基线 |
-| 新 js 文件名／hash 须异于 W3JjVPYl | 本分支最终 `apps/staff/dist/index.html` 引用 **`index-DC9fXU42.js`**，SHA-256 `d7a31727f7843fb61e20638bb908e9dc1ce507982f54d083f04ba9f065c459d5`；不同于现网名与 hash | **本地候选，非 tip 包** |
+| 新 js 文件名／hash 须异于 W3JjVPYl | 本分支最终 `apps/staff/dist/index.html` 引用 **`index-CMkXZF1E.js`**，SHA-256 `f5972fe9ac572c9dac0fb2bd163eb13fc5022d66eaa959b49b29bc7c082c65fb`；不同于现网名与 hash | **本地候选，非 tip 包** |
 | 合部同源 tip 现网 HIT | 本窗只开 PR、未合未部；localhost／mock preview 不计现网 HIT | **待合部部署后执行，不在本卷冒认** |

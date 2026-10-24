@@ -19,7 +19,7 @@ const { Jimp } = createRequire(join(REPO_ROOT, 'server', 'package.json'))('jimp'
 const STAFF_URL = (process.env.STAFF_URL ?? 'http://127.0.0.1:7190').replace(/\/$/, '');
 const CDP_PORT = Number(process.env.CDP_PORT ?? 9290);
 const PHASE = process.env.PHASE ?? 'fixed';
-if (!['baseline', 'fixed'].includes(PHASE)) throw new Error('PHASE 仅可为 baseline 或 fixed');
+if (!['baseline', 'cross-red', 'fixed'].includes(PHASE)) throw new Error('PHASE 仅可为 baseline、cross-red 或 fixed');
 const OUT_DIR = process.env.OUT_DIR ?? join(REPO_ROOT, 'evidence', 'pd90-staff-pill-selected-state', 'shots');
 const REPORT = join(REPO_ROOT, 'evidence', 'pd90-staff-pill-selected-state', `${PHASE}-pixel-report.json`);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -40,8 +40,20 @@ const note = (ok, name, detail = '') => {
 
 const MOCK_SOURCE = `(() => {
   const nativeFetch = window.fetch.bind(window);
+  const NativeDate = Date;
+  const initialNow = new NativeDate(2026, 9, 25, 12, 0, 0).getTime();
+  let offset = initialNow - NativeDate.now();
+  window.Date = class extends NativeDate {
+    constructor(...args) { super(...(args.length ? args : [NativeDate.now() + offset])); }
+    static now() { return NativeDate.now() + offset; }
+  };
+  window.__pd90AdvanceDays = (days, notify = true) => {
+    offset += days * 86400000;
+    if (notify) window.dispatchEvent(new Event('focus'));
+  };
   window.__pd90MockSeen = [];
   window.__pd90MockUnknown = [];
+  window.__pd90MockMutations = [];
   const dataFor = (procedure) => {
     if (procedure === 'auth.me') return {
       user: { id: 'pd90-user', nickname: '小美', activePetId: null },
@@ -66,7 +78,14 @@ const MOCK_SOURCE = `(() => {
     const url = new URL(raw, window.location.origin);
     if (!url.pathname.includes('/trpc/')) return nativeFetch(input, init);
     const procedures = decodeURIComponent(url.pathname.split('/trpc/')[1]).split(',');
+    const method = String(init?.method ?? (typeof input === 'object' && 'method' in input ? input.method : 'GET')).toUpperCase();
     window.__pd90MockSeen.push(...procedures);
+    if (method !== 'GET') {
+      window.__pd90MockMutations.push({ method, procedures });
+      return new Response(JSON.stringify({ error: 'PD-90 mutation blocked' }), {
+        status: 403, headers: { 'content-type': 'application/json' },
+      });
+    }
     const body = procedures.map((procedure) => ({ result: { data: { json: dataFor(procedure) } } }));
     return new Response(JSON.stringify(body), {
       status: 200,
@@ -94,14 +113,15 @@ const READ_PILLS = `(() => {
   });
   const range = bar.querySelector('[data-testid="mysched-week-pill"]');
   const rangeRect = range?.getBoundingClientRect();
-  const right = Math.max(...buttons.map((button) => button.rect.x + button.rect.width));
   return {
     buttons,
     rangeText: range?.textContent.trim() ?? '',
-    rangeOutsideStrip: !!rangeRect && rangeRect.left >= right,
+    rangeRect: rangeRect ? { x: rangeRect.x, y: rangeRect.y, width: rangeRect.width, height: rangeRect.height } : null,
+    dayTestIds: [...document.querySelectorAll('[data-testid^="mysched-day-"]')].map((node) => node.getAttribute('data-testid')),
     loading: !!document.querySelector('[aria-label="加载中"]'),
     pageReady: !!document.querySelector('[data-testid="mysched-page"]') && document.querySelectorAll('[data-testid^="mysched-day-"]').length === 7,
     mockUnknown: window.__pd90MockUnknown ?? [],
+    mockMutations: window.__pd90MockMutations ?? [],
   };
 })()`;
 
@@ -159,6 +179,15 @@ const roundedClip = (rect) => ({
   width: Math.round(rect.width), height: Math.round(rect.height),
 });
 const pillName = (text) => text === '本周' ? 'this' : text.includes('上周') ? 'previous' : 'next';
+const weekExpectation = (monday) => {
+  const base = new Date(`${monday}T00:00:00Z`).getTime();
+  const days = Array.from({ length: 7 }, (_, index) => new Date(base + index * 86400000).toISOString().slice(0, 10));
+  const md = (date) => `${Number(date.slice(5, 7))}月${Number(date.slice(8, 10))}日`;
+  return {
+    rangeText: `${md(days[0])}–${md(days[6])} · 待发布`,
+    dayTestIds: days.map((date) => `mysched-day-${date}`),
+  };
+};
 const rawPixelMd5 = (image) => createHash('md5').update(image.bitmap.data).digest('hex');
 
 async function pixelDiff(fileA, fileB) {
@@ -229,16 +258,21 @@ async function main() {
 
   const states = {};
   let geometry = null;
-  const capture = async (key, expectedSelected) => {
+  const capture = async (key, expectedSelected, expectedWeekStart, withShots = true) => {
     await cdp.eval('window.scrollTo(0, 0)');
     await sleep(350);
     const state = await cdp.eval(READ_PILLS);
+    const expected = weekExpectation(expectedWeekStart);
     note(!!state?.pageReady && !state.loading && state.mockUnknown.length === 0, `${key} 查询完成且 mock 过程全已知`, state?.mockUnknown ?? []);
-    note(!!state?.rangeOutsideStrip, `${key} strip 裁片排除区间正文`);
+    note(state.mockMutations.length === 0, `${key} 只读查询零 mutation`, state.mockMutations);
+    note(state.rangeText === expected.rangeText, `${key} 真实周区间=${expected.rangeText}`, state.rangeText);
+    note(JSON.stringify(state.dayTestIds) === JSON.stringify(expected.dayTestIds), `${key} 七日日卡与真实周一致`, state.dayTestIds);
     const selected = state.buttons.filter((button) => button.className.split(/\s+/).includes('on'));
-    note(selected.length === 1 && selected[0].text === expectedSelected, `${key} 唯一选中 pill=${expectedSelected}`, selected.map((button) => button.text));
+    const selectedOk = expectedSelected === null ? selected.length === 0 : selected.length === 1 && selected[0].text === expectedSelected;
+    note(selectedOk, `${key} ${expectedSelected === null ? '超三周无选中 pill' : `唯一选中 pill=${expectedSelected}`}`, selected.map((button) => button.text));
     const pressed = state.buttons.filter((button) => button.ariaPressed === 'true');
-    note(pressed.length === 1 && pressed[0].text === expectedSelected, `${key} aria-pressed 与真实区间一致`, pressed.map((button) => button.text));
+    const pressedOk = expectedSelected === null ? pressed.length === 0 : pressed.length === 1 && pressed[0].text === expectedSelected;
+    note(pressedOk, `${key} aria-pressed 与真实区间一致`, pressed.map((button) => button.text));
 
     const first = state.buttons[0].rect;
     const last = state.buttons[state.buttons.length - 1].rect;
@@ -255,22 +289,27 @@ async function main() {
         }])),
       };
     }
-    const files = { pills: {} };
-    files.strip = join(OUT_DIR, `${PHASE}-${key}-strip.png`);
-    files.page = join(OUT_DIR, `${PHASE}-${key}-page.png`);
-    await cdp.shot(files.strip, roundedClip({ x: geometry.strip.x, y: stripRect.y, width: geometry.strip.width, height: geometry.strip.height }));
-    await cdp.shot(files.page);
-    for (const button of state.buttons) {
-      const name = pillName(button.text);
-      const file = join(OUT_DIR, `${PHASE}-${key}-pill-${name}.png`);
-      const fixed = geometry.pills[name];
-      await cdp.shot(file, roundedClip({
-        x: button.rect.x + button.rect.width / 2 - fixed.width / 2,
-        y: button.rect.y, width: fixed.width, height: fixed.height,
-      }));
-      files.pills[name] = file;
+    const stripClip = roundedClip({ x: geometry.strip.x, y: stripRect.y, width: geometry.strip.width, height: geometry.strip.height });
+    const rangeOutsideStrip = !!state.rangeRect && state.rangeRect.x >= stripClip.x + stripClip.width;
+    note(rangeOutsideStrip, `${key} 实际 strip 裁片排除区间正文`, { rangeRect: state.rangeRect, stripClip });
+    const files = withShots ? { pills: {} } : null;
+    if (withShots) {
+      files.strip = join(OUT_DIR, `${PHASE}-${key}-strip.png`);
+      files.page = join(OUT_DIR, `${PHASE}-${key}-page.png`);
+      await cdp.shot(files.strip, stripClip);
+      await cdp.shot(files.page);
+      for (const button of state.buttons) {
+        const name = pillName(button.text);
+        const file = join(OUT_DIR, `${PHASE}-${key}-pill-${name}.png`);
+        const fixed = geometry.pills[name];
+        await cdp.shot(file, roundedClip({
+          x: button.rect.x + button.rect.width / 2 - fixed.width / 2,
+          y: button.rect.y, width: fixed.width, height: fixed.height,
+        }));
+        files.pills[name] = file;
+      }
     }
-    states[key] = { ...state, files, expectedSelected };
+    states[key] = { ...state, rangeOutsideStrip, stripClip, files, expectedSelected, expectedWeekStart };
   };
 
   const click = async (label) => {
@@ -284,15 +323,34 @@ async function main() {
     await sleep(450);
   };
 
-  await capture('this', '本周');
+  await capture('this', '本周', '2026-10-19');
   await click('‹ 上周');
-  await capture('previous', '‹ 上周');
+  await capture('previous', '‹ 上周', '2026-10-12');
   await click('本周');
-  await capture('returned-from-previous', '本周');
+  await capture('returned-from-previous', '本周', '2026-10-19');
   await click('下周 ›');
-  await capture('next', '下周 ›');
+  await capture('next', '下周 ›', '2026-10-26');
   await click('本周');
-  await capture('returned-from-next', '本周');
+  await capture('returned-from-next', '本周', '2026-10-19');
+
+  await click('下周 ›');
+  await click('下周 ›');
+  await capture('outside-next', null, '2026-11-02', false);
+  await click('‹ 上周');
+  await capture('outside-next-return', '下周 ›', '2026-10-26', false);
+  await click('本周');
+  await click('‹ 上周');
+  await click('‹ 上周');
+  await capture('outside-previous', null, '2026-10-05', false);
+  await click('下周 ›');
+  await capture('outside-previous-return', '‹ 上周', '2026-10-12', false);
+  await click('本周');
+
+  await cdp.eval('window.__pd90AdvanceDays(1, true)');
+  await capture('cross-midnight', '本周', '2026-10-26', false);
+  await cdp.eval('window.__pd90AdvanceDays(7, false)');
+  await click('本周');
+  await capture('click-current-after-midnight', '本周', '2026-11-02', false);
 
   const comparisons = { strip: {}, selectedPill: {}, returns: {} };
   for (const [a, b] of [['this', 'previous'], ['this', 'next'], ['previous', 'next']]) {
@@ -320,12 +378,14 @@ async function main() {
   }
 
   const mockSeen = await cdp.eval('window.__pd90MockSeen');
+  const mutationCount = await cdp.eval('window.__pd90MockMutations.length');
   writeFileSync(REPORT, JSON.stringify({
     phase: PHASE,
     at: new Date().toISOString(),
     staffUrl: STAFF_URL,
     viewport: { width: 512, height: 844, deviceScaleFactor: 1 },
-    mock: { readOnlyQueries: true, mutations: 0, seen: [...new Set(mockSeen)] },
+    clock: { initialLocal: '2026-10-25T12:00:00', crossMidnight: '+1 day to Monday', clickCurrent: '+7 days without notification' },
+    mock: { readOnlyQueries: mutationCount === 0, mutations: mutationCount, seen: [...new Set(mockSeen)] },
     states,
     comparisons,
     results,
