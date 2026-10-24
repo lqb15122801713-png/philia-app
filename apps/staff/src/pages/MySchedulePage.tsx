@@ -57,7 +57,11 @@ export default function MySchedulePage() {
   const myStaffId = meQuery.data?.staff?.id ?? null;
 
   /* ---- 周选择（周一起算） ---- */
-  const [weekStart, setWeekStart] = useState(() => dateStr(mondayOf(new Date())));
+  const thisWeekStart = useMemo(() => dateStr(mondayOf(new Date())), []);
+  const [weekStart, setWeekStart] = useState(thisWeekStart);
+  const previousWeekStart = dateStr(addDays(new Date(`${thisWeekStart}T00:00:00`), -7));
+  const nextWeekStart = dateStr(addDays(new Date(`${thisWeekStart}T00:00:00`), 7));
+  const weekChoice = weekStart === thisWeekStart ? 'this' : weekStart === previousWeekStart ? 'prev' : weekStart === nextWeekStart ? 'next' : null;
   const days = useMemo(() => weekDates(weekStart), [weekStart]);
 
   const weekQuery = useQuery({
@@ -204,16 +208,16 @@ export default function MySchedulePage() {
       {/* 周视图（只读；我的班次高亮） */}
       <section className="mt-3" data-testid="mysched-week">
         <div className="flex items-center gap-2 px-[22px] pb-2">
-          <button type="button" className="sk-btn-ghost" onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), -7)))}>
+          <button type="button" className={`sk-btn-ghost${weekChoice === 'prev' ? ' on' : ''}`} aria-pressed={weekChoice === 'prev'} onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), -7)))}>
             {sdc('sched.myweek.prev')}
           </button>
-          <button type="button" className="sk-btn-ghost" onClick={() => setWeekStart(dateStr(mondayOf(new Date())))} data-testid="mysched-week-this">
+          <button type="button" className={`sk-btn-ghost${weekChoice === 'this' ? ' on' : ''}`} aria-pressed={weekChoice === 'this'} onClick={() => setWeekStart(thisWeekStart)} data-testid="mysched-week-this">
             {sdc('sched.week.this')}
           </button>
-          <button type="button" className="sk-btn-ghost" onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), 7)))}>
+          <button type="button" className={`sk-btn-ghost${weekChoice === 'next' ? ' on' : ''}`} aria-pressed={weekChoice === 'next'} onClick={() => setWeekStart(dateStr(addDays(new Date(`${weekStart}T00:00:00`), 7)))}>
             {sdc('sched.myweek.next')}
           </button>
-          {/* PD-80 R15-01：pill 绑真实区间——周一~周日日期段恒在文内，本周↔下周切换必有状态差（消除 PILL_NO_STATE≡0） */}
+          {/* 日期段与周按钮选中态同绑 weekStart。 */}
           <span
             className={`ml-auto rounded-chip px-1.5 py-0.5 text-caption font-bold ${
               weekPublished ? 'bg-success-light text-success-deep' : 'bg-brand-primary-light text-ink'

@@ -1,0 +1,740 @@
+{
+  "phase": "baseline",
+  "at": "2026-10-24T04:57:00.157Z",
+  "staffUrl": "http://127.0.0.1:7190",
+  "viewport": {
+    "width": 512,
+    "height": 844,
+    "deviceScaleFactor": 1
+  },
+  "mock": {
+    "readOnlyQueries": true,
+    "mutations": 0,
+    "seen": [
+      "config.activeCopyTexts",
+      "slotPort.liveMap",
+      "auth.me",
+      "schedule.weekView",
+      "schedule.myAvailability",
+      "schedule.myLeaves",
+      "schedule.compOffBalance"
+    ]
+  },
+  "states": {
+    "this": {
+      "buttons": [
+        {
+          "text": "‹ 上周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        },
+        {
+          "text": "本周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 102.671875,
+            "y": 70,
+            "width": 64,
+            "height": 44
+          }
+        },
+        {
+          "text": "下周 ›",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 174.671875,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        }
+      ],
+      "rangeText": "10月19日–10月25日 · 待发布",
+      "rangeOutsideStrip": true,
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "files": {
+        "pills": {
+          "previous": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-this-pill-previous.png",
+          "this": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-this-pill-this.png",
+          "next": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-this-pill-next.png"
+        },
+        "strip": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-this-strip.png",
+        "page": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-this-page.png"
+      },
+      "expectedSelected": "本周"
+    },
+    "previous": {
+      "buttons": [
+        {
+          "text": "‹ 上周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        },
+        {
+          "text": "本周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 102.671875,
+            "y": 70,
+            "width": 64,
+            "height": 44
+          }
+        },
+        {
+          "text": "下周 ›",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 174.671875,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        }
+      ],
+      "rangeText": "10月12日–10月18日 · 待发布",
+      "rangeOutsideStrip": true,
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "files": {
+        "pills": {
+          "previous": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-previous-pill-previous.png",
+          "this": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-previous-pill-this.png",
+          "next": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-previous-pill-next.png"
+        },
+        "strip": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-previous-strip.png",
+        "page": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-previous-page.png"
+      },
+      "expectedSelected": "‹ 上周"
+    },
+    "returned-from-previous": {
+      "buttons": [
+        {
+          "text": "‹ 上周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        },
+        {
+          "text": "本周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 102.671875,
+            "y": 70,
+            "width": 64,
+            "height": 44
+          }
+        },
+        {
+          "text": "下周 ›",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 174.671875,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        }
+      ],
+      "rangeText": "10月19日–10月25日 · 待发布",
+      "rangeOutsideStrip": true,
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "files": {
+        "pills": {
+          "previous": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-previous-pill-previous.png",
+          "this": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-previous-pill-this.png",
+          "next": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-previous-pill-next.png"
+        },
+        "strip": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-previous-strip.png",
+        "page": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-previous-page.png"
+      },
+      "expectedSelected": "本周"
+    },
+    "next": {
+      "buttons": [
+        {
+          "text": "‹ 上周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        },
+        {
+          "text": "本周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 102.671875,
+            "y": 70,
+            "width": 64,
+            "height": 44
+          }
+        },
+        {
+          "text": "下周 ›",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 174.671875,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        }
+      ],
+      "rangeText": "10月26日–11月1日 · 待发布",
+      "rangeOutsideStrip": true,
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "files": {
+        "pills": {
+          "previous": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-next-pill-previous.png",
+          "this": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-next-pill-this.png",
+          "next": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-next-pill-next.png"
+        },
+        "strip": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-next-strip.png",
+        "page": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-next-page.png"
+      },
+      "expectedSelected": "下周 ›"
+    },
+    "returned-from-next": {
+      "buttons": [
+        {
+          "text": "‹ 上周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 22,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        },
+        {
+          "text": "本周",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 102.671875,
+            "y": 70,
+            "width": 64,
+            "height": 44
+          }
+        },
+        {
+          "text": "下周 ›",
+          "className": "sk-btn-ghost",
+          "ariaPressed": null,
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)",
+          "color": "rgb(44, 40, 34)",
+          "rect": {
+            "x": 174.671875,
+            "y": 70,
+            "width": 72.671875,
+            "height": 44
+          }
+        }
+      ],
+      "rangeText": "10月19日–10月25日 · 待发布",
+      "rangeOutsideStrip": true,
+      "loading": false,
+      "pageReady": true,
+      "mockUnknown": [],
+      "files": {
+        "pills": {
+          "previous": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-next-pill-previous.png",
+          "this": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-next-pill-this.png",
+          "next": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-next-pill-next.png"
+        },
+        "strip": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-next-strip.png",
+        "page": "E:\\KIMI code\\pd90-staff-pill-selected-state\\evidence\\pd90-staff-pill-selected-state\\shots\\baseline-returned-from-next-page.png"
+      },
+      "expectedSelected": "本周"
+    }
+  },
+  "comparisons": {
+    "strip": {
+      "this-vs-previous": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      },
+      "this-vs-next": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      },
+      "previous-vs-next": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    },
+    "selectedPill": {
+      "previous": {
+        "comparable": true,
+        "size": [
+          75,
+          44
+        ],
+        "md5A": "ea2c83784068f23339bf80022843d322",
+        "md5B": "ea2c83784068f23339bf80022843d322",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 3300,
+        "selected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "styleChanged": false
+      },
+      "this": {
+        "comparable": true,
+        "size": [
+          66,
+          44
+        ],
+        "md5A": "31a048577e420b76fcdc0dd63bc84e82",
+        "md5B": "31a048577e420b76fcdc0dd63bc84e82",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 2904,
+        "selected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "styleChanged": false
+      },
+      "next": {
+        "comparable": true,
+        "size": [
+          75,
+          44
+        ],
+        "md5A": "7cae3643f9dc7a18467c80ca321c43b2",
+        "md5B": "7cae3643f9dc7a18467c80ca321c43b2",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 3300,
+        "selected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "styleChanged": false
+      }
+    },
+    "returns": {
+      "returned-from-previous": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      },
+      "returned-from-next": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "真实 /my-schedule 页面加载完成（非加载壳）",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "this 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "this strip 裁片排除区间正文",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "this 唯一选中 pill=本周",
+      "detail": []
+    },
+    {
+      "ok": false,
+      "name": "this aria-pressed 与真实区间一致",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "previous 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "previous strip 裁片排除区间正文",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "previous 唯一选中 pill=‹ 上周",
+      "detail": []
+    },
+    {
+      "ok": false,
+      "name": "previous aria-pressed 与真实区间一致",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "returned-from-previous 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "returned-from-previous strip 裁片排除区间正文",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "returned-from-previous 唯一选中 pill=本周",
+      "detail": []
+    },
+    {
+      "ok": false,
+      "name": "returned-from-previous aria-pressed 与真实区间一致",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "next 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "next strip 裁片排除区间正文",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "next 唯一选中 pill=下周 ›",
+      "detail": []
+    },
+    {
+      "ok": false,
+      "name": "next aria-pressed 与真实区间一致",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "returned-from-next 查询完成且 mock 过程全已知",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "name": "returned-from-next strip 裁片排除区间正文",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "returned-from-next 唯一选中 pill=本周",
+      "detail": []
+    },
+    {
+      "ok": false,
+      "name": "returned-from-next aria-pressed 与真实区间一致",
+      "detail": []
+    },
+    {
+      "ok": false,
+      "name": "strip 整体像素双态可辨：this vs previous",
+      "detail": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    },
+    {
+      "ok": false,
+      "name": "strip 整体像素双态可辨：this vs next",
+      "detail": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    },
+    {
+      "ok": false,
+      "name": "strip 整体像素双态可辨：previous vs next",
+      "detail": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    },
+    {
+      "ok": false,
+      "name": "同一 pill 选中／未选中填色或描边像素可辨：previous",
+      "detail": {
+        "comparable": true,
+        "size": [
+          75,
+          44
+        ],
+        "md5A": "ea2c83784068f23339bf80022843d322",
+        "md5B": "ea2c83784068f23339bf80022843d322",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 3300,
+        "selected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "styleChanged": false
+      }
+    },
+    {
+      "ok": false,
+      "name": "同一 pill 选中／未选中填色或描边像素可辨：this",
+      "detail": {
+        "comparable": true,
+        "size": [
+          66,
+          44
+        ],
+        "md5A": "31a048577e420b76fcdc0dd63bc84e82",
+        "md5B": "31a048577e420b76fcdc0dd63bc84e82",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 2904,
+        "selected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "styleChanged": false
+      }
+    },
+    {
+      "ok": false,
+      "name": "同一 pill 选中／未选中填色或描边像素可辨：next",
+      "detail": {
+        "comparable": true,
+        "size": [
+          75,
+          44
+        ],
+        "md5A": "7cae3643f9dc7a18467c80ca321c43b2",
+        "md5B": "7cae3643f9dc7a18467c80ca321c43b2",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 3300,
+        "selected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "unselected": {
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "borderColor": "rgba(44, 40, 34, 0.14)"
+        },
+        "styleChanged": false
+      }
+    },
+    {
+      "ok": true,
+      "name": "点回本周恢复原 strip 与真实区间：returned-from-previous",
+      "detail": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    },
+    {
+      "ok": true,
+      "name": "点回本周恢复原 strip 与真实区间：returned-from-next",
+      "detail": {
+        "comparable": true,
+        "size": [
+          232,
+          44
+        ],
+        "md5A": "ccaf9d79c6044556ced4663941587478",
+        "md5B": "ccaf9d79c6044556ced4663941587478",
+        "md5Equal": true,
+        "meanAbs": 0,
+        "changedPixels": 0,
+        "totalPixels": 10208
+      }
+    }
+  ],
+  "failures": 16
+}
