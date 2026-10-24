@@ -1,0 +1,124 @@
+{
+  "phase": "finalize",
+  "ok": true,
+  "url": "http://127.0.0.1:7191/orders",
+  "mockOnly": true,
+  "scenario": "finalize",
+  "checks": [
+    {
+      "name": "final confirm sends one mock request",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "pending disables header close",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "pending disables cancel",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "pending disables confirm",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "pending Escape cannot dismiss request",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "pending overlay cannot dismiss request",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "successful final confirm stays exactly once",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "final payload has order id",
+      "pass": true,
+      "actual": "01PD91MOCK0000000000000001",
+      "expected": "01PD91MOCK0000000000000001"
+    },
+    {
+      "name": "final payload trims tracking number",
+      "pass": true,
+      "actual": "SF-PD91-MOCK-ONLY",
+      "expected": "SF-PD91-MOCK-ONLY"
+    },
+    {
+      "name": "successful mock order moved to shipped",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "rejection keeps confirmation open",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "rejection restores confirm CTA",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "rejection restores cancel CTA",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "rejection is one additional mock attempt",
+      "pass": true,
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "name": "rejection does not move order to shipped",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "rejection cancel makes no extra request",
+      "pass": true,
+      "actual": 2,
+      "expected": 2
+    }
+  ],
+  "shipMutationCalls": [
+    {
+      "at": "2026-10-24T05:36:18.715Z",
+      "body": "{\"0\":{\"json\":{\"orderId\":\"01PD91MOCK0000000000000001\",\"trackingNo\":\"SF-PD91-MOCK-ONLY\"}}}",
+      "input": {
+        "orderId": "01PD91MOCK0000000000000001",
+        "trackingNo": "SF-PD91-MOCK-ONLY"
+      }
+    },
+    {
+      "at": "2026-10-24T05:36:29.156Z",
+      "body": "{\"0\":{\"json\":{\"orderId\":\"01PD91MOCK0000000000000001\",\"trackingNo\":\"SF-PD91-MOCK-ONLY\"}}}",
+      "input": {
+        "orderId": "01PD91MOCK0000000000000001",
+        "trackingNo": "SF-PD91-MOCK-ONLY"
+      }
+    }
+  ],
+  "screenshots": "E:\\KIMI code\\pd91-merchant-ship-confirm-gate\\evidence\\pd91-merchant-ship-confirm-gate\\shots\\finalize"
+}

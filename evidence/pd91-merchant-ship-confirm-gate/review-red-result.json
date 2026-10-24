@@ -1,0 +1,33 @@
+{
+  "phase": "review-red",
+  "ok": false,
+  "url": "http://127.0.0.1:7191/orders",
+  "mockOnly": true,
+  "failure": "pending disables header close",
+  "error": null,
+  "checks": [
+    {
+      "name": "final confirm sends one mock request",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "pending disables header close",
+      "pass": false,
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "shipMutationCalls": [
+    {
+      "at": "2026-10-24T05:29:10.713Z",
+      "body": "{\"0\":{\"json\":{\"orderId\":\"01PD91MOCK0000000000000001\",\"trackingNo\":\"SF-PD91-MOCK-ONLY\"}}}",
+      "input": {
+        "orderId": "01PD91MOCK0000000000000001",
+        "trackingNo": "SF-PD91-MOCK-ONLY"
+      }
+    }
+  ],
+  "screenshots": "E:\\KIMI code\\pd91-merchant-ship-confirm-gate\\evidence\\pd91-merchant-ship-confirm-gate\\shots\\review-red"
+}
