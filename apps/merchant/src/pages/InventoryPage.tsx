@@ -107,6 +107,7 @@ export default function InventoryPage() {
     enabled: role.canManage,
   });
   const [destroyId, setDestroyId] = useState<string | null>(null);
+  const [destroyOpen, setDestroyOpen] = useState(false);
   const [destroyNote, setDestroyNote] = useState('');
   const [destroyBusy, setDestroyBusy] = useState(false);
   const [quarantineBusyId, setQuarantineBusyId] = useState<string | null>(null);
@@ -117,6 +118,11 @@ export default function InventoryPage() {
     queryKey: ['inventory', 'batchList', batchProductId],
     queryFn: () => trpc.stock2.batchList.query(batchProductId ? { productId: batchProductId } : {}),
     enabled: role.canManage,
+  });
+  const destroyCandidatesQ = useQuery({
+    queryKey: ['inventory', 'destroyCandidates'],
+    queryFn: () => trpc.stock2.batchList.query({}),
+    enabled: role.canManage && destroyOpen,
   });
   const fefoQ = useQuery({
     queryKey: ['inventory', 'fefo', batchProductId],
@@ -165,6 +171,16 @@ export default function InventoryPage() {
     }
   };
 
+  const openDestroy = (batchId?: string) => {
+    setDestroyId(batchId ?? null);
+    setDestroyNote('');
+    setDestroyOpen(true);
+  };
+  const closeDestroy = () => {
+    if (destroyBusy) return;
+    setDestroyOpen(false);
+    setDestroyId(null);
+  };
   const submitDestroy = async () => {
     if (!destroyId) return;
     if (!destroyNote.trim()) {
@@ -175,6 +191,7 @@ export default function InventoryPage() {
     try {
       await trpc.stock2.batchDestroy.mutate({ batchId: destroyId, note: destroyNote.trim() });
       toast(iv('inv.expiry.destroyDone'));
+      setDestroyOpen(false);
       setDestroyId(null);
       invalidateAll();
     } catch (err) {
@@ -293,6 +310,12 @@ export default function InventoryPage() {
   const expiryItems = expiryQ.data?.items ?? [];
   const batches = batchQ.data?.items ?? [];
   const writeoffs = writeoffQ.data ?? [];
+  const destroyBatches = destroyCandidatesQ.data?.items ?? [];
+  const destroyCandidates = destroyBatches.filter((b) => b.status === 'quarantined' && b.qty > 0);
+  const destroyTarget = destroyId
+    ? destroyBatches.find((b) => b.id === destroyId) ?? batches.find((b) => b.id === destroyId) ?? expiryItems.find((b) => b.id === destroyId)
+    : undefined;
+  const destroyBlocked = !destroyTarget || (destroyTarget.qty > 0 && destroyTarget.status !== 'quarantined');
 
   return (
     <MainScaffold title={iv('inv.pageTitle')} sub={iv('inv.pageSub')} testid="inventory-page">
@@ -362,9 +385,14 @@ export default function InventoryPage() {
       <div className="u3-panel mb-4" data-testid="inventory-expiry">
         <div className="u3-panel-head">
           <h3>{iv('inv.expiry.title')}</h3>
-          <span className="aside">
-            {iv('inv.expiry.aside', { u: expiryQ.data?.urgentDays ?? 7, w: expiryQ.data?.warnDays ?? 30 })}
-          </span>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <span className="aside">
+              {iv('inv.expiry.aside', { u: expiryQ.data?.urgentDays ?? 7, w: expiryQ.data?.warnDays ?? 30 })}
+            </span>
+            <Btn variant="subtle" size="sm" onClick={() => openDestroy()} data-testid="inventory-destroy-open">
+              {iv('inv.expiry.destroyTitle')}
+            </Btn>
+          </div>
         </div>
         {expiryQ.isPending ? (
           <div className="px-[17px] py-3" aria-label="加载中">
@@ -410,10 +438,7 @@ export default function InventoryPage() {
               <Btn
                 variant="subtle"
                 size="sm"
-                onClick={() => {
-                  setDestroyNote('');
-                  setDestroyId(b.id);
-                }}
+                onClick={() => openDestroy(b.id)}
                 data-testid={`inventory-destroy-${b.id}`}
               >
                 {iv('inv.expiry.destroyCta')}
@@ -603,31 +628,82 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* 销毁事由弹层（必填留痕） */}
+      {/* 销毁独立确认层：目标与后果先复核，cancel 不改库存 */}
       <Modal
-        open={destroyId !== null}
-        onClose={() => setDestroyId(null)}
+        open={destroyOpen}
+        onClose={closeDestroy}
         title={iv('inv.expiry.destroyTitle')}
+        ariaLabel={iv('inv.expiry.destroyTitle')}
         footer={
           <>
-            <Btn variant="ghost" onClick={() => setDestroyId(null)} disabled={destroyBusy}>
+            <Btn variant="ghost" onClick={closeDestroy} disabled={destroyBusy} data-testid="inventory-destroy-cancel">
               {iv('inv.common.cancel')}
             </Btn>
-            <Btn variant="primary" onClick={() => void submitDestroy()} disabled={destroyBusy} data-testid="inventory-destroy-submit">
+            <Btn
+              variant="primary"
+              onClick={() => void submitDestroy()}
+              disabled={destroyBusy || destroyBlocked || !destroyNote.trim()}
+              data-testid="inventory-destroy-submit"
+            >
               {destroyBusy ? iv('inv.common.submitting') : iv('inv.common.confirm')}
             </Btn>
           </>
         }
       >
-        <textarea
-          value={destroyNote}
-          onChange={(e) => setDestroyNote(e.target.value)}
-          rows={3}
-          maxLength={200}
-          placeholder={iv('inv.expiry.destroyReasonPh')}
-          data-testid="inventory-destroy-note"
-          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
-        />
+        <div className="grid gap-3">
+          <p className="rounded-input bg-sunken px-3 py-2.5 text-caption text-ink-secondary">
+            {iv('inv.expiry.destroyConsequence')}
+          </p>
+          {destroyTarget ? (
+            <div className="rounded-input bg-card px-3 py-2.5 text-caption shadow-hairline ring-1 ring-line-ring" data-testid="inventory-destroy-summary">
+              <div className="font-bold text-ink">{destroyTarget.productName}</div>
+              <div className="u1-num mt-1 text-ink-secondary">
+                {destroyTarget.batchNo} · {iv('inv.batch.qtyUnit', { n: destroyTarget.qty })} · {batchStatusLabel(destroyTarget.status)}
+              </div>
+            </div>
+          ) : destroyCandidatesQ.isPending ? (
+            <p className="text-caption text-ink-secondary" data-testid="inventory-destroy-loading">
+              {iv('inv.expiry.destroyLoading')}
+            </p>
+          ) : destroyCandidatesQ.isError ? (
+            <div className="text-caption" data-testid="inventory-destroy-error">
+              <p className="text-danger-deep">{iv('inv.expiry.destroyLoadFailed')}</p>
+              <Btn variant="subtle" size="sm" className="mt-2" onClick={() => void destroyCandidatesQ.refetch()}>
+                {iv('inv.common.retry')}
+              </Btn>
+            </div>
+          ) : (
+            <Field label={iv('inv.expiry.destroyBatchLabel')}>
+              <select
+                className={inputCls}
+                value={destroyId ?? ''}
+                disabled={destroyCandidates.length === 0}
+                onChange={(e) => setDestroyId(e.target.value || null)}
+                data-testid="inventory-destroy-batch"
+              >
+                <option value="">
+                  {destroyCandidates.length > 0 ? iv('inv.expiry.destroyBatchPh') : iv('inv.expiry.destroyNoQuarantined')}
+                </option>
+                {destroyCandidates.map((b) => (
+                  <option key={b.id} value={b.id}>{b.productName} · {b.batchNo}</option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {destroyTarget && destroyBlocked ? (
+            <p className="text-caption text-danger-deep">{iv('inv.expiry.destroyActiveHint')}</p>
+          ) : null}
+          <textarea
+            value={destroyNote}
+            onChange={(e) => setDestroyNote(e.target.value)}
+            rows={3}
+            maxLength={200}
+            placeholder={iv('inv.expiry.destroyReasonPh')}
+            aria-label={iv('inv.expiry.destroyReasonPh')}
+            data-testid="inventory-destroy-note"
+            className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
+          />
+        </div>
       </Modal>
 
       {/* 手工入批弹层（品/批号/数量/生产日期/保质期天数） */}

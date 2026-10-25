@@ -1,0 +1,39 @@
+{
+  "phase": "review-red",
+  "scenario": "destroy",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "failure": "destroy candidates ignore the unrelated batch filter",
+  "error": null,
+  "checks": [
+    {
+      "name": "expiry board is the reported empty state",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "unrelated batch filter hides the target in the batch panel",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "DESTROY_CTA_NOT_SEEN",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "destroy candidates ignore the unrelated batch filter",
+      "pass": false,
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\review-red\\destroy"
+}

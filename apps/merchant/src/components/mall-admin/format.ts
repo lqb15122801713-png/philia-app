@@ -21,16 +21,16 @@ export type StoreOrder = StoreOrderGroups['paid'][number]
 export const STORE_ORDERS_KEY = ['mall', 'listStoreOrders'] as const
 
 /* ------------------------------------------------------------------ */
-/* PD-81 死单前台隐藏（显示层过滤 · 庆贲裁：禁删库/禁直改库，库内保留）          */
+/* 死单显示层只读名单（禁删库/禁直改库，库内保留）                      */
 /* ------------------------------------------------------------------ */
 
-/** 死单显示层名单：已付无退口的商城夹具死单（P261022YKNXD2／01M5H1E1… ¥19）；
-    仅前台列表过滤，库内行保留不动 */
+/** 已付无退口的商城夹具死单（P261022YKNXD2／01M5H1E1… ¥19）；
+    单号与 ULID 前缀双口径只用于前端只读展示，不改履约或库存状态 */
 const DEAD_ORDER_NOS: ReadonlySet<string> = new Set(['P261022YKNXD2'])
 const DEAD_ORDER_ID_PREFIXES: readonly string[] = ['01M5H1E1']
 
-/** 商家端订单队列显示层过滤：名单内死单不渲染（计数同源同步剔除） */
-export function isDeadOrderDisplayHidden(order: { id?: string | null; orderNo?: string | null }): boolean {
+/** 名单内死单保留在订单队列，但禁发、禁退 */
+export function isDeadOrderReadOnly(order: { id?: string | null; orderNo?: string | null }): boolean {
   if (order.orderNo && DEAD_ORDER_NOS.has(order.orderNo)) return true
   const id = order.id ?? ''
   return id.length > 0 && DEAD_ORDER_ID_PREFIXES.some((p) => id.startsWith(p))

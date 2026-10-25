@@ -1,0 +1,21 @@
+{
+  "phase": "baseline",
+  "scenario": "dead",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "failure": "DEAD_ORDER_ID_NOT_SEEN",
+  "error": null,
+  "checks": [
+    {
+      "name": "DEAD_ORDER_ID_NOT_SEEN",
+      "pass": false,
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\baseline\\dead"
+}

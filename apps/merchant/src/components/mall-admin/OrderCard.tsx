@@ -10,6 +10,7 @@
  * 真值：>0 红字强调，0=「—」）｜支付（已支付 live）｜状态
  * （待发货 amber / 已发货 wait / 售后中 amber）｜操作：
  * - 待发货：「发货 ›」主行动 → 开 ShipOrderDialog（mall.shipOrder 现成）；
+ * - 死单：保留单号，状态为「死单 · 只读」，发货/退款均为原生 disabled 灰态；
  * - 已发货：直接展示物流单号真值（商家端无订单详情页可跳，不做假链接）；
  * - 售后：只读，行末无动作（退款操作=冻结项，规格书 §7 明确不做）。
  *
@@ -46,10 +47,13 @@ function StatusPill({ status }: { status: string }) {
 export default function OrderRow({
   order,
   onShip,
+  readOnly = false,
 }: {
   order: StoreOrder
   /** 待发货行的发货入口；其他队列不传 */
   onShip?: (order: StoreOrder) => void
+  /** 死单仅展示，禁发禁退 */
+  readOnly?: boolean
 }) {
   const lines = lineOf(order)
   const first = lines[0]
@@ -97,10 +101,35 @@ export default function OrderRow({
         <span className="u3-st live">已支付</span>
       </td>
       <td>
-        <StatusPill status={order.status} />
+        {readOnly ? (
+          <span className="u3-st done" data-testid={`dead-order-readonly-${order.id}`}>死单 · 只读</span>
+        ) : (
+          <StatusPill status={order.status} />
+        )}
       </td>
       <td>
-        {order.status === 'paid' && onShip ? (
+        {readOnly ? (
+          <div className="flex flex-wrap gap-1" aria-label="死单只读：禁发禁退">
+            <button
+              type="button"
+              disabled
+              title="死单只读，不可发货"
+              data-testid={`dead-order-ship-${order.id}`}
+              className="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0"
+            >
+              发货 ›
+            </button>
+            <button
+              type="button"
+              disabled
+              title="死单只读，不可退款"
+              data-testid={`dead-order-refund-${order.id}`}
+              className="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0"
+            >
+              退款 ›
+            </button>
+          </div>
+        ) : order.status === 'paid' && onShip ? (
           <button
             type="button"
             onClick={() => onShip(order)}

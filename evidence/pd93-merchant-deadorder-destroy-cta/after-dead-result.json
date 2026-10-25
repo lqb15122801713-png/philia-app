@@ -1,0 +1,79 @@
+{
+  "phase": "after",
+  "scenario": "dead",
+  "ok": true,
+  "mockOnly": true,
+  "hit": false,
+  "checks": [
+    {
+      "name": "DEAD_ORDER_ID_NOT_SEEN",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "dead order literal and read-only state are visible",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "dead order is included in the paid chip count",
+      "pass": true,
+      "actual": "待发货 2",
+      "expected": "待发货 2"
+    },
+    {
+      "name": "dead order is included in the subtitle count",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "dead ship is visibly disabled",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "dead refund is visibly disabled",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "normal paid order keeps its ship action",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "dead controls cannot open a shipment or refund layer",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "normal order retains the existing shipment layer",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "normal shipment cancel makes no mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "no uncaught page exception",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\after\\dead"
+}

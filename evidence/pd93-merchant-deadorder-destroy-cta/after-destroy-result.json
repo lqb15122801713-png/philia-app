@@ -1,0 +1,109 @@
+{
+  "phase": "after",
+  "scenario": "destroy",
+  "ok": true,
+  "mockOnly": true,
+  "hit": false,
+  "checks": [
+    {
+      "name": "expiry board is the reported empty state",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "unrelated batch filter hides the target in the batch panel",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "DESTROY_CTA_NOT_SEEN",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "destroy candidates ignore the unrelated batch filter",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "destroy opens an independent confirmation layer",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "opening destroy makes no mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "confirm is blocked before a target and reason",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "whitespace-only reason keeps confirm disabled",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "valid target and reason enable but do not submit confirm",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "confirmation identifies the quarantined batch",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "confirmation names the inventory consequence",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "pre-confirm still makes no destroy mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "cancel acted and closed the destroy layer",
+      "pass": true,
+      "actual": "acted+closed",
+      "expected": "acted+closed"
+    },
+    {
+      "name": "cancel makes no destroy or quarantine mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "no shipment mutation was made",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "no uncaught page exception",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    }
+  ],
+  "shipCalls": [],
+  "destroyCalls": [],
+  "quarantineCalls": [],
+  "screenshots": "E:\\KIMI code\\pd93-merchant-deadorder-destroy-cta\\evidence\\pd93-merchant-deadorder-destroy-cta\\shots\\after\\destroy"
+}
