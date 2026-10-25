@@ -181,6 +181,8 @@
 }
 .sk-chip:active { transform: scale(.94); }
 .sk-chip.on { background: var(--ink); border-color: var(--ink); color: #FAF7F0; }
+.sk-chip-selected-mark { margin-right: 5px; font-weight: 900; }
+.sk-chips[data-testid="sk-daychip"] > button.sk-chip.on { border-width: 2px; font-weight: 800; }
 
 /* ---- S3 班轴 daygrid + 预约卡 appt ---- */
 .sk-daygrid { margin: 12px 22px 0; position: relative; }
