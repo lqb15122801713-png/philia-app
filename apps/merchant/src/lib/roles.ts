@@ -110,7 +110,7 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
     return { title: '权限矩阵由店长或店主查看', hint: '角色×权限矩阵属管理层视界；店员账号的工作面是收银台。' }
   }
   if (pathname.startsWith('/hq')) {
-    // PD-71 总部台：关店/再开/克隆写口仅店主（manager 页内另有引导页，server 硬 403）
+    // PD-94：owner/manager 可读总部台；关店/再开/克隆仅 owner（clerk 仍由本守卫引导，server 硬闸）
     return { title: '总部台仅店主可用', hint: '连锁门店的关闭/再开/克隆属店主动作；店员账号的工作面是收银台。' }
   }
   if (pathname.startsWith('/console')) {

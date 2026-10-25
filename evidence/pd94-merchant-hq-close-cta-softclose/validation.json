@@ -1,0 +1,66 @@
+{
+  "base": "7a37c6c333aeeb7e8b4f160eed54f95d946e553d",
+  "branch": "feat/pd94-merchant-hq-close-cta-softclose",
+  "schemaChanges": 0,
+  "migration": "0135 故意空留",
+  "productDiff": {
+    "files": 3,
+    "insertions": 48,
+    "deletions": 42,
+    "serverFiles": 0,
+    "schemaFiles": 0
+  },
+  "bundle": {
+    "live": {
+      "name": "index-Cy3GZDEr.js",
+      "sha256": "ec6cb53a6797cb2f3cbe7efd1444e489b186e0e74d74260ab40a794d5605f715",
+      "tip": true,
+      "deploy": "20261025155014"
+    },
+    "baselineLocal": {
+      "name": "index-wv31ao1w.js",
+      "sha256": "59fb983bfae76a1a1decad0f6c740e62f2eb0d9a71cf8599fcd6db6b2bffa151",
+      "tip": false
+    },
+    "candidateLocal": {
+      "name": "index-Bzkt2irq.js",
+      "size": 1684020,
+      "sha256": "3384bb31cc3c43c8c90d8e449fa0d0345ea77d7c32e46d6b06ccd176b8cd41a3",
+      "tip": false,
+      "differentFromLive": true,
+      "differentFromBaseline": true
+    }
+  },
+  "checks": {
+    "baselineManager": { "ok": false, "failure": "HQ_CLOSE_CTA_NOT_SEEN", "actual": false, "expected": true },
+    "afterManagerCancel": { "ok": true, "pass": 17, "total": 17, "closeCalls": 0, "reopenCalls": 0, "cloneCalls": 0 },
+    "afterOwnerCancel": { "ok": true, "pass": 17, "total": 17, "closeCalls": 0, "reopenCalls": 0, "cloneCalls": 0 },
+    "afterManagerClosed": { "ok": true, "pass": 11, "total": 11, "closeCalls": 0, "reopenCalls": 0, "cloneCalls": 0 },
+    "afterOwnerMockCloseSuccess": { "ok": true, "pass": 19, "total": 19, "closeCalls": 1, "acknowledgeOpenFulfillment": true, "memoryOnly": true, "databaseWrites": 0 }
+  },
+  "commands": {
+    "npm run build": { "exit": 0, "apps": ["customer", "merchant", "staff"], "log": "build-all.log" },
+    "merchant unit via tsx + tsconfig.app.json": { "exit": 0, "pass": 10, "fail": 0, "log": "merchant-unit.log" },
+    "targeted eslint": { "exit": 0, "files": ["apps/merchant/src/App.tsx", "apps/merchant/src/lib/roles.ts", "apps/merchant/src/pages/HqConsolePage.tsx"] },
+    "npm run lint -w @philia/merchant": { "exit": 1, "errors": 47, "warnings": 5, "classification": "baseline-existing, no targeted-file errors", "log": "merchant-lint.log" },
+    "git diff --check": { "exit": 0 },
+    "node --check evidence/pd94-merchant-hq-close-cta-softclose/hq-close-cta.mjs": { "exit": 0 }
+  },
+  "review": {
+    "independentSecondPass": { "critical": 0, "important": 0 },
+    "remainingMinorAtThatPass": ["closed empty-state copy", "summary count"],
+    "minorFollowUp": "empty-state RED→GREEN 11/11；汇总按实际 17/17、17/17、11/11、19/19"
+  },
+  "hit": {
+    "started": false,
+    "reason": "未收到另行贴出的 HIT 例程；PR 只开不合、不部署",
+    "localhostAcceptedAsLive": false,
+    "acceptanceClaimed": false
+  },
+  "fixtures": {
+    "storeIds": ["pd94-mock-store"],
+    "secondStore": false,
+    "database": false,
+    "forbiddenFixtureTouched": false
+  }
+}
