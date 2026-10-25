@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: PD-95：无宠物照片时使用紧凑档案布局，不渲染待换假照片框
+ok 1 - PD-95：无宠物照片时使用紧凑档案布局，不渲染待换假照片框
+  ---
+  duration_ms: 3.3522
+  ...
+# Subtest: PD-95：已有宠物照片仍渲染真实头像与 16:10 照片框
+ok 2 - PD-95：已有宠物照片仍渲染真实头像与 16:10 照片框
+  ---
+  duration_ms: 0.5569
+  ...
+# Subtest: PD-95：在住房间未登记时提供登记入口，不显示待分配
+ok 3 - PD-95：在住房间未登记时提供登记入口，不显示待分配
+  ---
+  duration_ms: 1.1056
+  ...
+# Subtest: PD-95：只读历史单保留未登记事实，不显示待分配或伪造编辑入口
+not ok 4 - PD-95：只读历史单保留未登记事实，不显示待分配或伪造编辑入口
+  ---
+  duration_ms: 1.6427
+  location: 'E:\\KIMI code\\pd95-holdover-exposure\\apps\\staff\\src\\components\\boarding\\boardingExposure.test.tsx:1:2123'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /未登记/. Input:
+    
+    '<section class="sk-panel"><div class="flex items-center justify-between"><h2 class="text-title">入住信息</h2><span class="flex items-center gap-2"><span class="rounded-chip bg-success-light px-2 py-1 text-caption text-success-deep">已入住</span></span></div><div class="mt-3 flex flex-wrap gap-x-6 gap-y-2"><p class="flex items-center gap-1.5 text-body-sm text-ink"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scale h-5 w-5 text-ink-secondary" aria-hidden="true"><path d="M12 3v18"></path><path d="m19 8 3 8a5 5 0 0 1-6 0zV7"></path><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1"></path><path d="m5 8 3 8a5 5 0 0 1-6 0zV7"></path><path d="M7 21h10"></path></svg>入住称重 <span class="u1-num font-semibold">6.4 kg</span></p></div><div class="mt-3"><p class="text-caption text-ink-secondary">随身物品</p><ul class="mt-1.5 flex flex-wrap gap-1.5"><li><button type="button" disabled="" class="flex h-11 items-center gap-1.5 rounded-chip bg-sunken px-2.5 text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-default disabled:opacity-100">食盆</button></li></ul></div></section>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<section class="sk-panel"><div class="flex items-center justify-between"><h2 class="text-title">入住信息</h2><span class="flex items-center gap-2"><span class="rounded-chip bg-success-light px-2 py-1 text-caption text-success-deep">已入住</span></span></div><div class="mt-3 flex flex-wrap gap-x-6 gap-y-2"><p class="flex items-center gap-1.5 text-body-sm text-ink"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scale h-5 w-5 text-ink-secondary" aria-hidden="true"><path d="M12 3v18"></path><path d="m19 8 3 8a5 5 0 0 1-6 0zV7"></path><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1"></path><path d="m5 8 3 8a5 5 0 0 1-6 0zV7"></path><path d="M7 21h10"></path></svg>入住称重 <span class="u1-num font-semibold">6.4 kg</span></p></div><div class="mt-3"><p class="text-caption text-ink-secondary">随身物品</p><ul class="mt-1.5 flex flex-wrap gap-1.5"><li><button type="button" disabled="" class="flex h-11 items-center gap-1.5 rounded-chip bg-sunken px-2.5 text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-default disabled:opacity-100">食盆</button></li></ul></div></section>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd95-holdover-exposure\apps\staff\src\components\boarding\boardingExposure.test.tsx:64:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-95：已登记房间继续显示原房号
+ok 5 - PD-95：已登记房间继续显示原房号
+  ---
+  duration_ms: 0.4689
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 325.0621

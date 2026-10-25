@@ -49,10 +49,22 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
       </div>
 
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
-        <p className="flex items-center gap-1.5 text-body-sm text-ink">
-          <BedDouble className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-          房间 {stay.roomNo ? <span className="u1-num font-semibold">{stay.roomNo}</span> : <span className="font-semibold">待分配</span>}
-        </p>
+        {stay.roomNo || !onEdit ? (
+          <p className="flex items-center gap-1.5 text-body-sm text-ink">
+            <BedDouble className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
+            房间 {stay.roomNo ? <span className="u1-num font-semibold">{stay.roomNo}</span> : <span className="font-semibold">未登记</span>}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onEdit}
+            data-testid="boarding-room-register"
+            className="flex min-h-11 items-center gap-1.5 rounded-control bg-sunken px-3 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          >
+            <BedDouble className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
+            登记房间
+          </button>
+        )}
         {stay.checkinWeightKg != null ? (
           <p className="flex items-center gap-1.5 text-body-sm text-ink">
             <Scale className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />

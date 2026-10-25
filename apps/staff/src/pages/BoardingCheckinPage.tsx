@@ -7,7 +7,7 @@
  * 2. 每日打卡段：stay 已登记 → DailyLogForm（喂食 segment/遛狗步进/照片≥1/备注选填，
  *    吸底淡黄主钮）+ DailyLogList 历史倒序行。dailyLog 是 UPSERT by (stay_id, log_date)。
  * U2 版式：返回条（‹ 寄养打卡 + 右「第 N 晚·共 M 晚」）+ BoardingPetCard
- * （16:10 照片头+「在店寄养·房型」签+状态签）。
+ * （有图 16:10／无图紧凑档案头+「在店寄养·房型」签+状态签）。
  * 骨架批片 1（S-10）：外框换骨架——页根 .sk + SkBackBar（mono 晚数注，二级页无 dock）；
  * 功能件（CheckinForm/DailyLogForm/DailyLogList/StayInfoCard/BoardingPetCard）保数据接插不动。
  *
@@ -454,7 +454,7 @@ export default function BoardingCheckinPage() {
       {/* 返回条（‹ 寄养打卡 + 右 mono 注「第 N 晚·共 M 晚」；二级页无 dock） */}
       <SkBackBar title={BOARDING_COPY['boarding.title']} note={nightNote} fallback="/today" />
 
-      {/* 宠物卡（16:10 照片 + 在店寄养·房型签 + 状态签） */}
+      {/* 宠物卡（有图 16:10／无图紧凑档案 + 在店寄养·房型签 + 状态签） */}
       <BoardingPetCard
         pet={pet}
         roomLabel={roomLabel}
