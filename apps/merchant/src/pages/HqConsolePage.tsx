@@ -9,15 +9,14 @@
  * - 关店/再开写口 → store.closeStore / store.reopenStore（PD-70 软关语义的最小落口；
  *   未完成履约强警示等完整语义权威=PD-70）；
  * - 克隆写口 → 既有 store.cloneStore 语义（结构克隆、不带员工；仅 active 门店可作源）。
- * 权限闸：owner 可写；manager 页内引导页、clerk 由 ClerkRouteGuard 白名单拦；
- * 服务端 merchantOwnerProcedure 硬闸为准（双闸口径）。
+ * 权限闸：owner 可写；manager 可读真实门店及软关后果，确认/再开/克隆仍 owner-only；
+ * clerk 由 ClerkRouteGuard 白名单拦；服务端 merchantOwnerProcedure 硬闸为准（双闸口径）。
  */
 
 import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import MainScaffold from '../components/MainScaffold';
-import RoleGuidePage from '../components/RoleGuidePage';
 import { errMsg } from '../components/staff-admin/format';
 import { Badge, Btn, Field, inputCls, Modal, toast, ToasterMount } from '../components/staff-admin/ui';
 import { useMerchantRole } from '../lib/roles';
@@ -33,14 +32,14 @@ type HqStoreRow = {
 
 export default function HqConsolePage() {
   const { trpc, queryClient } = usePhiliaClient();
-  const { isOwner } = useMerchantRole();
+  const { canManage, isOwner } = useMerchantRole();
 
   /* 店列表默认仅 active；「含已关闭」默认不勾（PD-70 裁③同口径；服务端 listMine.includeClosed） */
   const [includeClosed, setIncludeClosed] = useState(false);
   const mineQ = useQuery({
     queryKey: ['store', 'listMine', includeClosed],
     queryFn: () => trpc.store.listMine.query({ includeClosed }),
-    enabled: isOwner,
+    enabled: canManage,
   });
   const stores = (mineQ.data?.stores ?? []) as HqStoreRow[];
   const visible = stores;
@@ -48,11 +47,11 @@ export default function HqConsolePage() {
   const [busy, setBusy] = useState(false);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ['store', 'listMine'] });
 
-  /* ---- 关店（二次确认 + 勾选「已知晓仍关闭」） ---- */
+  /* ---- 关店（二次确认 + 勾选「已知晓仍关闭」；manager 可读撤，owner 才可确认） ---- */
   const [closeTarget, setCloseTarget] = useState<HqStoreRow | null>(null);
   const [closeAck, setCloseAck] = useState(false);
   const doClose = async () => {
-    if (!closeTarget) return;
+    if (!closeTarget || !isOwner) return;
     setBusy(true);
     try {
       await trpc.store.closeStore.mutate({ storeId: closeTarget.id, acknowledgeOpenFulfillment: closeAck });
@@ -103,19 +102,14 @@ export default function HqConsolePage() {
     }
   };
 
-  if (!isOwner) {
-    return (
-      <RoleGuidePage
-        title="总部台仅店主可用"
-        hint="连锁门店的关闭/再开/克隆属店主动作（服务端 403 硬闸）；请使用店主账号。"
-      />
-    );
-  }
-
   return (
     <MainScaffold
       title="总部台"
-      sub="连锁门店经营壳——关闭/再开/克隆写操作的主写口；≠控制台（调参/画布/口令闸）"
+      sub={
+        isOwner
+          ? '连锁门店经营壳——关闭/再开/克隆写操作的主写口；≠控制台（调参/画布/口令闸）'
+          : '连锁门店经营视界——可查看软关影响与已关闭标识；关闭/再开/克隆仅店主确认'
+      }
       testid="hq-page"
       actions={
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
@@ -143,7 +137,7 @@ export default function HqConsolePage() {
           </p>
         ) : visible.length === 0 ? (
           <p className="py-12 text-center text-caption text-ink-placeholder" data-testid="hq-list-empty">
-            {stores.length === 0 ? '名下暂无门店' : '当前无营业中门店；勾选「含已关闭」可查看已关闭门店'}
+            {includeClosed ? '名下暂无门店' : '当前无营业中门店；勾选「含已关闭」可查看已关闭门店'}
           </p>
         ) : (
           <ul className="divide-y divide-line-divider">
@@ -172,27 +166,33 @@ export default function HqConsolePage() {
                   ) : (
                     <div className="flex items-center gap-2">
                       {isClosed ? (
-                        <Btn
-                          variant="ghost"
-                          size="sm"
-                          data-testid={`hq-reopen-open-${s.id}`}
-                          onClick={() => setReopenTarget(s)}
-                        >
-                          重新开业
-                        </Btn>
-                      ) : (
-                        <>
+                        isOwner ? (
                           <Btn
                             variant="ghost"
                             size="sm"
-                            data-testid={`hq-clone-open-${s.id}`}
-                            onClick={() => {
-                              setCloneName('');
-                              setCloneSource(s);
-                            }}
+                            data-testid={`hq-reopen-open-${s.id}`}
+                            onClick={() => setReopenTarget(s)}
                           >
-                            克隆新店
+                            重新开业
                           </Btn>
+                        ) : (
+                          <span className="text-caption-xs text-ink-placeholder">仅店主可再开</span>
+                        )
+                      ) : (
+                        <>
+                          {isOwner ? (
+                            <Btn
+                              variant="ghost"
+                              size="sm"
+                              data-testid={`hq-clone-open-${s.id}`}
+                              onClick={() => {
+                                setCloneName('');
+                                setCloneSource(s);
+                              }}
+                            >
+                              克隆新店
+                            </Btn>
+                          ) : null}
                           <Btn
                             variant="danger"
                             size="sm"
@@ -215,25 +215,26 @@ export default function HqConsolePage() {
         )}
       </section>
 
-      {/* 关店确认弹层（软关警示：历史全留；勾选后可关） */}
+      {/* 关店确认弹层（软关警示：历史全留；owner 勾选后可关，manager 仅查看可撤） */}
       <Modal
         open={closeTarget !== null}
         onClose={() => {
           if (!busy) setCloseTarget(null);
         }}
         title={`关闭门店「${closeTarget?.name ?? ''}」`}
+        ariaLabel={`关闭门店「${closeTarget?.name ?? ''}」`}
         footer={
           <>
-            <Btn variant="ghost" onClick={() => setCloseTarget(null)} disabled={busy}>
+            <Btn variant="ghost" data-testid="hq-close-cancel" onClick={() => setCloseTarget(null)} disabled={busy}>
               取消
             </Btn>
             <Btn
               variant="danger"
               data-testid="hq-close-submit"
-              disabled={busy || !closeAck}
+              disabled={busy || !closeAck || !isOwner}
               onClick={() => void doClose()}
             >
-              确认关闭
+              {isOwner ? '确认关闭' : '仅店主可确认'}
             </Btn>
           </>
         }
@@ -242,13 +243,18 @@ export default function HqConsolePage() {
           <p className="rounded-input bg-danger-light px-3 py-2 text-caption text-danger-deep">
             关闭后该店不再出现在客端附近店/可约列表与默认经营视图；历史预约、账目、会员、员工记录全部保留，不做物理删除。
           </p>
+          {!isOwner ? (
+            <p className="text-caption text-ink-secondary" data-testid="hq-close-owner-required">
+              仅店主可确认关店；本层用于查看软关影响，选择取消不会改动门店。
+            </p>
+          ) : null}
           <label className="flex items-center gap-2 text-caption text-ink">
             <input
               type="checkbox"
               data-testid="hq-close-ack"
               checked={closeAck}
               onChange={(e) => setCloseAck(e.target.checked)}
-              disabled={busy}
+              disabled={busy || !isOwner}
             />
             已知晓影响，仍要关闭
           </label>

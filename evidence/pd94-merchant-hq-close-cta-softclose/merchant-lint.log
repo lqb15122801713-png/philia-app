@@ -1,0 +1,515 @@
+
+> @philia/merchant@0.0.0 lint
+> eslint .
+
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\appointments\MonitorTimeline.tsx
+  22:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\appointments\RescheduleSheet.tsx
+  218:66  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\appointments\RescheduleSheet.tsx:218:66
+  216 |                 const disabled =
+  217 |                   isClosedDay(store?.openHours, d) ||
+> 218 |                   boardingAlign(store?.openHours, d).getTime() < Date.now() + LEAD_BUFFER_MS ||
+      |                                                                  ^^^^^^^^^^ Cannot call impure function
+  219 |                   nightFull(d);
+  220 |                 const active = checkin?.getTime() === d.getTime();
+  221 |                 return (  react-hooks/purity
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\appointments\Toast.tsx
+  21:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\DayClosePanels.tsx
+  277:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\DayClosePanels.tsx:277:5
+  275 |   useEffect(() => {
+  276 |     if (clearSignal === 0) return
+> 277 |     setActualInput('')
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  278 |     setActualWechatInput('')
+  279 |     setActualAlipayInput('')
+  280 |     setDiffNote('')  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\HoldPanel.tsx
+  122:32  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\HoldPanel.tsx:122:32
+  120 |                   <span className="break-all">{b.billNo}</span>
+  121 |                   {/* 片 3：挂出超 24h 徽标（按 heldAt 计算，防压单） */}
+> 122 |                   {b.heldAt && Date.now() - new Date(b.heldAt).getTime() > 24 * 3600 * 1000 ? (
+      |                                ^^^^^^^^^^ Cannot call impure function
+  123 |                     <span
+  124 |                       className="inline-flex items-center rounded-[6px] bg-danger-light px-1.5 py-[2px] align-middle text-caption-xs font-sans font-semibold leading-none text-danger-deep"
+  125 |                       data-testid={`cashier-held-over24-${b.billNo}`}  react-hooks/purity
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\ImportLedgerPanel.tsx
+  30:30  error  Irregular whitespace not allowed  no-irregular-whitespace
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\MembershipPanel.tsx
+  169:28  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\MembershipPanel.tsx:169:28
+  167 |     if (!open) return
+  168 |     if (memberIdForLand === null) {
+> 169 |       if (mode !== 'sell') setMode('sell')
+      |                            ^^^^^^^ Avoid calling setState() directly within an effect
+  170 |       return
+  171 |     }
+  172 |     if (effStatusForLand === 'frozen') {  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\PaySheet.tsx
+  141:60  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\cashier\PaySheet.tsx:141:60
+  139 |   const passUsable =
+  140 |     pass != null && pass.status === 'active' && pass.remainTimes > 0 &&
+> 141 |     (pass.expiresAt === null || pass.expiresAt.getTime() > Date.now())
+      |                                                            ^^^^^^^^^^ Cannot call impure function
+  142 |
+  143 |   /** 次卡胶囊不可用原因（null = 可用） */
+  144 |   const passBlockReason = useMemo((): string | null => {  react-hooks/purity
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\dashboard\MerchantEventsProvider.tsx
+  62:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\mall-admin\ProductEditorDialog.tsx
+  60:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\mall-admin\ProductEditorDialog.tsx:60:5
+  58 |   useEffect(() => {
+  59 |     if (!open) return
+> 60 |     setName(product?.name ?? '')
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  61 |     setCategory(product?.category ?? PRODUCT_CATEGORIES[0])
+  62 |     setDescription(product?.description ?? '')
+  63 |     setPriceYuan(product ? fenToYuanInput(product.priceFen) : '')  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\mall-admin\ui.tsx
+  218:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\member\amortization.tsx
+  15:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\EditStaffDialog.tsx
+  42:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\EditStaffDialog.tsx:42:7
+  40 |   useEffect(() => {
+  41 |     if (open && staff) {
+> 42 |       setRole(staff.role === 'frontdesk' ? 'frontdesk' : 'groomer');
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  43 |       setActive(staff.status === 'active');
+  44 |       setPending(false);
+  45 |       setError(null);  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\InviteStaffDialog.tsx
+  28:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\InviteStaffDialog.tsx:28:7
+  26 |   useEffect(() => {
+  27 |     if (open) {
+> 28 |       setName('');
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  29 |       setPending(false);
+  30 |       setResult(null);
+  31 |     }  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\ScheduleEditorDialog.tsx
+  53:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\ScheduleEditorDialog.tsx:53:7
+  51 |   useEffect(() => {
+  52 |     if (open && staff) {
+> 53 |       setWeek(toEdit(staff.schedule));
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  54 |       setPending(false);
+  55 |       setError(null);
+  56 |     }  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\ServiceEditorDialog.tsx
+  40:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\ServiceEditorDialog.tsx:40:5
+  38 |   useEffect(() => {
+  39 |     if (!open) return;
+> 40 |     setType(service?.type === 'boarding' ? 'boarding' : 'grooming');
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  41 |     setName(service?.name ?? '');
+  42 |     setDuration(service?.durationMin != null ? String(service.durationMin) : '');
+  43 |     setPriceYuan(service ? (service.priceFen / 100).toFixed(2) : '');  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\staff-admin\ui.tsx
+  214:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  272:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\badge.tsx
+  46:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\button-group.tsx
+  82:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\button.tsx
+  62:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\carousel.tsx
+  96:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\carousel.tsx:96:5
+  94 |   React.useEffect(() => {
+  95 |     if (!api) return
+> 96 |     onSelect(api)
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  97 |     api.on("reInit", onSelect)
+  98 |     api.on("select", onSelect)
+  99 |  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\form.tsx
+  159:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\navigation-menu.tsx
+  167:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\sidebar.tsx
+  611:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\sidebar.tsx:611:26
+  609 |   // Random width between 50 to 90%.
+  610 |   const width = React.useMemo(() => {
+> 611 |     return `${Math.floor(Math.random() * 40) + 50}%`
+      |                          ^^^^^^^^^^^^^ Cannot call impure function
+  612 |   }, [])
+  613 |
+  614 |   return (  react-hooks/purity
+  725:3   error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\components\ui\toggle.tsx
+  45:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\hooks\use-mobile.ts
+  14:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\hooks\use-mobile.ts:14:5
+  12 |     }
+  13 |     mql.addEventListener("change", onChange)
+> 14 |     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     return () => mql.removeEventListener("change", onChange)
+  16 |   }, [])
+  17 |  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AnnouncementsPage.tsx
+  288:17  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AnnouncementsPage.tsx:288:17
+  286 |   /** 懒算窗口章（同 promo 口径）：未到点=待生效 / 已过点=已截止 */
+  287 |   const windowBadge = (a: Pick<AnnouncementRow, 'startsAt' | 'endsAt'>): { tone: 'warn' | 'muted'; label: string } | null => {
+> 288 |     const now = Date.now();
+      |                 ^^^^^^^^^^ Cannot call impure function
+  289 |     if (a.endsAt && new Date(a.endsAt).getTime() < now) return { tone: 'muted', label: an('ann.list.expiredBadge') };
+  290 |     if (a.startsAt && new Date(a.startsAt).getTime() > now) return { tone: 'warn', label: an('ann.list.pendingBadge') };
+  291 |     return null;  react-hooks/purity
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AppointmentDetailPage.tsx
+  377:65  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AppointmentDetailPage.tsx:377:65
+  375 |   const srcLabel = assignSourceLabel(appt.assignSource);
+  376 |   const vaccineExpired = pet?.vaccineValidUntil
+> 377 |     ? new Date(`${pet.vaccineValidUntil}T23:59:59`).getTime() < Date.now()
+      |                                                                 ^^^^^^^^^^ Cannot call impure function
+  378 |     : false;
+  379 |
+  380 |   // 六步卡：锁定顺序渲染（未初始化的步 = 墨灰「未到」）  react-hooks/purity
+  991:29  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AppointmentDetailPage.tsx:991:29
+  989 |   const nightNow = Math.min(
+  990 |     nightsTotal,
+> 991 |     Math.max(1, Math.floor((Date.now() - appt.scheduledStart.getTime()) / 86_400_000) + 1),
+      |                             ^^^^^^^^^^ Cannot call impure function
+  992 |   );
+  993 |   const aside =
+  994 |     appt.status === 'in_boarding' && stay                                                               react-hooks/purity
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AppointmentMonitorPage.tsx
+  232:5  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AppointmentMonitorPage.tsx:232:5
+  230 |   const isStaleZombie =
+  231 |     appt?.status === 'in_service' &&
+> 232 |     Date.now() - new Date(appt.checkedInAt ?? appt.scheduledStart).getTime() >= ZOMBIE_MS_49;
+      |     ^^^^^^^^^^ Cannot call impure function
+  233 |   const [forcing49, setForcing49] = useState(false);
+  234 |   const forceComplete49 = () => {
+  235 |     if (!aid || !window.confirm(oc('mon.forceCompleteConfirm'))) return;  react-hooks/purity
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\AppointmentsPage.tsx
+  196:9  warning  The 'todayItems' conditional could make the dependencies of useMemo Hook (at line 210) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'todayItems' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CashierClosePage.tsx
+  176:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CashierClosePage.tsx:176:7
+  174 |     const sid = searchParams.get('reclose')
+  175 |     if (sid) {
+> 176 |       setOverrideShiftId(sid)
+      |       ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  177 |       setSearchParams({}, { replace: true })
+  178 |     }
+  179 |   }, [searchParams, setSearchParams])  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CashierPage.tsx
+  219:76  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CashierPage.tsx:219:76
+  217 |     (memberPass == null ||
+  218 |       (memberPass.status === 'active' &&
+> 219 |         (memberPass.expiresAt === null || memberPass.expiresAt.getTime() > Date.now())))
+      |                                                                            ^^^^^^^^^^ Cannot call impure function
+  220 |
+  221 |   const clearCart = useCallback(() => {
+  222 |     setLines([])                                                                                                                                                                                                                                                                                                                                     react-hooks/purity
+  323:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CashierPage.tsx:323:7
+  321 |     const appt = pendingQ.data.find((a) => a.id === pullId)
+  322 |     if (appt) {
+> 323 |       pullAppt(appt)
+      |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  324 |       toast(`已拉入待收款预约：${appt.petName} · ${appt.serviceName}`)
+  325 |     } else {
+  326 |       toast('该预约已收款或不存在', { icon: 'ℹ️' })  react-hooks/set-state-in-effect
+  617:11  error  Expected a 'break' statement before 'case'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-fallthrough
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CashierRefundsPage.tsx
+  122:11  error  Expected a 'break' statement before 'case'  no-fallthrough
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx
+   83:16  error  Error: Cannot call impure function during render
+
+`performance.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx:83:16
+  81 |   return useMemo(() => {
+  82 |     if (!copyQ.data || !dictQ.data || !blocksQ.data || !slotsQ.data) return null;
+> 83 |     const t0 = performance.now();
+     |                ^^^^^^^^^^^^^^^^^ Cannot call impure function
+  84 |     const items: SearchItem[] = [];
+  85 |     /* 端口件 15 卡（consolePortsMeta 单源） */
+  86 |     for (const p of CONSOLE_PORT_META) {                                                                                                                                                                                                                                                                              react-hooks/purity
+  114:30  error  Error: Cannot call impure function during render
+
+`performance.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx:114:30
+  112 |       items.push({ kind: 'slot', title: s.live?.contentJson?.alt ?? s.slotKey, sub: `素材位 · ${s.slotKey}`, port: 'slots' });
+  113 |     }
+> 114 |     return { items, buildMs: performance.now() - t0, total: items.length };
+      |                              ^^^^^^^^^^^^^^^^^ Cannot call impure function
+  115 |   }, [copyQ.data, dictQ.data, blocksQ.data, slotsQ.data]);
+  116 | }
+  117 |                                                                                                                                                                                                                                               react-hooks/purity
+  168:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx:168:7
+  166 |   useEffect(() => {
+  167 |     if (open) {
+> 168 |       setQ('');
+      |       ^^^^ Avoid calling setState() directly within an effect
+  169 |       setTimeout(() => inputRef.current?.focus(), 50);
+  170 |     }
+  171 |   }, [open]);                            react-hooks/set-state-in-effect
+  175:16  error  Error: Cannot call impure function during render
+
+`performance.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx:175:16
+  173 |   const results = useMemo(() => {
+  174 |     if (!index) return { groups: [] as Array<{ kind: SearchItem['kind']; items: SearchItem[] }>, ms: 0 };
+> 175 |     const t0 = performance.now();
+      |                ^^^^^^^^^^^^^^^^^ Cannot call impure function
+  176 |     const query = q.trim().toLowerCase();
+  177 |     if (query === '') return { groups: [], ms: 0 };
+  178 |     const terms = [query, ...(SYNONYMS[q.trim()] ?? []).map((s) => s.toLowerCase())];                                                                                                                                                                      react-hooks/purity
+  188:26  error  Error: Cannot call impure function during render
+
+`performance.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx:188:26
+  186 |       .map((kind) => ({ kind, items: top.filter((it) => it.kind === kind).slice(0, kind === 'copyKey' ? 12 : 6) }))
+  187 |       .filter((g) => g.items.length > 0);
+> 188 |     return { groups, ms: performance.now() - t0 };
+      |                          ^^^^^^^^^^^^^^^^^ Cannot call impure function
+  189 |   }, [index, q]);
+  190 |
+  191 |   useEffect(() => {                                                                                                                                                                                                                                                                       react-hooks/purity
+  192:26  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\ConsoleSearch.tsx:192:26
+  190 |
+  191 |   useEffect(() => {
+> 192 |     if (q.trim() !== '') setLastMs(results.ms);
+      |                          ^^^^^^^^^ Avoid calling setState() directly within an effect
+  193 |   }, [q, results.ms]);
+  194 |
+  195 |   const pick = (it: SearchItem) => {  react-hooks/set-state-in-effect
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CopyConfigPage.tsx
+  141:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\CopyConfigPage.tsx:141:7
+  139 |       el.scrollIntoView({ block: 'center' });
+  140 |       el.classList.add('ring-2', 'ring-brand-primary');
+> 141 |       setDeepLinked(true);
+      |       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  142 |     }
+  143 |   }, [initialSearch, deepLinked, groups]);
+  144 |  react-hooks/set-state-in-effect
+  216:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\DashboardPage.tsx
+  213:11  error  Expected a 'break' statement before 'case'  no-fallthrough
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\DevLoginPage.tsx
+  96:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\OpsPage.tsx
+  308:25  error  React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\RulesConfigPage.tsx
+  981:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  986:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\TransfersPage.tsx
+  147:24  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant\src\pages\TransfersPage.tsx:147:24
+  145 |   /* 建议量预填：选品后建议量回填数量框（手改不覆写——随选品变化才回填） */
+  146 |   useEffect(() => {
+> 147 |     if (suggestQ.data) setRepQty(String(suggestQ.data.suggestQty));
+      |                        ^^^^^^^^^ Avoid calling setState() directly within an effect
+  148 |   }, [suggestQ.data]);
+  149 |   const replenishQ = useQuery({
+  150 |     queryKey: ['transfers', 'replenishList'],  react-hooks/set-state-in-effect
+
+✖ 52 problems (47 errors, 5 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.
+
+npm error Lifecycle script `lint` failed with error:
+npm error code 1
+npm error path E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant
+npm error workspace @philia/merchant@0.0.0
+npm error location E:\KIMI code\pd94-merchant-hq-close-cta-softclose\apps\merchant
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c eslint .

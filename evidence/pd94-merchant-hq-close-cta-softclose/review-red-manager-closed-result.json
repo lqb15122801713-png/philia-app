@@ -1,0 +1,39 @@
+{
+  "phase": "review-red",
+  "role": "manager",
+  "scenario": "closed",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "bundle": {
+    "name": "index-CatG7a5e.js",
+    "size": 1684035,
+    "sha256": "92a0c173e14f5e3b3e4db095ed33bee25c9f8f8ca7ba0927c2a4f4331bd3e11f"
+  },
+  "failure": "closed-only empty state points to retained closed stores",
+  "error": null,
+  "checks": [
+    {
+      "name": "closed store is absent from the default list",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "default closed-only list shows an honest empty state",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "closed-only empty state points to retained closed stores",
+      "pass": false,
+      "actual": "名下暂无门店",
+      "expected": "当前无营业中门店；勾选「含已关闭」可查看已关闭门店"
+    }
+  ],
+  "closeCalls": [],
+  "reopenCalls": [],
+  "cloneCalls": [],
+  "screenshots": "E:\\KIMI code\\pd94-merchant-hq-close-cta-softclose\\evidence\\pd94-merchant-hq-close-cta-softclose\\shots\\review-red\\manager-closed"
+}

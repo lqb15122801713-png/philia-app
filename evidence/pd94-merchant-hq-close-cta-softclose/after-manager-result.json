@@ -1,0 +1,121 @@
+{
+  "phase": "after",
+  "role": "manager",
+  "scenario": "active",
+  "ok": true,
+  "mockOnly": true,
+  "hit": false,
+  "bundle": {
+    "name": "index-Bzkt2irq.js",
+    "size": 1684020,
+    "sha256": "3384bb31cc3c43c8c90d8e449fa0d0345ea77d7c32e46d6b06ccd176b8cd41a3"
+  },
+  "checks": [
+    {
+      "name": "HQ_CLOSE_CTA_NOT_SEEN",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "real active store row is visible",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "default list contains no closed badge",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "include-closed defaults off",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "clone CTA exposure matches role",
+      "pass": true,
+      "actual": false,
+      "expected": false
+    },
+    {
+      "name": "close CTA opens an independent confirmation layer",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "soft-close consequence says records are retained, not physically deleted",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "opening the layer makes no close mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "close acknowledgement respects owner boundary",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "close confirmation is blocked before owner acknowledgement",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "manager sees the owner-only confirmation boundary",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "cancel acted and closed the confirmation layer",
+      "pass": true,
+      "actual": "acted+closed",
+      "expected": "acted+closed"
+    },
+    {
+      "name": "cancel makes no close mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "no close, reopen, or clone mutation occurred",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "active store was never closed",
+      "pass": true,
+      "actual": "active",
+      "expected": "active"
+    },
+    {
+      "name": "the same single store is retained",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "no uncaught page exception",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    }
+  ],
+  "closeCalls": [],
+  "reopenCalls": [],
+  "cloneCalls": [],
+  "screenshots": "E:\\KIMI code\\pd94-merchant-hq-close-cta-softclose\\evidence\\pd94-merchant-hq-close-cta-softclose\\shots\\after\\manager"
+}

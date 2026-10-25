@@ -1,0 +1,50 @@
+{
+  "leg": "Kimi Code Desktop built-in browser",
+  "status": "LOCAL_CANDIDATE_OBSERVED",
+  "hit": false,
+  "storeScope": "所有腿仅同一家 pd94-mock-store；无第二店、无数据库",
+  "liveReadOnly": {
+    "url": "http://120.53.102.45:7202/hq",
+    "bundle": "index-Cy3GZDEr.js",
+    "bundleSha256": "ec6cb53a6797cb2f3cbe7efd1444e489b186e0e74d74260ab40a794d5605f715",
+    "staticBundleContainsHqCloseMarkers": true,
+    "sessionObserved": "小美（非商家角色）",
+    "roleBoundPageObserved": true,
+    "gateBypassed": false,
+    "mutations": []
+  },
+  "activeManager": {
+    "url": "http://127.0.0.1:55626/hq",
+    "role": "merchant_manager（敏慧店长 Mock）",
+    "bundle": "index-Bzkt2irq.js",
+    "ctaVisible": true,
+    "realStoreRowVisible": true,
+    "confirmationLayerOpened": true,
+    "softCloseRetentionCopyVisible": true,
+    "managerAckDisabled": true,
+    "managerConfirmDisabled": true,
+    "cancelActedAndDialogClosed": true,
+    "closeCalls": [],
+    "reopenCalls": [],
+    "cloneCalls": [],
+    "storeStatusAfter": "active",
+    "singleStoreRetained": true
+  },
+  "closedManager": {
+    "url": "http://127.0.0.1:55625/hq",
+    "role": "merchant_manager（敏慧店长 Mock）",
+    "bundle": "index-Bzkt2irq.js",
+    "initialStatus": "closed",
+    "defaultListShowsNoStoreRow": true,
+    "emptyStateCopy": "当前无营业中门店；勾选「含已关闭」可查看已关闭门店",
+    "includeClosedDefaultsOff": true,
+    "includeClosedRevealsSameStoreWithClosedBadge": true,
+    "managerReopenAbsent": true,
+    "closeCalls": [],
+    "reopenCalls": [],
+    "cloneCalls": [],
+    "storeStatusAfter": "closed",
+    "singleStoreRetained": true
+  },
+  "visualSnapshotTool": "PAGE_NOT_READY；像素帧由同源 dist CDP 脚本保存，Desktop 腿记录 DOM 与真实点击"
+}

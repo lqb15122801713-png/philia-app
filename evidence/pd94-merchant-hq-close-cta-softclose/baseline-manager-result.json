@@ -1,0 +1,26 @@
+{
+  "phase": "baseline",
+  "role": "manager",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "bundle": {
+    "name": "index-wv31ao1w.js",
+    "size": 1683586,
+    "sha256": "59fb983bfae76a1a1decad0f6c740e62f2eb0d9a71cf8599fcd6db6b2bffa151"
+  },
+  "failure": "HQ_CLOSE_CTA_NOT_SEEN",
+  "error": null,
+  "checks": [
+    {
+      "name": "HQ_CLOSE_CTA_NOT_SEEN",
+      "pass": false,
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "closeCalls": [],
+  "reopenCalls": [],
+  "cloneCalls": [],
+  "screenshots": "E:\\KIMI code\\pd94-merchant-hq-close-cta-softclose\\evidence\\pd94-merchant-hq-close-cta-softclose\\shots\\baseline\\manager"
+}
