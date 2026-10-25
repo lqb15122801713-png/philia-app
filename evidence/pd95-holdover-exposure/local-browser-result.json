@@ -1,0 +1,50 @@
+{
+  "capturedAt": "2026-10-25T12:13:24.034Z",
+  "kind": "local-candidate-not-live-hit",
+  "base": "http://127.0.0.1:7295/boarding/pd95-boarding/checkin",
+  "bundleName": "index-_s_wlKE7.js",
+  "bundleSha256": "207564bd2e0701d7b59d785605e9fabc4839e392c287861fe2fba4212388c64b",
+  "observations": {
+    "compactPetCardVisible": true,
+    "roomRegisterVisible": true,
+    "pendingReplaceTextAbsent": true,
+    "roomPendingTextAbsent": true,
+    "realAvatarAndSixteenTenControlCoveredByUnitTest": true,
+    "existingRoomNumberControlCoveredByUnitTest": true,
+    "readonlyHistoricalUnregisteredFactCoveredByUnitTest": true
+  },
+  "interactions": {
+    "mobileKeyboardEnterOpenedRegisterForm": true,
+    "mobileKeyboardCancelReturnedToRegisterEntry": true,
+    "desktopPointerOpenedRegisterForm": true,
+    "desktopPointerCancelReturnedToRegisterEntry": true,
+    "saveButtonVisibleWhileEditing": true,
+    "saveButtonAbsentAfterCancel": true,
+    "saveSubmitClicked": false,
+    "dailyLogSubmitClicked": false,
+    "checkoutClicked": false
+  },
+  "network": {
+    "unknownProcedures": 0,
+    "businessMutations": 0,
+    "blockedAutomaticPushSubscribeCalls": 94,
+    "note": "浏览器自动 push.subscribe 均被只读 mock 阻断并单列；未计作业务提交，未建立真实订阅。"
+  },
+  "frames": [
+    {
+      "path": "shots/01-boarding-compact.png",
+      "content": "400px 视口：紧凑宠物档案条、登记房间入口、原入住信息",
+      "md5": "f706310a945060bae814e1aeafc40fcd",
+      "sha256": "08f1fec18d8a73c3f5536e3d1c7dbce57b023ec963bc943d3ab9209c8bba29c3"
+    },
+    {
+      "path": "shots/02-room-register-form.png",
+      "content": "390px 视口：原入住登记表单、保存与取消双出口",
+      "md5": "53fd58200db919ba58b6f833b3526c8f",
+      "sha256": "bb9789c4db5f32ee7b9ba1903552a6061835c9e3c9dc92a0f9a0a48e0c307893"
+    }
+  ],
+  "frameMd5Equal": false,
+  "evidenceReuse": false,
+  "liveHitClaim": false
+}
