@@ -1,0 +1,119 @@
+{
+  "schema": "pd97-client-pending-swap-clear-validation-v1",
+  "observedAt": "2026-10-26T14:00:41+08:00",
+  "worktree": "E:\\KIMI code\\pd97-client-pending-swap-clear",
+  "branch": "feat/pd97-client-pending-swap-clear",
+  "baseline": {
+    "tip": "287cf4f2aaf31195692040d3c2248b5e6c653166",
+    "deploy": "20261026112609",
+    "liveBundle": "index-0tBLrJnt.js",
+    "liveBundleSha256": "0f10dd7ea484e797d73a122e3893893573e272ab44a60ae1825c3d88b28a3e8a",
+    "localBuildBundle": "index-CU2PlPFq.js",
+    "localBuildBundleSha256": "79018db3d2d72d90a65b3accd26b0d2f3d36652a3b6932e25d14e1ca35fdf54f",
+    "e2e": {
+      "green": 0,
+      "red": 6,
+      "identityTrue": 6,
+      "pending": {
+        "home": 5,
+        "mall": 11,
+        "product": 1,
+        "cartInStock": 1,
+        "checkoutInStock": 1,
+        "orders": 5
+      }
+    }
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7297",
+    "bundleName": "index-Dv5UMifb.js",
+    "bundleBytes": 1423318,
+    "bundleSha256": "bb780e35a2476d08d592fed7d47a3d07601a0c9d95ff30b2fb56c2fa2caa9b79",
+    "tipPackage": false,
+    "differentFromRequiredBaseline": true,
+    "e2e": {
+      "green": 6,
+      "failures": 0,
+      "identityTrue": 6,
+      "pending": {
+        "home": 0,
+        "mall": 0,
+        "product": 0,
+        "cartInStock": 0,
+        "checkoutInStock": 0,
+        "orders": 0
+      }
+    }
+  },
+  "productDiff": {
+    "files": 6,
+    "insertions": 18,
+    "deletions": 17,
+    "paths": [
+      "apps/customer/src/components/mall/ProductImage.tsx",
+      "apps/customer/src/copy/mall.ts",
+      "apps/customer/src/pages/HomePage.tsx",
+      "apps/customer/src/pages/MallPage.tsx",
+      "apps/customer/src/pages/ProductDetailPage.tsx",
+      "apps/customer/src/styles/home-v2.css"
+    ]
+  },
+  "regression": {
+    "unit": {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/customer/tsconfig.app.json --test apps/customer/src/components/mall/ProductImage.test.tsx apps/customer/src/components/booking/single/slotGrid.test.ts apps/customer/src/components/booking/legendCopy.test.ts",
+      "passed": 4,
+      "failed": 0
+    },
+    "buildAll": "PASS; customer/merchant/staff; final-build-all.txt",
+    "targetedLintOther": "PASS; final-lint-other.txt",
+    "homeLint": "BASELINE_EXISTING_RED; react-hooks/purity at HomePage.tsx:128; final-lint-home.txt",
+    "fullCustomerLint": "BASELINE_EXISTING_RED; 65 errors/4 warnings before and after; final-lint-customer.txt",
+    "redToGreen": "baseline-results.json 0/6 GREEN -> final-results.json 6/6 GREEN",
+    "mutation": "mutation-red-product-image.txt: reintroduced generatedPlaceholder; 1/2 RED; reverted; final-unit-all.txt 4/4 PASS"
+  },
+  "surfaces": {
+    "home": "identity=true; pending 5 -> 0; real service illustrations; baseline-home.png/final-home.png",
+    "mall": "identity=true; pending 11 -> 0; hero + 10 product illustrations; baseline-mall.png/final-mall.png",
+    "product": "identity=true; real /mall/product/:id + pdp-add-cart; pending 1 -> 0; not cart_empty",
+    "cartInStock": "identity=true; one row/qty=1; pending 1 -> 0; not empty",
+    "checkoutInStock": "identity=true; one item; pending 1 -> 0; not empty; payment not submitted",
+    "orders": "identity=true; five real API-created orders on one isolated store; pending 5 -> 0"
+  },
+  "mislabel": {
+    "baselineR43ProductEqualsCartEmptyMd5": "88ffa0709accfd36592448a23216eb52",
+    "finalProductEqualsCart": false,
+    "finalProductIdentity": "/mall/product/:id with pdp-add-cart",
+    "finalCartIdentity": "/mall/cart with one stocked row",
+    "finalCheckoutIdentity": "/mall/checkout with one stocked item",
+    "corrected": true,
+    "emptyCartUsedAsCleared": false,
+    "skipUsedAsCleared": false,
+    "reuseCrossTipUsedAsCleared": false
+  },
+  "migration": {
+    "reserved": "0138",
+    "status": "0138 故意空留",
+    "schemaFiles": 0,
+    "forbiddenUntouched": ["0117", "0119", "0122-0137", "0139"]
+  },
+  "boundaries": {
+    "serverChanges": 0,
+    "schemaChanges": 0,
+    "secondStoreCreated": false,
+    "forbiddenFixture01M5EQVFTouched": false,
+    "directProductionDatabaseWrites": false,
+    "payment": "none; five orders created by real mall.createOrder only on isolated temporary single-store database; initially pending, later auto-cancelled by existing timeout sweeper",
+    "desktopTabsOrForegroundUsedForFinalEvidence": false,
+    "localhostUsedAsLiveHIT": false,
+    "usageInspected": false
+  },
+  "live": {
+    "health": [200, 200, 200, 200],
+    "bundleName": "index-0tBLrJnt.js",
+    "status": "PENDING_MERGE_DEPLOY",
+    "mergeShaEqualsDeployedSha": "NOT_APPLICABLE_BEFORE_MERGE"
+  },
+  "deliveryState": "LOCAL_CANDIDATE_READY_FOR_PR",
+  "externalReview": "PENDING_EXTERNAL_B_REVIEW",
+  "hit": false
+}

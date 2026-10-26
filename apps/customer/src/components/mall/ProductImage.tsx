@@ -17,9 +17,8 @@ export default function ProductImage({
   const [broken, setBroken] = useState(false);
   const [slotBroken, setSlotBroken] = useState(false);
   const resolved = resolveImgSrc(src, getApiBase());
-  const generatedPlaceholder = resolved.includes('/products/') && resolved.endsWith('.svg');
 
-  if (!resolved || broken || generatedPlaceholder) {
+  if (!resolved || broken) {
     const slotUrl = slotBroken ? null : resolveSlotUrl(slotContentOf('product.placeholder')?.url);
     if (slotUrl) {
       return (

@@ -1,0 +1,112 @@
+{
+  "at": "2026-10-26T05:33:09.120Z",
+  "base": "http://127.0.0.1:7197",
+  "apiBase": "http://127.0.0.1:7197",
+  "ordersCreated": 5,
+  "checks": [
+    {
+      "id": "home",
+      "ok": false,
+      "identityOk": true,
+      "assetOk": false,
+      "state": {
+        "path": "/home",
+        "pendingCount": 5,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/brand/banner-home-1200.png",
+            "naturalOk": true
+          }
+        ],
+        "identityOk": true,
+        "assetOk": false,
+        "contentImages": [
+          {
+            "src": "/brand/banner-home-1200.png",
+            "naturalOk": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "mall",
+      "ok": false,
+      "identityOk": true,
+      "assetOk": false,
+      "state": {
+        "path": "/mall",
+        "pendingCount": 11,
+        "emptyCart": false,
+        "images": [],
+        "heroPending": 1,
+        "identityOk": true,
+        "assetOk": false,
+        "productImages": [],
+        "heroImages": []
+      }
+    },
+    {
+      "id": "product",
+      "ok": false,
+      "identityOk": true,
+      "assetOk": false,
+      "state": {
+        "path": "/mall/product/01M5VABCFK6KBYWD2QWN9E6MMF",
+        "pendingCount": 1,
+        "emptyCart": false,
+        "images": [],
+        "cartCount": 1,
+        "identityOk": true,
+        "assetOk": false
+      }
+    },
+    {
+      "id": "cart-in-stock",
+      "ok": false,
+      "identityOk": true,
+      "assetOk": false,
+      "state": {
+        "path": "/mall/cart",
+        "pendingCount": 1,
+        "emptyCart": false,
+        "images": [],
+        "identityOk": true,
+        "assetOk": false
+      }
+    },
+    {
+      "id": "checkout-in-stock",
+      "ok": false,
+      "identityOk": true,
+      "assetOk": false,
+      "state": {
+        "path": "/mall/checkout",
+        "pendingCount": 1,
+        "emptyCart": false,
+        "images": [],
+        "identityOk": true,
+        "assetOk": false
+      }
+    },
+    {
+      "id": "orders",
+      "ok": false,
+      "identityOk": true,
+      "assetOk": false,
+      "state": {
+        "path": "/mall/orders",
+        "pendingCount": 5,
+        "emptyCart": false,
+        "images": [],
+        "orderCount": 5,
+        "identityOk": true,
+        "assetOk": false
+      }
+    }
+  ],
+  "failures": 6,
+  "hit": false,
+  "localhostUsedAsLiveHIT": false,
+  "payment": "none; order setup only via mall.createOrder on isolated single-store database"
+}

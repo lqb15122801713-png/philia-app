@@ -1,0 +1,104 @@
+{
+  "observedAt": "2026-10-26T06:08:40.658Z",
+  "authoritativeBaseline": {
+    "tip": "287cf4f2aaf31195692040d3c2248b5e6c653166",
+    "deploy": "20261026112609",
+    "customerBundle": "index-0tBLrJnt.js"
+  },
+  "health": [
+    {
+      "port": 7200,
+      "status": 200,
+      "ok": true
+    },
+    {
+      "port": 7201,
+      "status": 200,
+      "ok": true
+    },
+    {
+      "port": 7202,
+      "status": 200,
+      "ok": true
+    },
+    {
+      "port": 7203,
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "live": {
+    "base": "http://120.53.102.45:7201",
+    "indexStatus": 200,
+    "bundleName": "index-0tBLrJnt.js",
+    "bundleStatus": 200,
+    "bundleBytes": 1412840,
+    "bundleSha256": "0f10dd7ea484e797d73a122e3893893573e272ab44a60ae1825c3d88b28a3e8a"
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7297",
+    "indexStatus": 200,
+    "bundleName": "index-Dv5UMifb.js",
+    "bundleStatus": 200,
+    "bundleBytes": 1423318,
+    "bundleSha256": "bb780e35a2476d08d592fed7d47a3d07601a0c9d95ff30b2fb56c2fa2caa9b79"
+  },
+  "comparisons": {
+    "candidateNameDiffersFromLive": true,
+    "candidateBytesDifferFromLive": true,
+    "candidateDiffersFromRequiredBaseline": true,
+    "screenshots": [
+      {
+        "name": "home",
+        "baselineBytes": 166539,
+        "baselineSha256": "6eafd983597a5bd1e0835c7e892d7c2ed4266ec225cc6357ec253bd923791bf7",
+        "finalBytes": 270454,
+        "finalSha256": "676f31ee880f174c42caf01f36c3d0e48a20b5a7f5847c6e3cb3bab47453f213",
+        "different": true
+      },
+      {
+        "name": "mall",
+        "baselineBytes": 134079,
+        "baselineSha256": "eafbed73893559cfcbb315b645ca248e14a762d975d249e0e1f5515c12a77dc6",
+        "finalBytes": 104094,
+        "finalSha256": "539e21db77150822e5e62bd30247985adf36429142cb2951c1b3baa09b8807ba",
+        "different": true
+      },
+      {
+        "name": "product",
+        "baselineBytes": 54192,
+        "baselineSha256": "4d5cba0e4a1e58cf9bb8cea86d99e9856df997587bf257fdd2d57ec78e42905c",
+        "finalBytes": 44455,
+        "finalSha256": "a0c1493c20d211cc51ae018ce2afad0286ad316f1d7964328d71bd610575a894",
+        "different": true
+      },
+      {
+        "name": "cart-in-stock",
+        "baselineBytes": 26987,
+        "baselineSha256": "c6b1675da56b9b88d19f8a2020da9a826f6f581bd39d6ef5711c0b88dfb1ba08",
+        "finalBytes": 26003,
+        "finalSha256": "9c0284a25aa4895431ce3d533e65c38574f7beed7f16a18d9a73a9ea9804bcc4",
+        "different": true
+      },
+      {
+        "name": "checkout-in-stock",
+        "baselineBytes": 31584,
+        "baselineSha256": "d4c38f5c0c2c042405f974d00f40cc262f18076d55fac35c298b7a1aa5eaa455",
+        "finalBytes": 30854,
+        "finalSha256": "bfce610449f33bc107774abdabeddfa32834b622ef7f24308d22db30f291c404",
+        "different": true
+      },
+      {
+        "name": "orders",
+        "baselineBytes": 93084,
+        "baselineSha256": "b2e2c6d20e6f5c585d9fdb0c6dc26a753ffcd9137d18377bd385cc8dedf791d7",
+        "finalBytes": 73486,
+        "finalSha256": "bb526d8e81e1a589ca1cf0c28cdc98efa5daf516266089edf89382da2e11e2b2",
+        "different": true
+      }
+    ]
+  },
+  "hit": false,
+  "localhostUsedAsLiveHIT": false,
+  "liveHitStatus": "PENDING_MERGE_DEPLOY"
+}

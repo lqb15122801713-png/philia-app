@@ -1,0 +1,7 @@
+RED home identity=true asset=false pending=5
+RED mall identity=true asset=false pending=11
+RED product identity=true asset=false pending=1
+RED cart-in-stock identity=true asset=false pending=1
+RED checkout-in-stock identity=true asset=false pending=1
+RED orders identity=true asset=false pending=5
+汇总：0/6 GREEN；ordersCreated=5

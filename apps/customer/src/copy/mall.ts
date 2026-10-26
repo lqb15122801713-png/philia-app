@@ -47,7 +47,7 @@ const MALL_COPY_TABLE = {
   'mall.memberPrice': '会员 {amt}',
   'mall.rebateLineU4': '购可得 {amt}',
   'mall.storeSame': '门店同款',
-  'mall.pendingImage': '待换',
+  'mall.pendingImage': '暂无图片',
   'mall.heroCtaU4': '去逛逛',
   'mall.cat.recommend': '推荐',
   'mall.cat.food': '粮',

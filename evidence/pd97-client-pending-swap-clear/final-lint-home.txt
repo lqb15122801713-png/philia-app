@@ -1,0 +1,16 @@
+
+E:\KIMI code\pd97-client-pending-swap-clear\apps\customer\src\pages\HomePage.tsx
+  128:17  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd97-client-pending-swap-clear\apps\customer\src\pages\HomePage.tsx:128:17
+  126 |     /* PD-75（P-CLIENT-01）：预约未开始（提前核销未来单）不出「服务进行中」；
+  127 |        已取消/翻转会随 30s 轮询出桶，双保险再核 status 原值 */
+> 128 |     const now = Date.now()
+      |                 ^^^^^^^^^^ Cannot call impure function
+  129 |     return (
+  130 |       rows.find(
+  131 |         (appointment) =>  react-hooks/purity
+
+✖ 1 problem (1 error, 0 warnings)
