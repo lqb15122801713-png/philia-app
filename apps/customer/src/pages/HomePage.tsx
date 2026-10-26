@@ -17,6 +17,7 @@ import { CK, getStepDef, resolveSlotUrl, slotContentOf, slotPreviewState, useMe,
 import { fenToYuan, fmtHM } from '@/components/booking/format'
 import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
+import { customerPetName } from '@/lib/customerPresentation'
 import { hc } from '@/copy/home'
 import { ntf } from '@/copy/notify'
 
@@ -61,7 +62,7 @@ function ServiceProgress({ appointment, steps }: { appointment: AppointmentListI
           <span className="hv2-step-count">{stepsReady ? `步骤 ${currentStep} / ${totalSteps}` : hc('home.serviceSyncing')}</span>
         </div>
         <div className="hv2-progress-title-row">
-          <h2>{appointment.petName ?? hc('home.petFallback')} · {appointment.serviceName ?? hc('home.serviceFallback')}</h2>
+          <h2>{customerPetName(appointment.petName, hc('home.petFallback'))} · {appointment.serviceName ?? hc('home.serviceFallback')}</h2>
           <Link to={`/appointments/${appointment.id}`} className="hv2-pickup" data-testid="home-service-pickup">{hc('home.pickup')}</Link>
         </div>
         <p className="hv2-sub">

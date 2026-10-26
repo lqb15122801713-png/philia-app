@@ -1,0 +1,9 @@
+PASS 真实通知列表与原未读数完成加载
+FAIL 同源去重后 50 行收敛为 25 行 — 50
+FAIL 同文同秒成对不再进入交付面 — 25
+FAIL 25 个不同提醒各保留一行 — {"careTitleHits":50,"careDistinctKeys":25}
+PASS 未读总数仍来自原接口，未清未读冒充去重 — 未读 35 条
+PASS 全部已读可见但未点击，业务 mutation 为零 — {"allReadVisible":true,"mutations":[]}
+PASS tRPC mock 过程全部已知 — []
+报告：E:\KIMI code\pd98-staff-notif-dedupe-r2\evidence\pd98-staff-notif-dedupe-r2\browser-baseline.json
+帧：E:\KIMI code\pd98-staff-notif-dedupe-r2\evidence\pd98-staff-notif-dedupe-r2\shots\baseline\notifications.png

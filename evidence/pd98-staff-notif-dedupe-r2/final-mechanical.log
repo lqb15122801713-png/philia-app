@@ -1,0 +1,20 @@
+{
+  "status": "LOCAL_CANDIDATE_EVIDENCE_COMPLETE",
+  "checks": 24,
+  "failures": 0,
+  "baseline": {
+    "rowCount": 50,
+    "dupPairGroups": 25,
+    "unread": "未读 35 条"
+  },
+  "candidate": {
+    "rowCount": 25,
+    "dupPairGroups": 0,
+    "unread": "未读 35 条"
+  },
+  "bundle": {
+    "name": "index-B584Q7Xj.js",
+    "sha256": "c4fd8c1870962b587d3b34b7670af5e2da034ce2d393ffb2ff0694fe240e549e",
+    "bytes": 740740
+  }
+}

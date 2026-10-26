@@ -2,7 +2,7 @@
  * 通知中心 /notifications（员工端骨架整建批 片 3 · 员工端，coder H）
  *
  * 结构：SkBackBar（fallback=/me）→ 未读计数行 +「全部已读」→ 通知列表
- * （push.listNotifications 游标分页首屏 50 条；同类型/同文/同链接/同秒重复分组展示；
+ * （push.listNotifications 游标分页首屏 50 条；同类型/同文/同秒重复分组展示，同源链接差不拆行；
  * 未读高亮=淡金底+红点；点条=同组 markRead+跳 link，无 link 纯已读）。空态/错误态照 MySchedulePage 工艺。
  * 文案键 copy/notifications.ts（NOTIFICATIONS_COPY 族，withCopyOverrides 代理）。
  */

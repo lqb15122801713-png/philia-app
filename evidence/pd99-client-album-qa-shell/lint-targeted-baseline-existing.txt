@@ -1,0 +1,54 @@
+
+E:\KIMI code\pd99-client-album-qa-shell\apps\customer\src\pages\AppointmentDetailPage.tsx
+  465:3   error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\KIMI code\pd99-client-album-qa-shell\apps\customer\src\pages\AppointmentDetailPage.tsx:465:3
+  463 |
+  464 |   const invalidateRef = useRef(invalidate);
+> 465 |   invalidateRef.current = invalidate;
+      |   ^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  466 |   const showToastRef = useRef(showToast);
+  467 |   showToastRef.current = showToast;
+  468 |                                                                                                                                                                                                                                                                                                             react-hooks/refs
+  467:3   error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\KIMI code\pd99-client-album-qa-shell\apps\customer\src\pages\AppointmentDetailPage.tsx:467:3
+  465 |   invalidateRef.current = invalidate;
+  466 |   const showToastRef = useRef(showToast);
+> 467 |   showToastRef.current = showToast;
+      |   ^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  468 |
+  469 |   const onEvent = useCallback(
+  470 |     (envelope: EventEnvelope) => {                                                                                                                                                                                                                                                                                        react-hooks/refs
+  563:70  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd99-client-album-qa-shell\apps\customer\src\pages\AppointmentDetailPage.tsx:563:70
+  561 |   const serving = appt.status === 'in_service' || appt.status === 'in_boarding';
+  562 |   const cancellable = appt.status === 'pending' || appt.status === 'confirmed';
+> 563 |   const secondsToStart = Math.floor((appt.scheduledStart.getTime() - Date.now()) / 1000);
+      |                                                                      ^^^^^^^^^^ Cannot call impure function
+  564 |   const freeCancel = secondsToStart > CANCEL_FREE_BEFORE_SEC;
+  565 |   // v1.1-b2 B2-6 / v1.1-b3 B3-4：自助改期入口——与取消同 >4h 阈值（寄养以入住日首晚
+  566 |   // 即 scheduledStart 计）；B3-4 起对寄养开放（两阶段日期组件重选入住/退房）  react-hooks/purity
+
+E:\KIMI code\pd99-client-album-qa-shell\apps\customer\src\pages\HomePage.tsx
+  129:17  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\pd99-client-album-qa-shell\apps\customer\src\pages\HomePage.tsx:129:17
+  127 |     /* PD-75（P-CLIENT-01）：预约未开始（提前核销未来单）不出「服务进行中」；
+  128 |        已取消/翻转会随 30s 轮询出桶，双保险再核 status 原值 */
+> 129 |     const now = Date.now()
+      |                 ^^^^^^^^^^ Cannot call impure function
+  130 |     return (
+  131 |       rows.find(
+  132 |         (appointment) =>  react-hooks/purity
+
+✖ 4 problems (4 errors, 0 warnings)

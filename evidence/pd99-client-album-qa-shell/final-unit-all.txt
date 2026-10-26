@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: PD-67：预约时段图例只保留一处现行口径
+ok 1 - PD-67：预约时段图例只保留一处现行口径
+  ---
+  duration_ms: 4.1297
+  ...
+# Subtest: PD-64 M-1：距开场 <1h 的 slot 不可进入已选态；409 后底栏无已选
+ok 2 - PD-64 M-1：距开场 <1h 的 slot 不可进入已选态；409 后底栏无已选
+  ---
+  duration_ms: 0.8707
+  ...
+# Subtest: PD-97：已有商品 SVG 必须渲染真图，不得换成待换占位
+ok 3 - PD-97：已有商品 SVG 必须渲染真图，不得换成待换占位
+  ---
+  duration_ms: 2.5517
+  ...
+# Subtest: PD-97：商品真缺图时保留诚实替代说明，不得输出待换
+ok 4 - PD-97：商品真缺图时保留诚实替代说明，不得输出待换
+  ---
+  duration_ms: 0.3372
+  ...
+# Subtest: PD-99：QA 夹具相册不成册，普通真实相册仍保留
+ok 5 - PD-99：QA 夹具相册不成册，普通真实相册仍保留
+  ---
+  duration_ms: 8.2527
+  ...
+# Subtest: PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+ok 6 - PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+  ---
+  duration_ms: 2.0459
+  ...
+# Subtest: PD-99：首页服务中条同源收敛 QA 夹具名
+ok 7 - PD-99：首页服务中条同源收敛 QA 夹具名
+  ---
+  duration_ms: 3.9095
+  ...
+# Subtest: PD-99：预约列表同源收敛 QA 夹具名
+ok 8 - PD-99：预约列表同源收敛 QA 夹具名
+  ---
+  duration_ms: 1.6295
+  ...
+# Subtest: PD-99：预约详情与取消入口同源收敛 QA 夹具名
+ok 9 - PD-99：预约详情与取消入口同源收敛 QA 夹具名
+  ---
+  duration_ms: 4.7016
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 558.5896
