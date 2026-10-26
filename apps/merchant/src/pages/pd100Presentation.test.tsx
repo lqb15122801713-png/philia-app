@@ -6,6 +6,8 @@ import React, { type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import MerchantEventsProvider from '../components/dashboard/MerchantEventsProvider'
+import OrderRow from '../components/mall-admin/OrderCard'
+import type { StoreOrder } from '../components/mall-admin/format'
 import MonitorHubPage from './MonitorHubPage'
 import OrdersPage from './OrdersPage'
 import { SlotPortBody } from './SlotPortPage'
@@ -106,4 +108,38 @@ test('PD-100 商城订单等待显示真实状态而非灰骨架', () => {
   const html = renderPage(<OrdersPage />)
   assert.match(html, /正在读取商城订单/)
   assert.doesNotMatch(html, /animate-pulse/)
+})
+
+test('PD-100 旧覆盖不得复活订单读口待补脚注', () => {
+  setCopyOverrides([
+    { key: 'order.rebatePendingNote', text: '回馈金列读口待补——订单域未透出回馈金字段，待 server 开口' },
+  ])
+  const html = renderPage(<OrdersPage />)
+  assert.doesNotMatch(html, /orders-rebate-note|读口待补/)
+})
+
+test('PD-100 YKNXD2 专帧只读章与加深禁点同屏', () => {
+  const order = {
+    id: 'pd100-dead',
+    orderNo: 'P261022YKNXD2',
+    customerNickname: '合成客户',
+    createdAt: new Date('2026-10-22T05:30:00Z'),
+    items: [{ product_id: 'pd100-product', name: '合成玩具', quantity: 1, price_fen: 1900 }],
+    totalFen: 1900,
+    rebateFen: 0,
+    status: 'paid',
+  } as StoreOrder
+  const html = renderToStaticMarkup(
+    <table>
+      <tbody>
+        <OrderRow order={order} readOnly />
+      </tbody>
+    </table>,
+  )
+  assert.match(html, /P261022YKNXD2/)
+  assert.match(html, /dead-order-readonly-pd100-dead/)
+  assert.equal((html.match(/disabled=""/g) ?? []).length, 2)
+  assert.doesNotMatch(html, /发货 ›|退款 ›|disabled:opacity-35/)
+  assert.match(html, /disabled:opacity-100/)
+  assert.match(html, /line-through/)
 })

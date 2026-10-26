@@ -208,11 +208,6 @@ export default function OrdersPage() {
         )}
       </div>
 
-      {/* W-09 回馈金列口径注（片 5 段 4 已接真值 · 回馈金仅抵商品） */}
-      <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="orders-rebate-note">
-        {od('order.rebatePendingNote')}
-      </p>
-
       {/* key=order.id：每次打开重挂载，表单态天然重置（配合 ShipOrderDialog 头注） */}
       <ShipOrderDialog
         key={shipTarget?.id ?? 'closed'}
