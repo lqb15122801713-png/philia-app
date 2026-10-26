@@ -1,9 +1,10 @@
 {
   "candidate": {
     "base": "http://127.0.0.1:7410",
-    "bundleName": "index-CRE6MlV2.js",
-    "bundleSha256": "4b91904049fbbe54db429faf6b0e6d2e5cef827201e05d6dcf1ef2e0d24076e8",
-    "note": "本地候选真 dist + 单店合成只读 mock；不是现网 tip 包"
+    "bundleName": "index-BFrSLK_B.js",
+    "bundleSha256": "6547e36f0e3ab5ac81e3c21b5bfe3383707c313178bba7eb4d183b98248db960",
+    "note": "本地候选真 dist + 单店合成只读 mock；不是现网 tip 包",
+    "allFramesRecapturedForThisBundle": true
   },
   "productionReadOnly": {
     "base": "http://120.53.102.45:7202",
@@ -33,7 +34,7 @@
   ],
   "unknown": [],
   "businessMutations": [],
-  "safeSubscriptions": 4,
+  "safeSubscriptions": 10,
   "deadOrderControls": {
     "ship": { "state": "disabled", "clickError": "ELEMENT_NOT_INTERACTABLE" },
     "refund": { "state": "disabled", "clickError": "ELEMENT_NOT_INTERACTABLE" },
