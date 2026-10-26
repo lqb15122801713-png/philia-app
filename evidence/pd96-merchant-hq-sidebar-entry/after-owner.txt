@@ -1,0 +1,14 @@
+PASS scenario starts outside HQ: actual="/matrix" expected="/matrix"
+PASS HQ_SIDEBAR_ENTRY_NOT_SEEN: actual=true expected=true
+PASS sidebar HQ entry has a visible native link: actual=true expected=true
+PASS sidebar click reaches HQ: actual="/hq" expected="/hq"
+PASS HQ close CTA remains visible after sidebar navigation: actual=true expected=true
+PASS existing close confirmation opens: actual=1 expected=1
+PASS opening confirmation does not close the store: actual=0 expected=0
+PASS final close remains blocked before acknowledgement: actual=true expected=true
+PASS cancel acted and closed the confirmation layer
+PASS cancel makes no close mutation: actual=0 expected=0
+PASS no close, reopen, or clone mutation occurred: actual=0 expected=0
+PASS the same store remains active: actual="active" expected="active"
+PASS no second store was created: actual=1 expected=1
+PASS no uncaught page exception: actual=0 expected=0

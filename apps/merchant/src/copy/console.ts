@@ -44,7 +44,7 @@ const CONSOLE_COPY_TABLE = {
   'wnav.footConsoleNote': '独立运营壳 · 与日常经营分栏',
   'wnav.footRules': '规则配置',
 
-  /* PD-71 总部台立壳：管理组 owner-only 口（≠控制台/运营后台端，独立连锁经营壳） */
+  /* PD-71 总部台立壳；PD-96 起管理组 owner/manager 可见（≠控制台/运营后台端，独立连锁经营壳） */
   'wnav.hqConsole': '总部台',
 
   /* ---- wnav dock 五槽（片0 回归 Ready §1.D：总览/门店/收银/报表/我的） ---- */
