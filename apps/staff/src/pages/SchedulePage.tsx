@@ -39,6 +39,7 @@ import {
 import { dayKeyOf, fenToYuan, hhmm, pad2, weekdayLabel, type HistoryItem } from '@/components/today/utils';
 import { HISTORY_COPY } from '@/copy/history';
 import { skc } from '@/copy/skeleton';
+import { isValidDateInput } from '@/lib/localeInput';
 
 type Schedule = Partial<Record<string, Array<{ start: string; end: string }> | null>>;
 
@@ -250,7 +251,7 @@ export default function SchedulePage() {
 
   return (
     <div className="sk" data-testid="sk-schedule">
-      <SkAppHead title={skc('sk.apptTitle')} no={skc('sk.apptNo')} />
+      <SkAppHead title={skc('sk.apptTitle')} />
 
       {/* G1 日期切换（昨天/今天/明天 + 日历 chip 任意日；切过去=历史单唯一入口） */}
       <SkChips
@@ -269,14 +270,22 @@ export default function SchedulePage() {
         ]}
         trailing={
           <input
-            type="date"
+            key={picked}
+            type="text"
+            pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+            maxLength={10}
+            placeholder="2026-10-26"
+            title="日期格式：2026-10-26"
             aria-label={skc('sk.pickDate')}
             data-testid="sk-datepick"
             className={`sk-chip sk-mono${chipValue === 'pick' ? ' on' : ''}`}
-            style={{ width: 148, colorScheme: chipValue === 'pick' ? 'dark' : 'light' }}
-            value={picked}
+            style={{ width: 148 }}
+            defaultValue={picked}
             onChange={(e) => {
-              if (e.target.value) setPicked(e.target.value);
+              if (isValidDateInput(e.target.value)) setPicked(e.target.value);
+            }}
+            onBlur={(e) => {
+              if (!isValidDateInput(e.target.value)) e.target.value = picked;
             }}
           />
         }

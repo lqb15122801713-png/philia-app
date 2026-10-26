@@ -1,0 +1,10 @@
+{
+  "status": "LOCAL_CANDIDATE_EVIDENCE_COMPLETE",
+  "checks": 30,
+  "failures": 0,
+  "candidate": {
+    "name": "index-XpRzbUj5.js",
+    "sha256": "cc2704440cd0a0fad21a9315fedcbdd7f85687d19e96fa7e253c180d91b3c1e9",
+    "bytes": 740747
+  }
+}

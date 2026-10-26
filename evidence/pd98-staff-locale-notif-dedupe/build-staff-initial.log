@@ -1,0 +1,20 @@
+
+> philia@0.0.0 build:staff
+> npm run build -w @philia/staff
+
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+src/pages/staff2/NotificationsPage.tsx(39,59): error TS2345: Argument of type '{ id: string; type: string; category: string; title: string; body: string | null; link: string | null; readAt: Date | null; createdAt: Date; }[]' is not assignable to parameter of type 'readonly NotificationRow[]'.
+  Type '{ id: string; type: string; category: string; title: string; body: string | null; link: string | null; readAt: Date | null; createdAt: Date; }' is not assignable to type 'NotificationRow'.
+    Types of property 'body' are incompatible.
+      Type 'string | null' is not assignable to type 'string'.
+        Type 'null' is not assignable to type 'string'.
+npm error Lifecycle script `build` failed with error:
+npm error code 2
+npm error path E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff
+npm error workspace @philia/staff@0.0.0
+npm error location E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c tsc -b && vite build
