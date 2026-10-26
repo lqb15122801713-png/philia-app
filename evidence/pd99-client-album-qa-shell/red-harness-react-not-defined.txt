@@ -1,0 +1,115 @@
+TAP version 13
+# Subtest: PD-99：QA 夹具相册不成册，普通真实相册仍保留
+not ok 1 - PD-99：QA 夹具相册不成册，普通真实相册仍保留
+  ---
+  duration_ms: 9.8496
+  location: 'E:\\KIMI code\\pd99-client-album-qa-shell\\apps\\customer\\src\\pages\\qaPresentation.test.tsx:1:2964'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    CanvasLayoutLoader (E:\KIMI code\pd99-client-album-qa-shell\packages\shared\src\canvasLayout.tsx:86:3)
+    renderWithHooks (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5790:7)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+  ...
+# Subtest: PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+not ok 2 - PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+  ---
+  duration_ms: 1.0151
+  location: 'E:\\KIMI code\\pd99-client-album-qa-shell\\apps\\customer\\src\\pages\\qaPresentation.test.tsx:1:3476'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    CanvasLayoutLoader (E:\KIMI code\pd99-client-album-qa-shell\packages\shared\src\canvasLayout.tsx:86:3)
+    renderWithHooks (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5790:7)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+  ...
+# Subtest: PD-99：首页服务中条同源收敛 QA 夹具名
+not ok 3 - PD-99：首页服务中条同源收敛 QA 夹具名
+  ---
+  duration_ms: 5.5643
+  location: 'E:\\KIMI code\\pd99-client-album-qa-shell\\apps\\customer\\src\\pages\\qaPresentation.test.tsx:1:3860'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    CK (E:\KIMI code\pd99-client-album-qa-shell\packages\shared\src\canvasLayout.tsx:57:3)
+    renderWithHooks (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderNode (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6274:12)
+    renderChildrenArray (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6226:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6156:7)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+  ...
+# Subtest: PD-99：预约列表同源收敛 QA 夹具名
+not ok 4 - PD-99：预约列表同源收敛 QA 夹具名
+  ---
+  duration_ms: 1.4652
+  location: 'E:\\KIMI code\\pd99-client-album-qa-shell\\apps\\customer\\src\\pages\\qaPresentation.test.tsx:1:4513'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    CanvasLayoutLoader (E:\KIMI code\pd99-client-album-qa-shell\packages\shared\src\canvasLayout.tsx:86:3)
+    renderWithHooks (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5790:7)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+  ...
+# Subtest: PD-99：预约详情与取消入口同源收敛 QA 夹具名
+not ok 5 - PD-99：预约详情与取消入口同源收敛 QA 夹具名
+  ---
+  duration_ms: 5.2644
+  location: 'E:\\KIMI code\\pd99-client-album-qa-shell\\apps\\customer\\src\\pages\\qaPresentation.test.tsx:1:4957'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    CanvasLayoutLoader (E:\KIMI code\pd99-client-album-qa-shell\packages\shared\src\canvasLayout.tsx:86:3)
+    renderWithHooks (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderIndeterminateComponent (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5790:7)
+    renderElement (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd99-client-album-qa-shell\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 0
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 628.1886

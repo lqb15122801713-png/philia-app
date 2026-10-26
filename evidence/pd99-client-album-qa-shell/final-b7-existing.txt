@@ -1,0 +1,116 @@
+TAP version 13
+# Subtest: full not-started page has the arrival notice, two cream accents and the light five-tab shell
+not ok 1 - full not-started page has the arrival notice, two cream accents and the light five-tab shell
+  ---
+  duration_ms: 8.6543
+  location: 'E:\\KIMI code\\pd99-client-album-qa-shell\\scripts\\b7-service-timeline-page.test.tsx:77:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /入口来自预约成功「查看服务过程」/. Input:
+
+    '<div data-testid="grooming-service-process" class="px-4 pb-28 pt-4"><section data-block-key="apptLive.header"><header class="relative mb-3 flex h-10 items-center justify-center"><button type="button" aria-label="返回预约详情" data-testid="page-back" class="absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-ink"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left h-5 w-5" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button><h1 class="text-body font-semibold">豆豆 · 洗护过程</h1></header><section data-testid="service-process-header" data-view-state="not-started" class="rounded-card bg-card p-4 shadow-card"><div class="flex items-center justify-between gap-3"><span class="rounded-tag px-2 py-1 text-caption font-medium bg-sunken text-ink-secondary">未开始</span><span class="font-number text-caption text-ink">节点 1/6</span></div><h2 class="mt-2 text-title font-semibold">豆豆 · 标准洗护</h2><p class="mt-1 text-caption text-ink-secondary">10月18日 14:00 · 静安寺店</p><span data-cream="now" class="mt-2 inline-flex rounded-tag bg-brand-primary px-2.5 py-1 text-caption font-semibold text-ink">此刻 已下单 · 候场</span></section><section class="mt-3 rounded-card bg-sunken px-4 py-3"><h2 class="text-body font-semibold">到店后会自动推进</h2></section></section><section data-block-key="apptLive.incident"></section><section data-block-key="apptLive.stepper"><div class="mt-2"><section data-testid="service-process-timeline" data-canvas-interactive="true" class="rounded-card bg-card p-4 shadow-card"><h2 class="border-b border-line-divider pb-2 text-caption text-ink-secondary">服务进度 · 六节点</h2><ol role="list" class="mt-1"><li data-step-key="ordered" data-step-status="active" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span data-cream="now" class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary" aria-hidden="true"><span class="h-3 w-3 rounded-full bg-brand-cta"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink">已下单</span><span class="shrink-0 font-number text-caption text-ink-secondary">10月17日 21:06</span></div><p class="mt-0.5 text-caption text-ink-secondary">预约已确认 · 等待到店</p><div id="service-process-panel-ordered"></div></div></li><li data-step-key="arrived" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">已到店</span></div><p class="mt-0.5 text-caption text-ink-placeholder">到店后前台核销</p><div id="service-process-panel-arrived"></div></div></li><li data-step-key="wash" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">洗护中</span></div><p class="mt-0.5 text-caption text-ink-placeholder">洗澡 · 吹干</p><div id="service-process-panel-wash"></div></div></li><li data-step-key="styling" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">美容造型</span></div><p class="mt-0.5 text-caption text-ink-placeholder">精修剪裁与造型</p><div id="service-process-panel-styling"></div></div></li><li data-step-key="pickup" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">待接回</span></div><p class="mt-0.5 text-caption text-ink-placeholder">可到店领取</p><div id="service-process-panel-pickup"></div></div></li><li data-step-key="completed" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span></div><div class="min-w-0 flex-1 "><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">已完成</span></div><p class="mt-0.5 text-caption text-ink-placeholder">服务结束</p><div id="service-process-panel-completed"></div></div></li></ol></section></div></section><section data-block-key="apptLive.boardingStay"></section><section data-block-key="apptLive.review"></section><section data-block-key="apptLive.contact"></section><nav data-testid="client-tab-bar" aria-label="底部导航" class="fixed inset-x-0 bottom-[calc(14px+env(safe-area-inset-bottom))] z-tabbar"><div class="mx-auto max-w-lg px-4"><div class="grid h-14 grid-cols-5 items-center rounded-full bg-card px-2 shadow-elevated ring-1 ring-line-ring"><a data-testid="client-tab-home" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/home"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>首页</span></a><a data-testid="client-tab-booking" aria-current="page" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors font-semibold text-ink" href="/booking/grooming"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-brand-cta"></span><span>预约</span></a><a data-testid="client-tab-philia" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/philia"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>PHILIA</span></a><a data-testid="client-tab-mall" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/mall"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>商城</span></a><a data-testid="client-tab-me" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/me"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>我的</span></a></div></div></nav></div>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div data-testid="grooming-service-process" class="px-4 pb-28 pt-4"><section data-block-key="apptLive.header"><header class="relative mb-3 flex h-10 items-center justify-center"><button type="button" aria-label="返回预约详情" data-testid="page-back" class="absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-ink"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left h-5 w-5" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button><h1 class="text-body font-semibold">豆豆 · 洗护过程</h1></header><section data-testid="service-process-header" data-view-state="not-started" class="rounded-card bg-card p-4 shadow-card"><div class="flex items-center justify-between gap-3"><span class="rounded-tag px-2 py-1 text-caption font-medium bg-sunken text-ink-secondary">未开始</span><span class="font-number text-caption text-ink">节点 1/6</span></div><h2 class="mt-2 text-title font-semibold">豆豆 · 标准洗护</h2><p class="mt-1 text-caption text-ink-secondary">10月18日 14:00 · 静安寺店</p><span data-cream="now" class="mt-2 inline-flex rounded-tag bg-brand-primary px-2.5 py-1 text-caption font-semibold text-ink">此刻 已下单 · 候场</span></section><section class="mt-3 rounded-card bg-sunken px-4 py-3"><h2 class="text-body font-semibold">到店后会自动推进</h2></section></section><section data-block-key="apptLive.incident"></section><section data-block-key="apptLive.stepper"><div class="mt-2"><section data-testid="service-process-timeline" data-canvas-interactive="true" class="rounded-card bg-card p-4 shadow-card"><h2 class="border-b border-line-divider pb-2 text-caption text-ink-secondary">服务进度 · 六节点</h2><ol role="list" class="mt-1"><li data-step-key="ordered" data-step-status="active" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span data-cream="now" class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary" aria-hidden="true"><span class="h-3 w-3 rounded-full bg-brand-cta"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink">已下单</span><span class="shrink-0 font-number text-caption text-ink-secondary">10月17日 21:06</span></div><p class="mt-0.5 text-caption text-ink-secondary">预约已确认 · 等待到店</p><div id="service-process-panel-ordered"></div></div></li><li data-step-key="arrived" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">已到店</span></div><p class="mt-0.5 text-caption text-ink-placeholder">到店后前台核销</p><div id="service-process-panel-arrived"></div></div></li><li data-step-key="wash" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">洗护中</span></div><p class="mt-0.5 text-caption text-ink-placeholder">洗澡 · 吹干</p><div id="service-process-panel-wash"></div></div></li><li data-step-key="styling" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">美容造型</span></div><p class="mt-0.5 text-caption text-ink-placeholder">精修剪裁与造型</p><div id="service-process-panel-styling"></div></div></li><li data-step-key="pickup" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span><span class="min-h-4 w-0.5 flex-1 bg-line-divider" aria-hidden="true"></span></div><div class="min-w-0 flex-1 pb-2.5"><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">待接回</span></div><p class="mt-0.5 text-caption text-ink-placeholder">可到店领取</p><div id="service-process-panel-pickup"></div></div></li><li data-step-key="completed" data-step-status="locked" class="relative flex gap-3"><div class="flex w-6 shrink-0 flex-col items-center"><span class="flex h-6 w-6 items-center justify-center rounded-full border border-line-divider bg-card" aria-hidden="true"><span class="h-1 w-1 rounded-full bg-line-divider"></span></span></div><div class="min-w-0 flex-1 "><div class="flex min-h-6 items-start justify-between gap-3"><span class="text-body font-semibold text-ink-placeholder">已完成</span></div><p class="mt-0.5 text-caption text-ink-placeholder">服务结束</p><div id="service-process-panel-completed"></div></div></li></ol></section></div></section><section data-block-key="apptLive.boardingStay"></section><section data-block-key="apptLive.review"></section><section data-block-key="apptLive.contact"></section><nav data-testid="client-tab-bar" aria-label="底部导航" class="fixed inset-x-0 bottom-[calc(14px+env(safe-area-inset-bottom))] z-tabbar"><div class="mx-auto max-w-lg px-4"><div class="grid h-14 grid-cols-5 items-center rounded-full bg-card px-2 shadow-elevated ring-1 ring-line-ring"><a data-testid="client-tab-home" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/home"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>首页</span></a><a data-testid="client-tab-booking" aria-current="page" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors font-semibold text-ink" href="/booking/grooming"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-brand-cta"></span><span>预约</span></a><a data-testid="client-tab-philia" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/philia"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>PHILIA</span></a><a data-testid="client-tab-mall" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/mall"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>商城</span></a><a data-testid="client-tab-me" class="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full text-caption transition-colors text-ink-secondary" href="/me"><span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-transparent"></span><span>我的</span></a></div></div></nav></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd99-client-album-qa-shell\scripts\b7-service-timeline-page.test.tsx:82:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: expanded preview uses the delivery-photo summary language
+ok 2 - expanded preview uses the delivery-photo summary language
+  ---
+  duration_ms: 2.1423
+  ...
+# Subtest: step-empty preview explains that styling photos are pending
+ok 3 - step-empty preview explains that styling photos are pending
+  ---
+  duration_ms: 1.659
+  ...
+# Subtest: completed page includes the done strip and beauty report without cream accents
+ok 4 - completed page includes the done strip and beauty report without cream accents
+  ---
+  duration_ms: 1.4974
+  ...
+# Subtest: styling summary stops saying photos are missing once the requirement is met
+ok 5 - styling summary stops saying photos are missing once the requirement is met
+  ---
+  duration_ms: 1.2141
+  ...
+# Subtest: step query failure renders an honest retry state instead of fake locked progress
+ok 6 - step query failure renders an honest retry state instead of fake locked progress
+  ---
+  duration_ms: 0.5348
+  ...
+# Subtest: published canvas layout still controls B7 block order and visibility
+ok 7 - published canvas layout still controls B7 block order and visibility
+  ---
+  duration_ms: 1.1719
+  ...
+# Subtest: not-started summary exposes the first current node and one cream chip
+ok 8 - not-started summary exposes the first current node and one cream chip
+  ---
+  duration_ms: 2.6452
+  ...
+# Subtest: expanded wash state shows step guidance and three honest photo placeholders
+ok 9 - expanded wash state shows step guidance and three honest photo placeholders
+  ---
+  duration_ms: 2.9217
+  ...
+# Subtest: expanded styling without photos renders the honest empty card
+ok 10 - expanded styling without photos renders the honest empty card
+  ---
+  duration_ms: 0.8288
+  ...
+# Subtest: completed summary and timeline have no current cream target
+ok 11 - completed summary and timeline have no current cream target
+  ---
+  duration_ms: 1.1774
+  ...
+# Subtest: light ClientTabBar exposes five ordered links with booking active and no paw control
+ok 12 - light ClientTabBar exposes five ordered links with booking active and no paw control
+  ---
+  duration_ms: 2.0381
+  ...
+# Subtest: completed wash photos remain expandable after styling starts
+ok 13 - completed wash photos remain expandable after styling starts
+  ---
+  duration_ms: 1.3755
+  ...
+# Subtest: completed before and after photos remain available in the finished journey
+ok 14 - completed before and after photos remain available in the finished journey
+  ---
+  duration_ms: 1.1588
+  ...
+# Subtest: missing after photo renders an honest placeholder instead of duplicating the before photo
+ok 15 - missing after photo renders an honest placeholder instead of duplicating the before photo
+  ---
+  duration_ms: 0.8236
+  ...
+# Subtest: B7 review uses neutral accents while the default review keeps cream
+ok 16 - B7 review uses neutral accents while the default review keeps cream
+  ---
+  duration_ms: 1.228
+  ...
+# Subtest: only after photo stays in the after slot while the before slot stays empty
+ok 17 - only after photo stays in the after slot while the before slot stays empty
+  ---
+  duration_ms: 0.8855
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 16
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 456.0071
