@@ -26,6 +26,7 @@ import {
   weekDates,
   type ShiftAssignment,
 } from '@/lib/schedulePort';
+import { isValidDateInput, isValidTimeInput } from '@/lib/localeInput';
 
 /** 周日 chips 值序（schema 口径 1=周一…0=周日；label=周一~周日） */
 const WEEKDAY_OPTIONS = [1, 2, 3, 4, 5, 6, 0].map((v) => ({
@@ -134,7 +135,7 @@ export default function MySchedulePage() {
   const [avBusy, setAvBusy] = useState(false);
 
   const saveAvailability = async () => {
-    if (hmToMin(avStart) >= hmToMin(avEnd)) {
+    if (!isValidTimeInput(avStart) || !isValidTimeInput(avEnd) || hmToMin(avStart) >= hmToMin(avEnd)) {
       showToast(sdc('sched.avail.invalid'));
       return;
     }
@@ -164,7 +165,7 @@ export default function MySchedulePage() {
   const [lvBusy, setLvBusy] = useState(false);
 
   const submitLeave = async () => {
-    if (!lvStart || !lvEnd || lvEnd < lvStart || !lvReason.trim()) {
+    if (!isValidDateInput(lvStart) || !isValidDateInput(lvEnd) || lvEnd < lvStart || !lvReason.trim()) {
       showToast(sdc('sched.leave.invalid'));
       return;
     }
@@ -218,7 +219,7 @@ export default function MySchedulePage() {
 
   return (
     <div className="sk pb-6" data-testid="mysched-page">
-      <SkBackBar title={sdc('sched.title')} note={sdc('sched.no')} fallback="/me" />
+      <SkBackBar title={sdc('sched.title')} fallback="/me" />
 
       {/* 周视图（只读；我的班次高亮） */}
       <section className="mt-3" data-testid="mysched-week">
@@ -388,9 +389,9 @@ export default function MySchedulePage() {
               <SkChips testId="mysched-avail-day" value={avWeekday} onChange={setAvWeekday} options={WEEKDAY_OPTIONS} />
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <input type="time" value={avStart} onChange={(e) => setAvStart(e.target.value)} aria-label={sdc('sched.avail.start')} data-testid="mysched-avail-start"
+              <input type="text" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" maxLength={5} placeholder="09:00" value={avStart} onChange={(e) => setAvStart(e.target.value)} aria-label={sdc('sched.avail.start')} data-testid="mysched-avail-start"
                 className="sk-input flex-1" />
-              <input type="time" value={avEnd} onChange={(e) => setAvEnd(e.target.value)} aria-label={sdc('sched.avail.end')} data-testid="mysched-avail-end"
+              <input type="text" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" maxLength={5} placeholder="09:00" value={avEnd} onChange={(e) => setAvEnd(e.target.value)} aria-label={sdc('sched.avail.end')} data-testid="mysched-avail-end"
                 className="sk-input flex-1" />
             </div>
             <input
@@ -450,9 +451,9 @@ export default function MySchedulePage() {
               ]}
             />
             <div className="mt-2 flex items-center gap-2">
-              <input type="date" value={lvStart} onChange={(e) => setLvStart(e.target.value)} aria-label={sdc('sched.leave.start')} data-testid="mysched-leave-start"
+              <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" maxLength={10} placeholder="2026-10-26" value={lvStart} onChange={(e) => setLvStart(e.target.value)} aria-label={sdc('sched.leave.start')} data-testid="mysched-leave-start"
                 className="sk-input flex-1" />
-              <input type="date" value={lvEnd} onChange={(e) => setLvEnd(e.target.value)} aria-label={sdc('sched.leave.end')} data-testid="mysched-leave-end"
+              <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" maxLength={10} placeholder="2026-10-26" value={lvEnd} onChange={(e) => setLvEnd(e.target.value)} aria-label={sdc('sched.leave.end')} data-testid="mysched-leave-end"
                 className="sk-input flex-1" />
             </div>
             <textarea

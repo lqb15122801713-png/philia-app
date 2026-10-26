@@ -115,18 +115,18 @@ export default function OrderRow({
               disabled
               title="死单只读，不可发货"
               data-testid={`dead-order-ship-${order.id}`}
-              className="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0"
+              className="min-h-[36px] rounded-chip border border-dashed border-[rgba(44,40,34,.24)] bg-[rgba(44,40,34,.08)] px-2 py-1 text-caption font-semibold text-[rgba(44,40,34,.68)] line-through decoration-[rgba(44,40,34,.45)] disabled:cursor-not-allowed disabled:opacity-100 lg:min-h-0"
             >
-              发货 ›
+              发货
             </button>
             <button
               type="button"
               disabled
               title="死单只读，不可退款"
               data-testid={`dead-order-refund-${order.id}`}
-              className="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0"
+              className="min-h-[36px] rounded-chip border border-dashed border-[rgba(44,40,34,.24)] bg-[rgba(44,40,34,.08)] px-2 py-1 text-caption font-semibold text-[rgba(44,40,34,.68)] line-through decoration-[rgba(44,40,34,.45)] disabled:cursor-not-allowed disabled:opacity-100 lg:min-h-0"
             >
-              退款 ›
+              退款
             </button>
           </div>
         ) : order.status === 'paid' && onShip ? (

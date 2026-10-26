@@ -1,0 +1,228 @@
+{
+  "generatedAt": "2026-10-26T14:19:45.818Z",
+  "status": "LOCAL_CANDIDATE_EVIDENCE_COMPLETE",
+  "delivery": "PENDING_DELIVERY_HIT_AND_EXTERNAL_REVIEW",
+  "mergeDeploy": "PENDING_MERGE_DEPLOY",
+  "formalClose": "FORBIDDEN_UNTIL_POST_DEPLOY_NOTIFICATION_RETEST_PASS",
+  "tipPackage": false,
+  "baselineTip": "50d6a66f2162de881c32ab57268e076f81aeca4f",
+  "deploy": "20261026192944",
+  "migration": "0145 故意空留",
+  "liveBundle": {
+    "name": "index-DRu9UKUe.js",
+    "sha256": "06b04ba2dd51c72a648d64693fe16ca4b53759e174dae9cbb374ba6e60a18392",
+    "bytes": 735754
+  },
+  "candidateBundle": {
+    "name": "index-B584Q7Xj.js",
+    "sha256": "c4fd8c1870962b587d3b34b7670af5e2da034ce2d393ffb2ff0694fe240e549e",
+    "bytes": 740740
+  },
+  "forbiddenBundleNames": [
+    "index-DRu9UKUe.js",
+    "index-DcDp2v-Y.js"
+  ],
+  "baseline": {
+    "rowCount": 50,
+    "dupPairGroups": 25,
+    "unread": "未读 35 条"
+  },
+  "candidate": {
+    "rowCount": 25,
+    "dupPairGroups": 0,
+    "unread": "未读 35 条"
+  },
+  "commands": [
+    {
+      "command": "npm run build",
+      "log": "final-build-all.log",
+      "exitCode": 0
+    },
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json --test apps/staff/src/lib/notifications.test.ts apps/staff/src/lib/localeInput.test.ts apps/staff/src/components/boarding/boardingExposure.test.tsx",
+      "log": "final-test-staff-all.log",
+      "exitCode": 0,
+      "pass": 11,
+      "fail": 0
+    },
+    {
+      "command": "npx eslint src/lib/notifications.ts src/lib/notifications.test.ts src/pages/staff2/NotificationsPage.tsx scripts/pd98-staff-notif-dedupe-r2-check.mjs",
+      "log": "final-lint-targeted.log",
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "command": "npm run lint -w @philia/staff",
+      "log": "final-lint-staff-full.log",
+      "exitCode": 1,
+      "status": "BASELINE_RED_UNCHANGED",
+      "errors": 25,
+      "warnings": 1
+    },
+    {
+      "command": "PD98_PHASE=final node apps/staff/scripts/pd98-staff-notif-dedupe-r2-check.mjs",
+      "log": "final-browser.log",
+      "exitCode": 0,
+      "assertions": 7
+    }
+  ],
+  "defects": [
+    {
+      "id": "NOTIF-DUP-ROWS-OBS",
+      "status": "LOCAL_CANDIDATE_COVERED_PENDING_DELIVERY_HIT",
+      "evidence": "browser-baseline.json vs browser-final.json"
+    }
+  ],
+  "clickedAllRead": false,
+  "reuseForClear": false,
+  "checks": [
+    {
+      "id": "baseline-50-rows-25-groups",
+      "ok": true,
+      "actual": {
+        "rows": 50,
+        "groups": 25
+      }
+    },
+    {
+      "id": "final-25-rows-zero-groups",
+      "ok": true,
+      "actual": {
+        "rows": 25,
+        "groups": 0
+      }
+    },
+    {
+      "id": "final-seven-assertions-green",
+      "ok": true,
+      "actual": {
+        "failures": 0,
+        "assertions": 7
+      }
+    },
+    {
+      "id": "same-source-fixture",
+      "ok": true,
+      "actual": {
+        "baseline": "cab1a0b5e62a3cb3bc84e300444383588accfb6359f8eeb5a1a71a5f773437cc",
+        "final": "cab1a0b5e62a3cb3bc84e300444383588accfb6359f8eeb5a1a71a5f773437cc"
+      }
+    },
+    {
+      "id": "source-links-prove-root-cause",
+      "ok": true,
+      "actual": "same type/title/body/createdAt, different link"
+    },
+    {
+      "id": "candidate-name-not-either-control",
+      "ok": true,
+      "actual": "index-B584Q7Xj.js"
+    },
+    {
+      "id": "candidate-sha-matches-dist",
+      "ok": true,
+      "actual": "c4fd8c1870962b587d3b34b7670af5e2da034ce2d393ffb2ff0694fe240e549e"
+    },
+    {
+      "id": "live-and-candidate-sha-differ",
+      "ok": true,
+      "actual": {
+        "live": "06b04ba2dd51c72a648d64693fe16ca4b53759e174dae9cbb374ba6e60a18392",
+        "candidate": "c4fd8c1870962b587d3b34b7670af5e2da034ce2d393ffb2ff0694fe240e549e"
+      }
+    },
+    {
+      "id": "candidate-html-links-bundle",
+      "ok": true,
+      "actual": "index-B584Q7Xj.js"
+    },
+    {
+      "id": "live-html-links-control",
+      "ok": true,
+      "actual": "index-DRu9UKUe.js"
+    },
+    {
+      "id": "unread-not-cleared",
+      "ok": true,
+      "actual": "未读 35 条"
+    },
+    {
+      "id": "all-read-not-used",
+      "ok": true,
+      "actual": {
+        "clickedAllRead": false,
+        "mutations": []
+      }
+    },
+    {
+      "id": "screenshots-differ",
+      "ok": true,
+      "actual": {
+        "baseline": "a9533ed75c5b77462014689e55a5ecada5aca6e1e59c039602a40ec7d09c799f",
+        "final": "3de610330870aef57aee439ebac48bcc77a431e4caa700df656470017321f1ed"
+      }
+    },
+    {
+      "id": "unit-tests-green",
+      "ok": true,
+      "actual": "11 pass / 0 fail"
+    },
+    {
+      "id": "three-app-build-green",
+      "ok": true,
+      "actual": "index-B584Q7Xj.js"
+    },
+    {
+      "id": "targeted-lint-clean",
+      "ok": true,
+      "actual": "0 errors / 0 warnings"
+    },
+    {
+      "id": "full-lint-baseline-unchanged",
+      "ok": true,
+      "actual": "baseline and final: 25 errors / 1 warning; not claimed green"
+    },
+    {
+      "id": "mutation-red-captured",
+      "ok": true,
+      "actual": "link key restored produced expected RED"
+    },
+    {
+      "id": "mutation-reverted",
+      "ok": true,
+      "actual": "link removed from grouping key again"
+    },
+    {
+      "id": "health-four",
+      "ok": true,
+      "actual": "7200–7203 = 200"
+    },
+    {
+      "id": "browser-cleanup",
+      "ok": true,
+      "actual": "PD98_R2_CDP_AFTER=000"
+    },
+    {
+      "id": "migration-0145-empty",
+      "ok": true,
+      "actual": "0145 故意空留"
+    },
+    {
+      "id": "notification-only-scope",
+      "ok": true,
+      "actual": [
+        "apps/staff/scripts/pd98-staff-notif-dedupe-r2-check.mjs",
+        "apps/staff/src/lib/notifications.test.ts",
+        "apps/staff/src/lib/notifications.ts",
+        "apps/staff/src/pages/staff2/NotificationsPage.tsx"
+      ]
+    },
+    {
+      "id": "not-tip-package",
+      "ok": true,
+      "actual": "真实员工 dist＋现网基线字段 mock；非 tip 包；未点全部已读；未写业务数据"
+    }
+  ],
+  "failures": 0
+}

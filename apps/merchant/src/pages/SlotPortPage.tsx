@@ -21,9 +21,10 @@
  * - 生效口径：点上线/回退即生效=只管新渲染（客户端 120s 轮询兜底，invalidate 立即拉新）。
  */
 
-import { getApiBase, gradients, resolveSlotUrl, Skeleton, uploadImage, usePhiliaClient, type PhiliaClient } from '@philia/shared';
+import { getApiBase, gradients, resolveSlotUrl, uploadImage, usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import { LoadingPanel } from '../components/ContentStatus';
 import MainScaffold from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
@@ -445,17 +446,12 @@ export function SlotPortBody() {
   /* ---------------- 加载 / 错误 / 空三态 ---------------- */
   if (listQuery.isPending) {
     return (
-      <div className="u3-panel" aria-label="加载中">
-        <div className="u3-panel-head">
-          <Skeleton className="h-4 w-24 rounded-chip" />
-        </div>
-        {['w-[46%]', 'w-[58%]', 'w-[70%]'].map((w, i) => (
-          <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
-            <Skeleton className={`h-3 rounded-chip ${w}`} />
-            <Skeleton className="mt-2 h-20 w-32 rounded-input" />
-          </div>
-        ))}
-      </div>
+      <LoadingPanel
+        title="正在读取展示素材…"
+        body="素材、待审版本与上线记录将在这里显示。"
+        testid="slotport-loading"
+        onRetry={() => void listQuery.refetch()}
+      />
     );
   }
 
@@ -531,7 +527,7 @@ export function SlotPortBody() {
 /** 页头装配（默认出口行为不变：MainScaffold + 内核体） */
 function OwnerSlotPort() {
   return (
-    <MainScaffold title={cp('slotport.pageTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
+    <MainScaffold title={cp('slotport.managementTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
       <SlotPortBody />
     </MainScaffold>
   );

@@ -2,8 +2,8 @@
  * 通知中心 /notifications（员工端骨架整建批 片 3 · 员工端，coder H）
  *
  * 结构：SkBackBar（fallback=/me）→ 未读计数行 +「全部已读」→ 通知列表
- * （push.listNotifications 游标分页首屏 50 条；未读高亮=淡金底+红点；
- * 点条=markRead+跳 link（无 link 纯已读））。空态/错误态照 MySchedulePage 工艺。
+ * （push.listNotifications 游标分页首屏 50 条；同类型/同文/同秒重复分组展示，同源链接差不拆行；
+ * 未读高亮=淡金底+红点；点条=同组 markRead+跳 link，无 link 纯已读）。空态/错误态照 MySchedulePage 工艺。
  * 文案键 copy/notifications.ts（NOTIFICATIONS_COPY 族，withCopyOverrides 代理）。
  */
 
@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { SkBackBar, SkEmpty, SkNote } from '@/components/skeleton';
 import { nfc } from '@/copy/notifications';
 import { fmtMdHm } from '@/lib/collabPort';
+import { groupDuplicateNotifications } from '@/lib/notifications';
 import { UNREAD_BADGE_CAP, UNREAD_COUNT_KEY, useUnreadCountQuery } from '@/lib/unreadBadge';
 
 const LIST_KEY = ['push', 'listNotifications', 'staff-center'] as const;
@@ -35,20 +36,20 @@ export default function NotificationsPage() {
   const unreadKnown = unreadQ.isSuccess;
   const unreadCount = unreadKnown ? unreadQ.data?.total ?? 0 : 0;
 
-  const items = useMemo(() => listQ.data?.items ?? [], [listQ.data]);
+  const items = useMemo(() => groupDuplicateNotifications(listQ.data?.items ?? []), [listQ.data]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: LIST_KEY });
     void queryClient.invalidateQueries({ queryKey: UNREAD_KEY });
   };
 
-  /** 点条：未读先 markRead（幂等），再按 link 跳转（站内深链） */
-  const onTap = async (n: { id: string; readAt: Date | null; link: string | null }) => {
+  /** 点条：未读先 markRead（同组幂等），再按 link 跳转（站内深链） */
+  const onTap = async (n: { id: string; readAt: Date | null; link: string | null }, ids: string[]) => {
     if (busyId) return;
     setBusyId(n.id);
     try {
       if (n.readAt === null) {
-        await trpc.push.markRead.mutate({ ids: [n.id] });
+        await trpc.push.markRead.mutate({ ids });
         invalidate();
       }
       if (n.link) navigate(n.link);
@@ -75,7 +76,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="sk pb-6" data-testid="notifications-page">
-      <SkBackBar title={nfc('snt.title')} note={nfc('snt.no')} fallback="/me" />
+      <SkBackBar title={nfc('snt.title')} fallback="/me" />
 
       {/* 未读计数 + 全部已读 */}
       <div className="flex items-center gap-2 px-[22px] pt-3">
@@ -133,14 +134,14 @@ export default function NotificationsPage() {
         ) : items.length === 0 ? (
           <SkEmpty title={nfc('snt.empty')} body={nfc('snt.emptyBody')} />
         ) : (
-          items.map((n) => {
+          items.map(({ notification: n, ids }) => {
             const unread = n.readAt === null;
             return (
               <button
                 key={n.id}
                 type="button"
                 disabled={busyId !== null}
-                onClick={() => void onTap(n)}
+                onClick={() => void onTap(n, ids)}
                 data-testid={`ntf-row-${n.id}`}
                 className={`mb-2 block w-full rounded-panel px-4 py-3 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-60 ${
                   unread ? 'bg-brand-primary-light' : 'u1-card'

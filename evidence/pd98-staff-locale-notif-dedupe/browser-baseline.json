@@ -1,0 +1,232 @@
+{
+  "phase": "baseline",
+  "at": "2026-10-26T10:25:05.192Z",
+  "scope": "真实员工 dist＋英文区域设置＋tRPC mock；不是现网 tip 包，不冒领合部结论",
+  "bundle": {
+    "name": "index-_s_wlKE7.js",
+    "sha256": "207564bd2e0701d7b59d785605e9fabc4839e392c287861fe2fba4212388c64b",
+    "differsFromControl": true
+  },
+  "controlBundle": "index-DcDp2v-Y.js",
+  "schedule": {
+    "body": "‹\n我的排班\nMY SCHEDULE\n‹ 上周\n本周\n下周 ›\n10月26日–11月1日 · 待发布\n10-26 周一\n休息\n10-27 周二\n休息\n10-28 周三\n休息\n10-29 周四\n休息\n10-30 周五\n休息\n10-31 周六\n休息\n11-01 周日\n休息\n我的可用时间\n\n填每周可上班时段，店长排班会参考\n\n周一\n周二\n周三\n周四\n周五\n周六\n周日\n保存可用时间\n周一\n09:00–18:00\n请假 / 调休申请\n请假\n调休\n提交申请\n我的申请\n请假\n2026-10-26 ~ 2026-10-26 · 家中有事\n待审批\n调休余额\n0 小时\n变动流水\n暂无变动记录",
+    "subtitle": "MY SCHEDULE",
+    "inputs": [
+      {
+        "id": "mysched-avail-start",
+        "type": "time",
+        "value": "09:00"
+      },
+      {
+        "id": "mysched-avail-end",
+        "type": "time",
+        "value": "18:00"
+      },
+      {
+        "id": "mysched-leave-start",
+        "type": "date",
+        "value": "2026-10-26"
+      },
+      {
+        "id": "mysched-leave-end",
+        "type": "date",
+        "value": "2026-10-26"
+      }
+    ]
+  },
+  "appointment": {
+    "body": "预约\nSCHEDULE\n昨天\n✓今天\n明天\n18:25 · 今日无排班\n这一天没有预约\n\n明日 0 单 · 早点休息\n\n选择过去的日期，可回看当天的服务单\n\n工位\n预约\n打卡\n我的\n6",
+    "subtitle": "SCHEDULE"
+  },
+  "me": {
+    "subtitle": "ME"
+  },
+  "notifications": {
+    "before": {
+      "body": "‹\n通知\nNOTIFICATIONS\n未读 6 条\n全部已读\n照护打卡提醒\n10-26 16:37\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 16:37\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 12:29\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 12:29\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 08:02\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 08:02\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n派单、改期与系统消息会出现在这里",
+      "subtitle": "NOTIFICATIONS",
+      "rows": [
+        "ntf-row-care-1637-a",
+        "ntf-row-care-1637-b",
+        "ntf-row-care-1229-a",
+        "ntf-row-care-1229-b",
+        "ntf-row-care-0802-a",
+        "ntf-row-care-0802-b"
+      ],
+      "unread": "未读 6 条"
+    },
+    "after": {
+      "rows": 6,
+      "unread": "未读 5 条",
+      "mutations": [
+        {
+          "procedures": [
+            "push.markRead"
+          ],
+          "body": "{\"0\":{\"json\":{\"ids\":[\"care-1637-a\"]}}}"
+        }
+      ],
+      "markAllClicks": 0,
+      "unknown": [],
+      "href": "http://127.0.0.1:7298/notifications",
+      "body": "‹\n通知\nNOTIFICATIONS\n未读 5 条\n全部已读\n照护打卡提醒\n10-26 16:37\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 16:37\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 12:29\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 12:29\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 08:02\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n照护打卡提醒\n10-26 08:02\n\n【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录\n\n派单、改期与系统消息会出现在这里",
+      "disabled": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "screenshots": {
+    "my-schedule-top": {
+      "file": "E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\evidence\\pd98-staff-locale-notif-dedupe\\shots\\baseline\\my-schedule-top.png",
+      "sha256": "7a951e449883ffafeb57f352742753a7ecdfce5f352a2539730bfe797df3788e"
+    },
+    "my-schedule-locale": {
+      "file": "E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\evidence\\pd98-staff-locale-notif-dedupe\\shots\\baseline\\my-schedule-locale.png",
+      "sha256": "7a951e449883ffafeb57f352742753a7ecdfce5f352a2539730bfe797df3788e"
+    },
+    "schedule": {
+      "file": "E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\evidence\\pd98-staff-locale-notif-dedupe\\shots\\baseline\\schedule.png",
+      "sha256": "48a3ee52681d4fb9cd0b038677021102892f7ae70047961ead2f232064c7cc5f"
+    },
+    "me": {
+      "file": "E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\evidence\\pd98-staff-locale-notif-dedupe\\shots\\baseline\\me.png",
+      "sha256": "b32f26ae986a6d3739e755d21f6ab9d104d3b33cf389beb9301d6652a50d211b"
+    },
+    "notifications-before": {
+      "file": "E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\evidence\\pd98-staff-locale-notif-dedupe\\shots\\baseline\\notifications-before.png",
+      "sha256": "886a399aa449e0fccd23b0d77f2f06955d58e3d462a9e952c6f440d1b91c3ae8"
+    },
+    "notifications-after": {
+      "file": "E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\evidence\\pd98-staff-locale-notif-dedupe\\shots\\baseline\\notifications-after.png",
+      "sha256": "48b24105533e6ca7cfefd4325bd08401482e3446c116ef0364da2f5a95e4d512"
+    }
+  },
+  "results": [
+    {
+      "ok": true,
+      "name": "真 /my-schedule 排班请假数据完成加载",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "09 可用时间与请假使用区域设置无关的文本控件",
+      "detail": [
+        {
+          "id": "mysched-avail-start",
+          "type": "time",
+          "value": "09:00"
+        },
+        {
+          "id": "mysched-avail-end",
+          "type": "time",
+          "value": "18:00"
+        },
+        {
+          "id": "mysched-leave-start",
+          "type": "date",
+          "value": "2026-10-26"
+        },
+        {
+          "id": "mysched-leave-end",
+          "type": "date",
+          "value": "2026-10-26"
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "name": "09 时间与请假日值保持 24h 与 YYYY-MM-DD",
+      "detail": [
+        "09:00",
+        "18:00",
+        "2026-10-26",
+        "2026-10-26"
+      ]
+    },
+    {
+      "ok": false,
+      "name": "我的排班不渲染 MY SCHEDULE 英文编号",
+      "detail": "MY SCHEDULE"
+    },
+    {
+      "ok": true,
+      "name": "真 /schedule 完成加载",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "预约页不渲染 SCHEDULE 英文编号",
+      "detail": "SCHEDULE"
+    },
+    {
+      "ok": true,
+      "name": "真 /me 员工身份卡完成加载",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "我的页不渲染 ME／frontdesk／groomer 英文字样",
+      "detail": {
+        "subtitle": "ME"
+      }
+    },
+    {
+      "ok": true,
+      "name": "真 /notifications 六条 mock 通知与未读计数完成加载",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "两组同秒重复与两组独立提醒收口为四行",
+      "detail": [
+        "ntf-row-care-1637-a",
+        "ntf-row-care-1637-b",
+        "ntf-row-care-1229-a",
+        "ntf-row-care-1229-b",
+        "ntf-row-care-0802-a",
+        "ntf-row-care-0802-b"
+      ]
+    },
+    {
+      "ok": false,
+      "name": "通知页不渲染 NOTIFICATIONS 英文编号",
+      "detail": "NOTIFICATIONS"
+    },
+    {
+      "ok": false,
+      "name": "点一组重复通知时同组两个 ID 一起已读",
+      "detail": [
+        {
+          "procedures": [
+            "push.markRead"
+          ],
+          "body": "{\"0\":{\"json\":{\"ids\":[\"care-1637-a\"]}}}"
+        }
+      ]
+    },
+    {
+      "ok": false,
+      "name": "同组已读后未读数减二且不重新冒出重复行",
+      "detail": {
+        "rows": 6,
+        "unread": "未读 5 条"
+      }
+    },
+    {
+      "ok": true,
+      "name": "全程未点全部已读",
+      "detail": 0
+    },
+    {
+      "ok": true,
+      "name": "tRPC mock 过程全部已知",
+      "detail": []
+    }
+  ],
+  "failures": 8
+}

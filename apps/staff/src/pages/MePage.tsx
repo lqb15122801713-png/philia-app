@@ -105,7 +105,7 @@ export default function MePage() {
   const todayKey = dayKeyOf(new Date());
   const todayRanges = schedule?.[todayKey] ?? [];
   const onDuty = todayRanges.length > 0;
-  const roleLabel = staff?.role === 'frontdesk' ? '前台 frontdesk' : '美容师 groomer';
+  const roleLabel = staff?.role === 'frontdesk' ? '前台' : '美容师';
   const joinDate = staff?.createdAt ? `${staff.createdAt.getFullYear()}-${String(staff.createdAt.getMonth() + 1).padStart(2, '0')}` : null;
 
   /* ---- 三级视界：补卡审批仅店长/店主可见；红点=有 pending 才点（gated 调用，员工不触merchantManager接口） ---- */
@@ -138,7 +138,7 @@ export default function MePage() {
 
   return (
     <div className="sk pb-6">
-      <SkAppHead title={skc('sk.meTitle')} no={skc('sk.meNo')} />
+      <SkAppHead title={skc('sk.meTitle')} />
 
       {/* 身份卡（字像金边 + mono 工号 + trio 三格账=既有绩效数据点） */}
       <div data-testid="me-user-card">

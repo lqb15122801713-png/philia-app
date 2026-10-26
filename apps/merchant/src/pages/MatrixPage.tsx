@@ -4,8 +4,8 @@
  * 区块序（UX-02 语言包 §四 W-14）：
  *   wtop（MainScaffold + 锁死区红胶囊 WPill red）
  *   → M5 矩阵全幅（WMatrix：角色行 店主/店长/前台/美容师 × 权限列 收银/退款/日结/
- *     反结账/库存/会员/员工/规则配置/文案端口/槽位/报表/权限矩阵，四态格 ✓/—/只读/锁死）
- *   → 口径注（编辑归控制台本页只读 / 锁死区任何端不可改 / 数据真源）。
+ *     反结账/库存/会员/员工/规则配置/界面文案/展示素材/报表/权限矩阵，四态格 ✓/—/只读/锁死）
+ *   → 口径注（编辑归控制台本页只读 / 锁死区任何端不可改）。
  *
  * 数据=静态结构（本页只读，不做编辑器）。真源：
  * - lib/roles.ts 头注冻结口径（三角色硬闸门/总规则②③/改价折扣日结反结账导出导入口径）；
@@ -32,8 +32,8 @@ const COLUMNS = [
   mtx('mtx.colMember'),
   mtx('mtx.colStaff'),
   mtx('mtx.colRules'),
-  mtx('mtx.colCopy'),
-  mtx('mtx.colSlots'),
+  mtx('mtx.colCopyManagement'),
+  mtx('mtx.colSlotManagement'),
   mtx('mtx.colReport'),
   mtx('mtx.colMatrix'),
 ];
@@ -80,7 +80,6 @@ const NOTES = [
   mtx('mtx.noteReport'),
   mtx('mtx.noteMatrix'),
   mtx('mtx.noteLocked'),
-  mtx('mtx.noteSource'),
 ];
 
 export default function MatrixPage() {

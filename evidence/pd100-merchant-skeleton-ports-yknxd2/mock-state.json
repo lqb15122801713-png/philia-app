@@ -1,0 +1,48 @@
+{
+  "candidate": {
+    "base": "http://127.0.0.1:7410",
+    "bundleName": "index-BFrSLK_B.js",
+    "bundleSha256": "6547e36f0e3ab5ac81e3c21b5bfe3383707c313178bba7eb4d183b98248db960",
+    "note": "本地候选真 dist + 单店合成只读 mock；不是现网 tip 包",
+    "allFramesRecapturedForThisBundle": true
+  },
+  "productionReadOnly": {
+    "base": "http://120.53.102.45:7202",
+    "status": 200,
+    "bundleName": "index-sf4Mp8sz.js",
+    "assetStatus": 200,
+    "bytes": 1669355,
+    "bundleSha256": "1b29ff27499c05b463c9e7322243967be7e6ff74507245566654868962ec6ada"
+  },
+  "localBaselineBundleName": "index-Bh5WsuOY.js",
+  "holdTarget": "none",
+  "uniqueSeen": [
+    "appointment.listForStore",
+    "auth.me",
+    "boarding.stayBoard",
+    "config.activeCopyTexts",
+    "config.list",
+    "config.versions",
+    "mall.listStoreOrders",
+    "push.subscribe",
+    "report.listMetricAppeals",
+    "selfCheck.listPending",
+    "serviceStep.list",
+    "slotPort.list",
+    "slotPort.liveMap",
+    "stock2.approvalPendingCount"
+  ],
+  "unknown": [],
+  "businessMutations": [],
+  "safeSubscriptions": 10,
+  "deadOrderControls": {
+    "ship": { "state": "disabled", "clickError": "ELEMENT_NOT_INTERACTABLE" },
+    "refund": { "state": "disabled", "clickError": "ELEMENT_NOT_INTERACTABLE" },
+    "pendingDialogs": [],
+    "urlAfterAttempts": "http://127.0.0.1:7410/orders"
+  },
+  "cleanup": {
+    "browserTabs": 0,
+    "mockServer": "stopped"
+  }
+}
