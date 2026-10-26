@@ -28,7 +28,7 @@
  * 监控页不手动刷新也能翻步；其余事件仍由 SSE 即时驱动。
  */
 
-import { BoardSkeleton, EventType, usePhiliaClient } from '@philia/shared';
+import { EventType, usePhiliaClient } from '@philia/shared';
 import { toast } from '../components/staff-admin/ui';
 import { errMsg } from '../components/staff-admin/format';
 import { useQueries, useQuery, type QueryClient } from '@tanstack/react-query';
@@ -47,6 +47,7 @@ import {
   useMerchantEvents,
   type MerchantEventsValue,
 } from '../components/dashboard/MerchantEventsProvider';
+import { LoadingNotice, LoadingPanel } from '../components/ContentStatus';
 import MainScaffold, { QuietButton } from '../components/MainScaffold';
 import { WAlert, WStepDots, type WAlertItem, type WStepDotState } from '../components/skeleton';
 import { oc } from '../copy/monitor';
@@ -370,13 +371,7 @@ export default function MonitorHubPage() {
         </div>
       ) : null}
 
-      {pending ? (
-        /* 加载中骨架块（animate-pulse，禁转圈）：看板卡 = shared BoardSkeleton
-           （!grid-cols-1 压成件自带 grid-cols-2，保移动端单列骨架口径） */
-        <div aria-label="加载中">
-          <BoardSkeleton cards={3} className="!grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3" />
-        </div>
-      ) : failed ? (
+      {failed ? (
         <div className="u3-panel px-[17px] py-14 text-center">
           <div className="text-body-sm font-semibold text-ink-secondary">
             监控列表加载失败
@@ -394,6 +389,17 @@ export default function MonitorHubPage() {
             </QuietButton>
           </div>
         </div>
+      ) : pending && totalVisible === 0 ? (
+        <LoadingPanel
+          title="正在读取在店情况…"
+          body="洗护、寄养与异常记录将在这里显示。"
+          testid="monitor-loading"
+          onRetry={() => {
+            void inServiceQ.refetch();
+            void inBoardingQ.refetch();
+            void boardQ.refetch();
+          }}
+        />
       ) : totalVisible === 0 ? (
         <div className="u3-panel px-[17px] py-16 text-center">
           <div className="text-body-sm font-semibold text-ink-secondary">
@@ -402,6 +408,11 @@ export default function MonitorHubPage() {
         </div>
       ) : (
         <>
+          {pending ? (
+            <LoadingNotice testid="monitor-partial-loading">
+              部分监控仍在读取，已显示先到达的内容。
+            </LoadingNotice>
+          ) : null}
           {/* D-44：异常待清桶注记（滤签=zombie 时在列头明说口径） */}
           {filter === 'zombie' ? (
             <p className="mb-3 rounded-control bg-[#F4EDDC] px-4 py-2.5 text-caption-xs font-semibold text-ink" data-testid="mon-zombie-note">

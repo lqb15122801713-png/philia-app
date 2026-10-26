@@ -1,0 +1,68 @@
+{
+  "window": "PD-100-merchant-skeleton-ports-yknxd2",
+  "includesOriginalPD102": true,
+  "branch": "feat/pd100-merchant-skeleton-ports-yknxd2",
+  "baselineTip": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
+  "productHead": "999cd8da7f7011ccee15ae52f3224ba7a1d15701",
+  "migration": "0141 故意空留",
+  "candidate": {
+    "bundle": "index-BFrSLK_B.js",
+    "sha256": "6547e36f0e3ab5ac81e3c21b5bfe3383707c313178bba7eb4d183b98248db960",
+    "allFramesRecaptured": true
+  },
+  "productionReadOnly": {
+    "url": "http://120.53.102.45:7202",
+    "bundle": "index-sf4Mp8sz.js",
+    "sha256": "1b29ff27499c05b463c9e7322243967be7e6ff74507245566654868962ec6ada",
+    "status": 200
+  },
+  "localBaselineBundle": "index-Bh5WsuOY.js",
+  "checks": {
+    "baselineUnit": { "exitCode": 0, "pass": 10, "fail": 0, "log": "baseline-unit.txt" },
+    "finalUnit": { "exitCode": 0, "pass": 19, "fail": 0, "log": "final-contrast-green.txt" },
+    "finalBuild": { "exitCode": 0, "log": "final-build.txt" },
+    "fullLint": { "exitCode": 1, "status": "INC_BASELINE", "errors": 47, "warnings": 5, "sameAsBaseline": true, "log": "final-full-lint.txt" },
+    "targetedLint": { "exitCode": 1, "status": "INC_BASELINE", "errors": 1, "warnings": 1, "sameAsBaseline": true, "log": "final-targeted-lint.txt" },
+    "newFilesLint": { "exitCode": 0, "log": "candidate-new-files-lint.txt" },
+    "diffCheck": { "exitCode": 0 },
+    "negativeControl": { "expectedExitCode": 1, "expectedFailures": 4, "restoredExitCode": 0, "restoredPass": 19, "residualProductDiff": false },
+    "contrastTdd": { "before": "4.05:1", "after": "4.82:1", "redFirst": true, "greenAfter": true }
+  },
+  "browser": {
+    "engine": "Kimi Code Desktop built-in browser",
+    "device": "desktop-1280",
+    "imageDimensions": "1280x800",
+    "holdTarget": "none",
+    "unknown": [],
+    "businessMutations": [],
+    "safeSubscriptions": 10,
+    "shipClick": "ELEMENT_NOT_INTERACTABLE",
+    "refundClick": "ELEMENT_NOT_INTERACTABLE",
+    "pendingDialogs": [],
+    "cleanup": { "tabs": 0, "server": "stopped" }
+  },
+  "shots": [
+    { "file": "01-monitor-content.png", "sha256": "62a7f326c1ab9a06a4ab4e8cada8a774c561e0f4de499f81223cdcd06ade511a" },
+    { "file": "02-slot-content.png", "sha256": "a8092bd26f319cd66c213f4f88665bc67525b96059babb56c25bc247f07e7e00" },
+    { "file": "03-copy-content.png", "sha256": "dabdeaedd782b18d9ed263d9eef86e60e1c60db6669d1808d5cb5d1b0a02eed1" },
+    { "file": "04-yknxd2-readonly.png", "sha256": "ad9c83fa1d03bbaf21de873e95383b536d617b71e9e2ec899fa8c89486bfb885" },
+    { "file": "05-yknxd2-disabled-detail.png", "sha256": "0ca1962e70192514fb938773ac0c7a88cbebd415d84d5477552bf5bdec5b5984" },
+    { "file": "06-matrix-human-labels.png", "sha256": "dc3a90664cda2fe9c97d79b431e5a40de93abd5032438ba1948d9115fbb9f9e0" },
+    { "file": "07-monitor-loading.png", "sha256": "d9b1e5f8278f9fa6e79b29c41e617ce4c90dae7d942262ddf04e8c2355f31e78" },
+    { "file": "08-slot-loading.png", "sha256": "7d16977e9e16d1dcae7d3a68d1db5750ee2305743bded899d2314cf2cf5a0ec2" },
+    { "file": "09-copy-loading.png", "sha256": "4ab75236b129e23ec45dce85a0cc6c19e2ee5f54623257b1fc6803a19545fe41" },
+    { "file": "10-orders-loading.png", "sha256": "aa69d568a78d9eea21ba98618d6c1b176897598ea68af423626849725dde5edb" }
+  ],
+  "noReuseForClearance": true,
+  "pullRequest": {
+    "number": 201,
+    "url": "https://github.com/lqb15122801713-png/philia-app/pull/201",
+    "state": "OPEN",
+    "merged": false
+  },
+  "hit": "PENDING_EXTERNAL_DELIVERY_HIT",
+  "mergeSha": null,
+  "deployedSha": null,
+  "merged": false,
+  "deployed": false
+}

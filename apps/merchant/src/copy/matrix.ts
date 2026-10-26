@@ -32,6 +32,8 @@ const MATRIX_COPY_TABLE = {
   'mtx.colRules': '规则配置',
   'mtx.colCopy': '文案端口',
   'mtx.colSlots': '槽位',
+  'mtx.colCopyManagement': '界面文案',
+  'mtx.colSlotManagement': '展示素材',
   'mtx.colReport': '报表',
   'mtx.colMatrix': '权限矩阵',
 
