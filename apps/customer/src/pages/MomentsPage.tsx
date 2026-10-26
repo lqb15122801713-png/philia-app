@@ -34,6 +34,7 @@ import PageHeader from '@/components/PageHeader'
 import type { PhotoWallPhoto } from '@philia/shared'
 import { EmptyState, ErrorState, LoadingBlock, formatDateCn } from '../components/home/common'
 import { readLastBooking } from '@/lib/bookingPrefill'
+import { isQaFixturePetName } from '@/lib/customerPresentation'
 import { mc } from '../components/member/copy'
 import { sl } from '@/copy/serviceloop'
 
@@ -193,6 +194,7 @@ export default function MomentsPage() {
       const feed = await trpc.serviceLoop.albumFeed.query({ limit: 12 })
       const albums: Album[] = []
       for (const item of feed) {
+        if (isQaFixturePetName(item.petName)) continue
         const photos: PhotoWallPhoto[] = []
         let before: PhotoWallPhoto | null = null
         let after: PhotoWallPhoto | null = null

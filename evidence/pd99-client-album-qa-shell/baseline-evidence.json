@@ -1,0 +1,57 @@
+{
+  "schema": "pd99-baseline-evidence-v1",
+  "capturedAt": "2026-10-26T10:29:52.123Z",
+  "baselineTip": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
+  "baselineDeploy": "20261026160104",
+  "live": {
+    "origin": "http://120.53.102.45:7201",
+    "healthStatus": 200,
+    "bundleName": "index-CfOqIr5Q.js",
+    "bundleBytes": 1413044,
+    "bundleSha256": "bf13238091fa9c4cf211cd38a23de31bb302397076893600cef1f510db669d4d",
+    "homeServiceQaNameVisible": true,
+    "momentsQaNameCards": 3,
+    "momentsScreenshot": "baseline-moments.png",
+    "momentsScreenshotSha256": "b8b1bb8525773841c271aea3bd12bc7b9c3635debd0f2e18a55aef94ca9f458c"
+  },
+  "readOnlyAlbumFeed": {
+    "httpStatus": 200,
+    "feedItems": 4,
+    "completedQaFixtureAlbums": 3,
+    "inServiceItemsWithoutVisiblePhotos": 1,
+    "petName": "QA夹具豆豆",
+    "photoTransport": "signed JPG URLs; no SVG/data-URI marker",
+    "note": "Read-only query only; no appointment mutation and no forbidden fixture operation."
+  },
+  "qaPhotoFiles": [
+    {
+      "file": "baseline-album-cover.jpg",
+      "sha256": "1747f6d9abffdfc8d4439c573192ab13f0bb302061da5b88ec7e0b56019898b3",
+      "observedText": "QA□□ STEP photo 2",
+      "dimensions": "640x480"
+    },
+    {
+      "file": "baseline-album-step.jpg",
+      "sha256": "5bd30b90b011e4c25fc797436a04778220203d246e7af6cb76d5689d72c1afe1",
+      "observedText": "QA□□ STEP photo 1",
+      "dimensions": "640x480"
+    },
+    {
+      "file": "baseline-album-grooming.jpg",
+      "sha256": "06d3066d68b4f1846b88b236b25544c2d854d9028c9915d0ebeb538d87740570",
+      "observedText": "QA□□ STEP photo 4",
+      "dimensions": "640x480"
+    }
+  ],
+  "local": {
+    "buildBundleName": "index-DQdVze0c.js",
+    "buildBundleSha256": "46e17e34aedf64fc86c97239e643c6605b6f1224377be80ffef93ad969747d1a",
+    "unitTests": { "passed": 4, "failed": 0 },
+    "customerBuild": "PASS",
+    "customerLint": "BASELINE_EXISTING_RED: 65 errors / 4 warnings",
+    "install": "root npm ci postinstall recursion; root npm ci --ignore-scripts + npm --prefix server ci completed (688 + 110 packages)"
+  },
+  "reuseUsedAsCleared": false,
+  "fakeClearedUsed": false,
+  "forbiddenFixture01M5EQVFTouched": false
+}

@@ -42,6 +42,7 @@ import { apc, type AppointmentsCopyKey } from '@/copy/appointments';
 import { rc } from '@/copy/refund';
 import { sl } from '@/copy/serviceloop';
 import { queryCancelFeeTiers, queryPrepaidOf, readDetailExtras } from '@/lib/exp2Api';
+import { customerPetName } from '@/lib/customerPresentation';
 import type { AppointmentDetail } from '@/components/booking/types';
 import {
   APPT_STATUS_META,
@@ -661,7 +662,7 @@ export default function AppointmentDetailPage() {
             ) : null}
             <div className="flex justify-between">
               <dt className="text-ink-secondary"><CK k="appointments.dtPet">{apc('appointments.dtPet')}</CK></dt>
-              <dd>{d.pet?.name ?? '—'}</dd>
+              <dd>{customerPetName(d.pet?.name, '—')}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-ink-secondary"><CK k="appointments.dtTime">{apc('appointments.dtTime')}</CK></dt>
@@ -1016,7 +1017,7 @@ export default function AppointmentDetailPage() {
                 </p>
                 <p className="mt-1 text-caption text-ink-secondary">
                   <CK k="appointments.rescheduleNote">
-                    {apc('appointments.rescheduleNote', { service: d.service?.name ?? apc('appointments.fallbackService'), pet: d.pet?.name ?? apc('appointments.fallbackPet') })}
+                    {apc('appointments.rescheduleNote', { service: d.service?.name ?? apc('appointments.fallbackService'), pet: customerPetName(d.pet?.name, apc('appointments.fallbackPet')) })}
                   </CK>
                 </p>
                 <div className="mt-3">

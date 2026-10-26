@@ -25,6 +25,7 @@ import { EmptyState, ErrorState } from '@/components/home/common';
 import { mc } from '@/components/member/copy';
 import { apc, type AppointmentsCopyKey } from '@/copy/appointments';
 import { readLastBooking } from '@/lib/bookingPrefill';
+import { customerPetName } from '@/lib/customerPresentation';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -111,7 +112,7 @@ function AppointmentCard({ item }: { item: AppointmentListItem }) {
       </div>
       {/* 门店/宠物名数据行（缺省兜底走 copy 键；数据行不挂 CK 锚，照 MePage 数据行惯例） */}
       <p className="mt-1 text-caption text-ink-secondary">
-        {item.storeName ?? apc('appointments.cardStoreFallback')} · {item.petName ?? apc('appointments.cardPetFallback')}
+        {item.storeName ?? apc('appointments.cardStoreFallback')} · {customerPetName(item.petName, apc('appointments.cardPetFallback'))}
       </p>
       <div className="mt-2 flex items-center justify-between">
         <p className="font-number text-caption text-ink">

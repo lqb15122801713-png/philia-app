@@ -1,0 +1,38 @@
+{
+  "receipt": "D:/Philia-shared/回执-B窗-PD99-client-album-qa-shell-开工.md",
+  "captured_at": "2026-10-26T09:59:55.540Z",
+  "captured_at_asia_shanghai": "2026-10-26 17:59:55 +08:00",
+  "window": "PD-99-client-album-qa-shell",
+  "model": "已用 K3 MAX",
+  "model_pill": "K3 · Max",
+  "evidence": {
+    "worktree": "E:/KIMI code/pd99-client-album-qa-shell",
+    "worktree_list_contains": true,
+    "git_dir": "E:/KIMI code/philia-app/.git/worktrees/pd99-client-album-qa-shell",
+    "git_common_dir": "E:/KIMI code/philia-app/.git",
+    "branch": "feat/pd99-client-album-qa-shell",
+    "baseline_tip": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
+    "head": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
+    "merge_base_with_pinned_baseline": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
+    "status_porcelain_empty": true,
+    "migration": "0140 故意空留",
+    "schema_changes": 0,
+    "migration_file": null,
+    "forbidden_migrations": "0117/0119/0122-0139; 0139 reserved for PD-98",
+    "baseline_deploy": "20261026160104",
+    "baseline_customer_dist": "index-CfOqIr5Q.js"
+  },
+  "verdict": {
+    "mechanical_four_fields": "COLLECTED",
+    "opening_hit": "PENDING_PRODUCT_REVIEW",
+    "delivery_hit": "NOT_ENTERED",
+    "merge_deploy": "NOT_ENTERED"
+  },
+  "fail_on_invalid": true,
+  "merge_sha": null,
+  "deployed_sha": null,
+  "remote_fetch": "FAILED_NETWORK_NO_FRESH_REMOTE_CLAIM",
+  "fixture_01M5EQVF_touched": false,
+  "pull_request_merged": false,
+  "deployment_attempted": false
+}
