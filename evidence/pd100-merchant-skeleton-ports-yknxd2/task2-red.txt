@@ -1,0 +1,85 @@
+TAP version 13
+# Subtest: PD-100 监控部分查询等待时已到达卡片不消失
+ok 1 - PD-100 监控部分查询等待时已到达卡片不消失
+  ---
+  duration_ms: 13.9906
+  ...
+# Subtest: PD-100 监控全等待显示可读状态而非整页骨架
+ok 2 - PD-100 监控全等待显示可读状态而非整页骨架
+  ---
+  duration_ms: 1.2559
+  ...
+# Subtest: PD-100 展示素材等待显示真实状态而非灰骨架
+ok 3 - PD-100 展示素材等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.0312
+  ...
+# Subtest: PD-100 界面文案等待显示真实状态而非灰骨架
+ok 4 - PD-100 界面文案等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.3627
+  ...
+# Subtest: PD-100 商城订单等待显示真实状态而非灰骨架
+ok 5 - PD-100 商城订单等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.4169
+  ...
+# Subtest: PD-100 旧覆盖不得复活订单读口待补脚注
+not ok 6 - PD-100 旧覆盖不得复活订单读口待补脚注
+  ---
+  duration_ms: 1.611
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:3817'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /orders-rebate-note|读口待补/. Input:
+    
+    '<div class="px-[18px] pb-6 pt-[16px]" data-testid="orders-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">商城订单</h1><div class="mt-1 text-caption-xs text-ink-placeholder">待发货 0 · 已发货 0 · 售后 0</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><input type="search" data-testid="orders-search" placeholder="搜索单号 / 客户…" class="u1-ring w-full rounded-control bg-card px-3.5 py-3.5 text-caption text-ink placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)] lg:w-56" value=""/></div></div><div class="mb-3.5 flex flex-wrap gap-2"><button type="button" class="u3-chipf on" data-testid="orders-tab-paid">待发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-shipped">已发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-refunding">售后·退款</button></div><div class="u3-panel"><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="orders-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取商城订单…</h2><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">订单号、状态和可执行操作将在读取完成后显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="orders-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div><p class="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="orders-rebate-note">回馈金列读口待补——订单域未透出回馈金字段，待 server 开口</p></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="px-[18px] pb-6 pt-[16px]" data-testid="orders-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">商城订单</h1><div class="mt-1 text-caption-xs text-ink-placeholder">待发货 0 · 已发货 0 · 售后 0</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><input type="search" data-testid="orders-search" placeholder="搜索单号 / 客户…" class="u1-ring w-full rounded-control bg-card px-3.5 py-3.5 text-caption text-ink placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)] lg:w-56" value=""/></div></div><div class="mb-3.5 flex flex-wrap gap-2"><button type="button" class="u3-chipf on" data-testid="orders-tab-paid">待发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-shipped">已发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-refunding">售后·退款</button></div><div class="u3-panel"><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="orders-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取商城订单…</h2><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">订单号、状态和可执行操作将在读取完成后显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="orders-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div><p class="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="orders-rebate-note">回馈金列读口待补——订单域未透出回馈金字段，待 server 开口</p></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:118:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 YKNXD2 专帧只读章与加深禁点同屏
+not ok 7 - PD-100 YKNXD2 专帧只读章与加深禁点同屏
+  ---
+  duration_ms: 10.2986
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:4241'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /发货 ›|退款 ›|disabled:opacity-35/. Input:
+    
+    '<table><tbody><tr data-testid="order-pd100-dead"><td class="font-number font-semibold tabular-nums">P261022YKNXD2</td><td><div class="font-semibold text-ink">合成客户</div><div class="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(44,40,34,.42)]">下单 10月22日 周四 13:30</div></td><td><div class="text-ink">合成玩具 ×1</div></td><td class="whitespace-nowrap text-right font-number font-semibold tabular-nums">¥19</td><td class="whitespace-nowrap text-right font-number tabular-nums text-caption-xs text-[rgba(44,40,34,.3)]" data-testid="order-rebate-pd100-dead">—</td><td><span class="u3-st live">已支付</span></td><td><span class="u3-st done" data-testid="dead-order-readonly-pd100-dead">死单 · 只读</span></td><td><div class="flex flex-wrap gap-1" aria-label="死单只读：禁发禁退"><button type="button" disabled="" title="死单只读，不可发货" data-testid="dead-order-ship-pd100-dead" class="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0">发货 ›</button><button type="button" disabled="" title="死单只读，不可退款" data-testid="dead-order-refund-pd100-dead" class="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0">退款 ›</button></div></td></tr></tbody></table>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<table><tbody><tr data-testid="order-pd100-dead"><td class="font-number font-semibold tabular-nums">P261022YKNXD2</td><td><div class="font-semibold text-ink">合成客户</div><div class="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(44,40,34,.42)]">下单 10月22日 周四 13:30</div></td><td><div class="text-ink">合成玩具 ×1</div></td><td class="whitespace-nowrap text-right font-number font-semibold tabular-nums">¥19</td><td class="whitespace-nowrap text-right font-number tabular-nums text-caption-xs text-[rgba(44,40,34,.3)]" data-testid="order-rebate-pd100-dead">—</td><td><span class="u3-st live">已支付</span></td><td><span class="u3-st done" data-testid="dead-order-readonly-pd100-dead">死单 · 只读</span></td><td><div class="flex flex-wrap gap-1" aria-label="死单只读：禁发禁退"><button type="button" disabled="" title="死单只读，不可发货" data-testid="dead-order-ship-pd100-dead" class="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0">发货 ›</button><button type="button" disabled="" title="死单只读，不可退款" data-testid="dead-order-refund-pd100-dead" class="min-h-[36px] rounded-chip px-2 py-1 text-caption font-bold text-ink disabled:cursor-not-allowed disabled:opacity-35 lg:min-h-0">退款 ›</button></div></td></tr></tbody></table>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:142:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 561.8445

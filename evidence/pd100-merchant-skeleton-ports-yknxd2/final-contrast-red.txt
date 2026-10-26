@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: PD-100 监控部分查询等待时已到达卡片不消失
+ok 1 - PD-100 监控部分查询等待时已到达卡片不消失
+  ---
+  duration_ms: 14.5243
+  ...
+# Subtest: PD-100 监控全等待显示可读状态而非整页骨架
+ok 2 - PD-100 监控全等待显示可读状态而非整页骨架
+  ---
+  duration_ms: 1.226
+  ...
+# Subtest: PD-100 展示素材等待显示真实状态而非灰骨架
+ok 3 - PD-100 展示素材等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.2404
+  ...
+# Subtest: PD-100 界面文案等待显示真实状态而非灰骨架
+ok 4 - PD-100 界面文案等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.1337
+  ...
+# Subtest: PD-100 商城订单等待显示真实状态而非灰骨架
+ok 5 - PD-100 商城订单等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.3219
+  ...
+# Subtest: PD-100 旧覆盖不得复活订单读口待补脚注
+ok 6 - PD-100 旧覆盖不得复活订单读口待补脚注
+  ---
+  duration_ms: 0.8558
+  ...
+# Subtest: PD-100 YKNXD2 专帧只读章与加深禁点同屏
+not ok 7 - PD-100 YKNXD2 专帧只读章与加深禁点同屏
+  ---
+  duration_ms: 12.2251
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:4308'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /text-\[rgba\(44,40,34,\.68\)\]/. Input:
+    
+    '<table><tbody><tr data-testid="order-pd100-dead"><td class="font-number font-semibold tabular-nums">P261022YKNXD2</td><td><div class="font-semibold text-ink">合成客户</div><div class="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(44,40,34,.42)]">下单 10月22日 周四 13:30</div></td><td><div class="text-ink">合成玩具 ×1</div></td><td class="whitespace-nowrap text-right font-number font-semibold tabular-nums">¥19</td><td class="whitespace-nowrap text-right font-number tabular-nums text-caption-xs text-[rgba(44,40,34,.3)]" data-testid="order-rebate-pd100-dead">—</td><td><span class="u3-st live">已支付</span></td><td><span class="u3-st done" data-testid="dead-order-readonly-pd100-dead">死单 · 只读</span></td><td><div class="flex flex-wrap gap-1" aria-label="死单只读：禁发禁退"><button type="button" disabled="" title="死单只读，不可发货" data-testid="dead-order-ship-pd100-dead" class="min-h-[36px] rounded-chip border border-dashed border-[rgba(44,40,34,.24)] bg-[rgba(44,40,34,.08)] px-2 py-1 text-caption font-semibold text-[rgba(44,40,34,.62)] line-through decoration-[rgba(44,40,34,.45)] disabled:cursor-not-allowed disabled:opacity-100 lg:min-h-0">发货</button><button type="button" disabled="" title="死单只读，不可退款" data-testid="dead-order-refund-pd100-dead" class="min-h-[36px] rounded-chip border border-dashed border-[rgba(44,40,34,.24)] bg-[rgba(44,40,34,.08)] px-2 py-1 text-caption font-semibold text-[rgba(44,40,34,.62)] line-through decoration-[rgba(44,40,34,.45)] disabled:cursor-not-allowed disabled:opacity-100 lg:min-h-0">退款</button></div></td></tr></tbody></table>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<table><tbody><tr data-testid="order-pd100-dead"><td class="font-number font-semibold tabular-nums">P261022YKNXD2</td><td><div class="font-semibold text-ink">合成客户</div><div class="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(44,40,34,.42)]">下单 10月22日 周四 13:30</div></td><td><div class="text-ink">合成玩具 ×1</div></td><td class="whitespace-nowrap text-right font-number font-semibold tabular-nums">¥19</td><td class="whitespace-nowrap text-right font-number tabular-nums text-caption-xs text-[rgba(44,40,34,.3)]" data-testid="order-rebate-pd100-dead">—</td><td><span class="u3-st live">已支付</span></td><td><span class="u3-st done" data-testid="dead-order-readonly-pd100-dead">死单 · 只读</span></td><td><div class="flex flex-wrap gap-1" aria-label="死单只读：禁发禁退"><button type="button" disabled="" title="死单只读，不可发货" data-testid="dead-order-ship-pd100-dead" class="min-h-[36px] rounded-chip border border-dashed border-[rgba(44,40,34,.24)] bg-[rgba(44,40,34,.08)] px-2 py-1 text-caption font-semibold text-[rgba(44,40,34,.62)] line-through decoration-[rgba(44,40,34,.45)] disabled:cursor-not-allowed disabled:opacity-100 lg:min-h-0">发货</button><button type="button" disabled="" title="死单只读，不可退款" data-testid="dead-order-refund-pd100-dead" class="min-h-[36px] rounded-chip border border-dashed border-[rgba(44,40,34,.24)] bg-[rgba(44,40,34,.08)] px-2 py-1 text-caption font-semibold text-[rgba(44,40,34,.62)] line-through decoration-[rgba(44,40,34,.45)] disabled:cursor-not-allowed disabled:opacity-100 lg:min-h-0">退款</button></div></td></tr></tbody></table>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:145:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 旧覆盖下双端口页题仍显示人话
+ok 8 - PD-100 旧覆盖下双端口页题仍显示人话
+  ---
+  duration_ms: 1.3196
+  ...
+# Subtest: PD-100 矩阵不暴露端口工程列与源码脚注
+ok 9 - PD-100 矩阵不暴露端口工程列与源码脚注
+  ---
+  duration_ms: 1.918
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 8
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 545.2291

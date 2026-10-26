@@ -32,15 +32,15 @@
 
 | 检查 | 结果 | 证据文件 |
 |---|---|---|
-| 基线既有单测 | 10/10 PASS | `baseline-unit.log` |
-| 最终专项＋既有单测 | **19/19 PASS，fail=0** | `final-contrast-green.log`、`negative-control-restored-green.log` |
-| 最终商家 `tsc -b && vite build` | exit 0；产 `index-BFrSLK_B.js` | `final-build.log` |
-| 全量商家 lint | **INC：与 untouched 基线同为 47 errors／5 warnings**；不是全绿 | `baseline-lint.log`、`final-full-lint.log` |
-| 触及文件定向 lint | 与基线同为 1 error／1 warning（`CopyConfigPage` 既有 effect 项）；未新增 | `baseline-targeted-lint.log`、`final-targeted-lint.log` |
-| 新增 `ContentStatus`／专项测试 lint | exit 0 | `candidate-new-files-lint.log` |
+| 基线既有单测 | 10/10 PASS | `baseline-unit.txt` |
+| 最终专项＋既有单测 | **19/19 PASS，fail=0** | `final-contrast-green.txt`、`negative-control-restored-green.txt` |
+| 最终商家 `tsc -b && vite build` | exit 0；产 `index-BFrSLK_B.js` | `final-build.txt` |
+| 全量商家 lint | **INC：与 untouched 基线同为 47 errors／5 warnings**；不是全绿 | `baseline-lint.txt`、`final-full-lint.txt` |
+| 触及文件定向 lint | 与基线同为 1 error／1 warning（`CopyConfigPage` 既有 effect 项）；未新增 | `baseline-targeted-lint.txt`、`final-targeted-lint.txt` |
+| 新增 `ContentStatus`／专项测试 lint | exit 0 | `candidate-new-files-lint.txt` |
 | `git diff --check` | 无输出 | 最终命令记录 |
-| 负控 | 故意放回 `animate-pulse` → 4 个预期 FAIL；移除 → 19/19 PASS；无产品 diff 残留 | `negative-control-intentional-red.log`、`negative-control-restored-green.log` |
-| 对比度补充 TDD | `.62` 断言先 FAIL；改 `.68` 后 19/19 PASS | `final-contrast-red.log`、`final-contrast-green.log` |
+| 负控 | 故意放回 `animate-pulse` → 4 个预期 FAIL；移除 → 19/19 PASS；无产品 diff 残留 | `negative-control-intentional-red.txt`、`negative-control-restored-green.txt` |
+| 对比度补充 TDD | `.62` 断言先 FAIL；改 `.68` 后 19/19 PASS | `final-contrast-red.txt`、`final-contrast-green.txt` |
 
 标准测试命令（cwd `apps/merchant`）：
 

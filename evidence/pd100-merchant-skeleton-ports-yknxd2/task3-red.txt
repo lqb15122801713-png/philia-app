@@ -1,0 +1,95 @@
+TAP version 13
+# Subtest: PD-100 监控部分查询等待时已到达卡片不消失
+ok 1 - PD-100 监控部分查询等待时已到达卡片不消失
+  ---
+  duration_ms: 14.6311
+  ...
+# Subtest: PD-100 监控全等待显示可读状态而非整页骨架
+ok 2 - PD-100 监控全等待显示可读状态而非整页骨架
+  ---
+  duration_ms: 1.1096
+  ...
+# Subtest: PD-100 展示素材等待显示真实状态而非灰骨架
+ok 3 - PD-100 展示素材等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 0.9448
+  ...
+# Subtest: PD-100 界面文案等待显示真实状态而非灰骨架
+ok 4 - PD-100 界面文案等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.128
+  ...
+# Subtest: PD-100 商城订单等待显示真实状态而非灰骨架
+ok 5 - PD-100 商城订单等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.2193
+  ...
+# Subtest: PD-100 旧覆盖不得复活订单读口待补脚注
+ok 6 - PD-100 旧覆盖不得复活订单读口待补脚注
+  ---
+  duration_ms: 0.6157
+  ...
+# Subtest: PD-100 YKNXD2 专帧只读章与加深禁点同屏
+ok 7 - PD-100 YKNXD2 专帧只读章与加深禁点同屏
+  ---
+  duration_ms: 11.5398
+  ...
+# Subtest: PD-100 旧覆盖下双端口页题仍显示人话
+not ok 8 - PD-100 旧覆盖下双端口页题仍显示人话
+  ---
+  duration_ms: 2.7228
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:5079'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression />界面文案</. Input:
+    
+    '<div class="px-[18px] pb-6 pt-[16px]" data-testid="copyport-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">文案端口</h1><div class="mt-1 text-caption-xs text-ink-placeholder">界面文案后台可改 · 保存即生效（新渲染）· 全程留痕</div></div></div><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="copyport-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取界面文案…</h2><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">文案、筛选项与变更留痕将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="copyport-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="px-[18px] pb-6 pt-[16px]" data-testid="copyport-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">文案端口</h1><div class="mt-1 text-caption-xs text-ink-placeholder">界面文案后台可改 · 保存即生效（新渲染）· 全程留痕</div></div></div><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="copyport-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取界面文案…</h2><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">文案、筛选项与变更留痕将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="copyport-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:169:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 矩阵不暴露端口工程列与源码脚注
+not ok 9 - PD-100 矩阵不暴露端口工程列与源码脚注
+  ---
+  duration_ms: 2.3487
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:5827'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /界面文案/. Input:
+    
+    '<div class="px-[18px] pb-6 pt-[16px]" data-testid="matrix-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">权限矩阵</h1><div class="mt-1 text-caption-xs text-ink-placeholder">角色×权限四态 · 本页只读</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><span class="wsk"><span class="wsk-pill red" data-testid="matrix-locked-pill">锁死区 · 反结账/导出/储值导入仅店主</span></span></div></div><div class="wsk"><section class="wsk-matrix" data-testid="matrix-grid"><div class="hidden lg:block"><table><thead><tr><th></th><th>收银</th><th>退款</th><th>日结</th><th>反结账</th><th>库存</th><th>会员</th><th>员工</th><th>规则配置</th><th>文案端口</th><th>槽位</th><th>报表</th><th>权限矩阵</th></tr></thead><tbody><tr><td>店主</td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx readonly">只读</span></td></tr><tr><td>店长</td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx locked">锁死</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx ok">✓</span></td><td><span class="mx readonly">只读</span></td></tr><tr><td>前台</td><td><span class="mx ok">✓</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx locked">锁死</span></td><td><span class="mx no">—</span></td><td><span class="mx readonly">只读</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td></tr><tr><td>美容师</td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx locked">锁死</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td></tr></tbody></table></div><div class="lg:hidden" data-testid="wsk-matrix-phone"><div class="mrole" data-testid="wsk-matrix-role-owner"><div class="mrole-hd">店主</div><div class="mrow"><span>收银</span><span class="mx ok">✓</span></div><div class="mrow"><span>退款</span><span class="mx ok">✓</span></div><div class="mrow"><span>日结</span><span class="mx ok">✓</span></div><div class="mrow"><span>反结账</span><span class="mx ok">✓</span></div><div class="mrow"><span>库存</span><span class="mx ok">✓</span></div><div class="mrow"><span>会员</span><span class="mx ok">✓</span></div><div class="mrow"><span>员工</span><span class="mx ok">✓</span></div><div class="mrow"><span>规则配置</span><span class="mx ok">✓</span></div><div class="mrow"><span>文案端口</span><span class="mx ok">✓</span></div><div class="mrow"><span>槽位</span><span class="mx ok">✓</span></div><div class="mrow"><span>报表</span><span class="mx ok">✓</span></div><div class="mrow"><span>权限矩阵</span><span class="mx readonly">只读</span></div></div><div class="mrole" data-testid="wsk-matrix-role-manager"><div class="mrole-hd">店长</div><div class="mrow"><span>收银</span><span class="mx ok">✓</span></div><div class="mrow"><span>退款</span><span class="mx ok">✓</span></div><div class="mrow"><span>日结</span><span class="mx ok">✓</span></div><div class="mrow"><span>反结账</span><span class="mx locked">锁死</span></div><div class="mrow"><span>库存</span><span class="mx ok">✓</span></div><div class="mrow"><span>会员</span><span class="mx ok">✓</span></div><div class="mrow"><span>员工</span><span class="mx no">—</span></div><div class="mrow"><span>规则配置</span><span class="mx no">—</span></div><div class="mrow"><span>文案端口</span><span class="mx no">—</span></div><div class="mrow"><span>槽位</span><span class="mx no">—</span></div><div class="mrow"><span>报表</span><span class="mx ok">✓</span></div><div class="mrow"><span>权限矩阵</span><span class="mx readonly">只读</span></div></div><div class="mrole" data-testid="wsk-matrix-role-frontdesk"><div class="mrole-hd">前台</div><div class="mrow"><span>收银</span><span class="mx ok">✓</span></div><div class="mrow"><span>退款</span><span class="mx no">—</span></div><div class="mrow"><span>日结</span><span class="mx no">—</span></div><div class="mrow"><span>反结账</span><span class="mx locked">锁死</span></div><div class="mrow"><span>库存</span><span class="mx no">—</span></div><div class="mrow"><span>会员</span><span class="mx readonly">只读</span></div><div class="mrow"><span>员工</span><span class="mx no">—</span></div><div class="mrow"><span>规则配置</span><span class="mx no">—</span></div><div class="mrow"><span>文案端口</span><span class="mx no">—</span></div><div class="mrow"><span>槽位</span><span class="mx no">—</span></div><div class="mrow"><span>报表</span><span class="mx no">—</span></div><div class="mrow"><span>权限矩阵</span><span class="mx no">—</span></div></div><div class="mrole" data-testid="wsk-matrix-role-groomer"><div class="mrole-hd">美容师</div><div class="mrow"><span>收银</span><span class="mx no">—</span></div><div class="mrow"><span>退款</span><span class="mx no">—</span></div><div class="mrow"><span>日结</span><span class="mx no">—</span></div><div class="mrow"><span>反结账</span><span class="mx locked">锁死</span></div><div class="mrow"><span>库存</span><span class="mx no">—</span></div><div class="mrow"><span>会员</span><span class="mx no">—</span></div><div class="mrow"><span>员工</span><span class="mx no">—</span></div><div class="mrow"><span>规则配置</span><span class="mx no">—</span></div><div class="mrow"><span>文案端口</span><span class="mx no">—</span></div><div class="mrow"><span>槽位</span><span class="mx no">—</span></div><div class="mrow"><span>报表</span><span class="mx no">—</span></div><div class="mrow"><span>权限矩阵</span><span class="mx no">—</span></div></div></div></section><div class="mt-3 space-y-1 px-1"><p class="wsk-note">退款：店长=本店≤阈值（默认 ¥500，配置端口店主可调）且非涉储值；超阈值/涉储值锁死仅店主（V1.2/V1.3 并轨）</p><p class="wsk-note">库存：店长=本店盘点派任务+确认差异；商品与服务定价仅店主</p><p class="wsk-note">会员：前台=仅收银识别时可见档位/余额/次卡，不可翻台账</p><p class="wsk-note">报表：店员不看营业额（总规则②）；导出仅店主（总规则③）</p><p class="wsk-note">权限矩阵：本页只读；编辑归控制台（开发侧发布），任何端不可页内改</p><p class="wsk-note">锁死区：反结账/导出/储值台账导入仅店主，任何端不可下放</p><p class="wsk-note">数据真源：lib/roles.ts 头注冻结口径 + 20 号档 V1.2（退款行）+ 26 号档 V1.3（驳回权/运营）；改矩阵先改真源</p></div></div></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="px-[18px] pb-6 pt-[16px]" data-testid="matrix-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">权限矩阵</h1><div class="mt-1 text-caption-xs text-ink-placeholder">角色×权限四态 · 本页只读</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><span class="wsk"><span class="wsk-pill red" data-testid="matrix-locked-pill">锁死区 · 反结账/导出/储值导入仅店主</span></span></div></div><div class="wsk"><section class="wsk-matrix" data-testid="matrix-grid"><div class="hidden lg:block"><table><thead><tr><th></th><th>收银</th><th>退款</th><th>日结</th><th>反结账</th><th>库存</th><th>会员</th><th>员工</th><th>规则配置</th><th>文案端口</th><th>槽位</th><th>报表</th><th>权限矩阵</th></tr></thead><tbody><tr><td>店主</td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx readonly">只读</span></td></tr><tr><td>店长</td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx locked">锁死</span></td><td><span class="mx ok">✓</span></td><td><span class="mx ok">✓</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx ok">✓</span></td><td><span class="mx readonly">只读</span></td></tr><tr><td>前台</td><td><span class="mx ok">✓</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx locked">锁死</span></td><td><span class="mx no">—</span></td><td><span class="mx readonly">只读</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td></tr><tr><td>美容师</td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx locked">锁死</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td><td><span class="mx no">—</span></td></tr></tbody></table></div><div class="lg:hidden" data-testid="wsk-matrix-phone"><div class="mrole" data-testid="wsk-matrix-role-owner"><div class="mrole-hd">店主</div><div class="mrow"><span>收银</span><span class="mx ok">✓</span></div><div class="mrow"><span>退款</span><span class="mx ok">✓</span></div><div class="mrow"><span>日结</span><span class="mx ok">✓</span></div><div class="mrow"><span>反结账</span><span class="mx ok">✓</span></div><div class="mrow"><span>库存</span><span class="mx ok">✓</span></div><div class="mrow"><span>会员</span><span class="mx ok">✓</span></div><div class="mrow"><span>员工</span><span class="mx ok">✓</span></div><div class="mrow"><span>规则配置</span><span class="mx ok">✓</span></div><div class="mrow"><span>文案端口</span><span class="mx ok">✓</span></div><div class="mrow"><span>槽位</span><span class="mx ok">✓</span></div><div class="mrow"><span>报表</span><span class="mx ok">✓</span></div><div class="mrow"><span>权限矩阵</span><span class="mx readonly">只读</span></div></div><div class="mrole" data-testid="wsk-matrix-role-manager"><div class="mrole-hd">店长</div><div class="mrow"><span>收银</span><span class="mx ok">✓</span></div><div class="mrow"><span>退款</span><span class="mx ok">✓</span></div><div class="mrow"><span>日结</span><span class="mx ok">✓</span></div><div class="mrow"><span>反结账</span><span class="mx locked">锁死</span></div><div class="mrow"><span>库存</span><span class="mx ok">✓</span></div><div class="mrow"><span>会员</span><span class="mx ok">✓</span></div><div class="mrow"><span>员工</span><span class="mx no">—</span></div><div class="mrow"><span>规则配置</span><span class="mx no">—</span></div><div class="mrow"><span>文案端口</span><span class="mx no">—</span></div><div class="mrow"><span>槽位</span><span class="mx no">—</span></div><div class="mrow"><span>报表</span><span class="mx ok">✓</span></div><div class="mrow"><span>权限矩阵</span><span class="mx readonly">只读</span></div></div><div class="mrole" data-testid="wsk-matrix-role-frontdesk"><div class="mrole-hd">前台</div><div class="mrow"><span>收银</span><span class="mx ok">✓</span></div><div class="mrow"><span>退款</span><span class="mx no">—</span></div><div class="mrow"><span>日结</span><span class="mx no">—</span></div><div class="mrow"><span>反结账</span><span class="mx locked">锁死</span></div><div class="mrow"><span>库存</span><span class="mx no">—</span></div><div class="mrow"><span>会员</span><span class="mx readonly">只读</span></div><div class="mrow"><span>员工</span><span class="mx no">—</span></div><div class="mrow"><span>规则配置</span><span class="mx no">—</span></div><div class="mrow"><span>文案端口</span><span class="mx no">—</span></div><div class="mrow"><span>槽位</span><span class="mx no">—</span></div><div class="mrow"><span>报表</span><span class="mx no">—</span></div><div class="mrow"><span>权限矩阵</span><span class="mx no">—</span></div></div><div class="mrole" data-testid="wsk-matrix-role-groomer"><div class="mrole-hd">美容师</div><div class="mrow"><span>收银</span><span class="mx no">—</span></div><div class="mrow"><span>退款</span><span class="mx no">—</span></div><div class="mrow"><span>日结</span><span class="mx no">—</span></div><div class="mrow"><span>反结账</span><span class="mx locked">锁死</span></div><div class="mrow"><span>库存</span><span class="mx no">—</span></div><div class="mrow"><span>会员</span><span class="mx no">—</span></div><div class="mrow"><span>员工</span><span class="mx no">—</span></div><div class="mrow"><span>规则配置</span><span class="mx no">—</span></div><div class="mrow"><span>文案端口</span><span class="mx no">—</span></div><div class="mrow"><span>槽位</span><span class="mx no">—</span></div><div class="mrow"><span>报表</span><span class="mx no">—</span></div><div class="mrow"><span>权限矩阵</span><span class="mx no">—</span></div></div></div></section><div class="mt-3 space-y-1 px-1"><p class="wsk-note">退款：店长=本店≤阈值（默认 ¥500，配置端口店主可调）且非涉储值；超阈值/涉储值锁死仅店主（V1.2/V1.3 并轨）</p><p class="wsk-note">库存：店长=本店盘点派任务+确认差异；商品与服务定价仅店主</p><p class="wsk-note">会员：前台=仅收银识别时可见档位/余额/次卡，不可翻台账</p><p class="wsk-note">报表：店员不看营业额（总规则②）；导出仅店主（总规则③）</p><p class="wsk-note">权限矩阵：本页只读；编辑归控制台（开发侧发布），任何端不可页内改</p><p class="wsk-note">锁死区：反结账/导出/储值台账导入仅店主，任何端不可下放</p><p class="wsk-note">数据真源：lib/roles.ts 头注冻结口径 + 20 号档 V1.2（退款行）+ 26 号档 V1.3（驳回权/运营）；改矩阵先改真源</p></div></div></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:179:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 7
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 548.983

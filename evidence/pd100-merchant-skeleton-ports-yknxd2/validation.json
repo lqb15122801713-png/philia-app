@@ -18,12 +18,12 @@
   },
   "localBaselineBundle": "index-Bh5WsuOY.js",
   "checks": {
-    "baselineUnit": { "exitCode": 0, "pass": 10, "fail": 0, "log": "baseline-unit.log" },
-    "finalUnit": { "exitCode": 0, "pass": 19, "fail": 0, "log": "final-contrast-green.log" },
-    "finalBuild": { "exitCode": 0, "log": "final-build.log" },
-    "fullLint": { "exitCode": 1, "status": "INC_BASELINE", "errors": 47, "warnings": 5, "sameAsBaseline": true, "log": "final-full-lint.log" },
-    "targetedLint": { "exitCode": 1, "status": "INC_BASELINE", "errors": 1, "warnings": 1, "sameAsBaseline": true, "log": "final-targeted-lint.log" },
-    "newFilesLint": { "exitCode": 0, "log": "candidate-new-files-lint.log" },
+    "baselineUnit": { "exitCode": 0, "pass": 10, "fail": 0, "log": "baseline-unit.txt" },
+    "finalUnit": { "exitCode": 0, "pass": 19, "fail": 0, "log": "final-contrast-green.txt" },
+    "finalBuild": { "exitCode": 0, "log": "final-build.txt" },
+    "fullLint": { "exitCode": 1, "status": "INC_BASELINE", "errors": 47, "warnings": 5, "sameAsBaseline": true, "log": "final-full-lint.txt" },
+    "targetedLint": { "exitCode": 1, "status": "INC_BASELINE", "errors": 1, "warnings": 1, "sameAsBaseline": true, "log": "final-targeted-lint.txt" },
+    "newFilesLint": { "exitCode": 0, "log": "candidate-new-files-lint.txt" },
     "diffCheck": { "exitCode": 0 },
     "negativeControl": { "expectedExitCode": 1, "expectedFailures": 4, "restoredExitCode": 0, "restoredPass": 19, "residualProductDiff": false },
     "contrastTdd": { "before": "4.05:1", "after": "4.82:1", "redFirst": true, "greenAfter": true }
