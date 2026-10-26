@@ -1,0 +1,104 @@
+{
+  "phase": "after",
+  "role": "owner",
+  "ok": true,
+  "mockOnly": true,
+  "hit": false,
+  "entryPath": "/matrix",
+  "destinationPath": "/hq",
+  "bundle": {
+    "name": "index-Bh5WsuOY.js",
+    "size": 1684022,
+    "sha256": "bc5ad0849a6efe59b60f76f40e565425be13bba12ee9c85c7adbfe43a8475362"
+  },
+  "checks": [
+    {
+      "name": "scenario starts outside HQ",
+      "pass": true,
+      "actual": "/matrix",
+      "expected": "/matrix"
+    },
+    {
+      "name": "HQ_SIDEBAR_ENTRY_NOT_SEEN",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "sidebar HQ entry has a visible native link",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "sidebar click reaches HQ",
+      "pass": true,
+      "actual": "/hq",
+      "expected": "/hq"
+    },
+    {
+      "name": "HQ close CTA remains visible after sidebar navigation",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "existing close confirmation opens",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "opening confirmation does not close the store",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "final close remains blocked before acknowledgement",
+      "pass": true,
+      "actual": true,
+      "expected": true
+    },
+    {
+      "name": "cancel acted and closed the confirmation layer",
+      "pass": true,
+      "actual": "acted+closed",
+      "expected": "acted+closed"
+    },
+    {
+      "name": "cancel makes no close mutation",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "no close, reopen, or clone mutation occurred",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "name": "the same store remains active",
+      "pass": true,
+      "actual": "active",
+      "expected": "active"
+    },
+    {
+      "name": "no second store was created",
+      "pass": true,
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "name": "no uncaught page exception",
+      "pass": true,
+      "actual": 0,
+      "expected": 0
+    }
+  ],
+  "closeCalls": [],
+  "reopenCalls": [],
+  "cloneCalls": [],
+  "screenshots": "E:\\KIMI code\\pd96-merchant-hq-sidebar-entry\\evidence\\pd96-merchant-hq-sidebar-entry\\shots\\after\\owner"
+}

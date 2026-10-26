@@ -1,0 +1,2 @@
+PASS scenario starts outside HQ: actual="/matrix" expected="/matrix"
+FAIL HQ_SIDEBAR_ENTRY_NOT_SEEN: actual=false expected=true

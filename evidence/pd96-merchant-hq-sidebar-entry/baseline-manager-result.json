@@ -1,0 +1,34 @@
+{
+  "phase": "baseline",
+  "role": "manager",
+  "ok": false,
+  "mockOnly": true,
+  "hit": false,
+  "entryPath": "/matrix",
+  "destinationPath": "/hq",
+  "bundle": {
+    "name": "index-Bzkt2irq.js",
+    "size": 1684020,
+    "sha256": "3384bb31cc3c43c8c90d8e449fa0d0345ea77d7c32e46d6b06ccd176b8cd41a3"
+  },
+  "failure": "HQ_SIDEBAR_ENTRY_NOT_SEEN",
+  "error": null,
+  "checks": [
+    {
+      "name": "scenario starts outside HQ",
+      "pass": true,
+      "actual": "/matrix",
+      "expected": "/matrix"
+    },
+    {
+      "name": "HQ_SIDEBAR_ENTRY_NOT_SEEN",
+      "pass": false,
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "closeCalls": [],
+  "reopenCalls": [],
+  "cloneCalls": [],
+  "screenshots": "E:\\KIMI code\\pd96-merchant-hq-sidebar-entry\\evidence\\pd96-merchant-hq-sidebar-entry\\shots\\baseline\\manager"
+}

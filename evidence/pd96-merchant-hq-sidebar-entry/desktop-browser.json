@@ -1,0 +1,50 @@
+{
+  "tool": "Kimi Code Desktop built-in browser",
+  "role": "manager",
+  "mockOnly": true,
+  "hit": false,
+  "bundle": {
+    "name": "index-Bh5WsuOY.js",
+    "sha256": "bc5ad0849a6efe59b60f76f40e565425be13bba12ee9c85c7adbfe43a8475362"
+  },
+  "finalRun": {
+    "deviceEmulation": "disabled",
+    "entryPath": "/matrix",
+    "sidebarEntry": { "role": "link", "name": "总部台", "visible": true, "count": 1 },
+    "clickedSidebarEntry": true,
+    "destinationPath": "/hq",
+    "closeCta": { "role": "button", "name": "关闭门店", "visible": true, "count": 1 },
+    "confirmationDialog": { "visible": true, "count": 1, "managerSubmitDisabled": true },
+    "cancelClicked": true,
+    "dialogAfterCancel": 0,
+    "finalHeading": "总部台",
+    "finalStoreRow": "敏慧门店（Mock） 未分组 关闭门店"
+  },
+  "mockStateAfterDesktopCancel": {
+    "closeCalls": [],
+    "reopenCalls": [],
+    "cloneCalls": [],
+    "stores": [
+      {
+        "id": "pd96-mock-store",
+        "name": "敏慧门店（Mock）",
+        "storeType": "store",
+        "hqId": "pd96-mock-store",
+        "status": "active",
+        "groupName": null
+      }
+    ]
+  },
+  "harnessRedBeforeFinalRun": [
+    "fit=0.8 下两次元素操作误落 /pass，一次视觉操作误落 /products；未记为产品结论，未据此改码。",
+    "一次 tab.go_back 返回 NAVIGATION_FAILED，但随后 tab.get_state 实测已回 /matrix。",
+    "两次 page.visual.snapshot 返回 PAGE_NOT_READY；既有 CDP 帧保留，未伪造 Desktop 截图。",
+    "关闭 device emulation 后重新从 /matrix 出发，元素点击准确到 /hq，随后 CTA→dialog→cancel 全链完成。"
+  ],
+  "boundaries": {
+    "realBusinessWrites": 0,
+    "secondStoreCreated": false,
+    "forbiddenFixtureTouched": false,
+    "localhostPresentedAsLiveHIT": false
+  }
+}

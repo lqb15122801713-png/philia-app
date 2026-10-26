@@ -1,0 +1,7 @@
+PD-96 定向 ESLint 实录
+
+cwd：E:\KIMI code\pd96-merchant-hq-sidebar-entry\apps\merchant
+command：npx eslint src/components/MerchantRail.tsx src/copy/console.ts
+exit：0
+stdout／stderr：空（无诊断输出）。
+覆盖声明：仅上述两个变更文件；不外推为商家端全量 lint 全绿。

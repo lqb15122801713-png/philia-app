@@ -1,0 +1,90 @@
+{
+  "pd": "PD-96",
+  "worktree": "E:\\KIMI code\\pd96-merchant-hq-sidebar-entry",
+  "branch": "feat/pd96-merchant-hq-sidebar-entry",
+  "base": "33f92d545a7691aa334aecd7ca401668692cc344",
+  "productDiff": {
+    "files": [
+      "apps/merchant/src/components/MerchantRail.tsx",
+      "apps/merchant/src/copy/console.ts"
+    ],
+    "behavior": "role.isOwner -> role.canManage on the existing /hq rail item",
+    "serverChanged": false,
+    "hqPageChanged": false,
+    "merchantOwnerProcedureChanged": false,
+    "staffOrCustomerChanged": false
+  },
+  "migration": {
+    "reserved": "0137",
+    "status": "0137 故意空留",
+    "schemaChanged": false,
+    "migrationFileCreated": false,
+    "forbiddenNumbersUsed": []
+  },
+  "baseline": {
+    "unit": { "tests": 10, "failures": 0 },
+    "buildAllExit": 0,
+    "red": {
+      "command": "PD96_PHASE=baseline PD96_ROLE=manager node --experimental-websocket evidence/pd96-merchant-hq-sidebar-entry/sidebar-hq-path.mjs",
+      "exit": 1,
+      "entryPath": "/matrix",
+      "failure": "HQ_SIDEBAR_ENTRY_NOT_SEEN",
+      "actual": false,
+      "expected": true,
+      "bundle": "index-Bzkt2irq.js"
+    }
+  },
+  "candidate": {
+    "buildAll": { "command": "npm run build", "exit": 0 },
+    "unit": { "tests": 10, "failures": 0, "exit": 0 },
+    "targetLint": {
+      "cwd": "apps/merchant",
+      "command": "npx eslint src/components/MerchantRail.tsx src/copy/console.ts",
+      "exit": 0,
+      "scopeOnly": true
+    },
+    "manager": { "checks": 14, "failures": 0, "exit": 0 },
+    "owner": { "checks": 14, "failures": 0, "exit": 0 },
+    "desktop": {
+      "entryPath": "/matrix",
+      "destinationPath": "/hq",
+      "ctaVisible": true,
+      "cancelActedAndClosed": true,
+      "closeCalls": 0,
+      "reopenCalls": 0,
+      "cloneCalls": 0
+    },
+    "bundle": {
+      "name": "index-Bh5WsuOY.js",
+      "size": 1684022,
+      "sha256": "bc5ad0849a6efe59b60f76f40e565425be13bba12ee9c85c7adbfe43a8475362",
+      "differentFromLiveControl": true,
+      "isLiveTipPackage": false
+    }
+  },
+  "liveControl": {
+    "name": "index-ZxpJoGaZ.js",
+    "sha256": "14d477f68684f9a9c90b9d744a7bd8e7425dfc7777d1d875fdbcd2445b5fd663",
+    "unchangedByThisWindow": true
+  },
+  "boundaries": {
+    "mockOnly": true,
+    "localhostUsedAsLiveHIT": false,
+    "realCloseAttempted": false,
+    "databaseChanged": false,
+    "secondStoreCreated": false,
+    "forbiddenFixtureTouched": false,
+    "moneyFlows": "not touched; all API data is in-memory mock",
+    "temporaryBrowserAndServerCleaned": true
+  },
+  "review": {
+    "independentReadOnlyReviewer": "agent-2",
+    "critical": 0,
+    "important": 0,
+    "initialMinor": 2,
+    "minorClosedOnRecheck": 2,
+    "readyToOpenPr": true,
+    "readyToMergeOrLiveHit": false
+  },
+  "liveHitStatus": "PENDING_MERGE_DEPLOY"
+}

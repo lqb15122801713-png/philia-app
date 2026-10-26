@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-26",
+  "readOnly": true,
+  "url": "http://120.53.102.45:7202/",
+  "indexFetch": {
+    "succeeded": true,
+    "script": "/assets/index-ZxpJoGaZ.js"
+  },
+  "asset": {
+    "url": "http://120.53.102.45:7202/assets/index-ZxpJoGaZ.js",
+    "sha256": "14d477f68684f9a9c90b9d744a7bd8e7425dfc7777d1d875fdbcd2445b5fd663"
+  },
+  "matchesPd94PinnedLivePackage": true,
+  "pd96MergedOrDeployedByThisWindow": false,
+  "candidatePackageIsLive": false,
+  "liveHitStatus": "PENDING_MERGE_DEPLOY"
+}
