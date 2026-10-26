@@ -1,5 +1,5 @@
 /**
- * 商城首页 /mall · U4 定稿面：搜索、回馈金、六类、会员礼、双列商品与浅色待换图。
+ * 商城首页 /mall · U4 定稿面：搜索、回馈金、六类、会员礼、双列商品与商品插画。
  * `?channel=groupbuy` 沿用上游诚实待上线分支；该分支不拉取商城数据、不渲染假商品。
  */
 import { BoardSkeleton, CanvasLayoutLoader, CK, resolveSlotUrl, slotContentOf, useCanvasLayout, usePhiliaClient } from '@philia/shared';
@@ -70,7 +70,9 @@ function MallHero() {
   const slot = slotContentOf('mall.hero');
   const title = slot?.title_main ?? mlc('mall.heroTitle');
   const sub = slot?.title_sub ?? mlc('mall.heroSub');
-  const src = resolveSlotUrl(slot?.url ?? null);
+  const slotSrc = resolveSlotUrl(slot?.url ?? null);
+  const src = slotSrc ?? '/photos/icons/ic-shop.png';
+  const alt = slotSrc ? (slot?.alt ?? title) : title;
   const [imgOk, setImgOk] = useState(true);
   return (
     <section className="mt-4 grid grid-cols-[minmax(0,1fr)_120px] items-center gap-3" data-testid="mall-hero">
@@ -89,13 +91,13 @@ function MallHero() {
       {src && imgOk ? (
         <img
           src={src}
-          alt={slot?.alt ?? title}
+          alt={alt}
           fetchPriority="high"
           onError={() => setImgOk(false)}
-          className="mall-hero-media h-[102px] w-[120px] rounded-control object-cover"
+          className={`mall-hero-media h-[102px] w-[120px] rounded-control ${slotSrc ? 'object-cover' : 'bg-[linear-gradient(135deg,#FAF7F0,#E9E1D2)] object-contain p-1.5'}`}
         />
       ) : (
-        <div role="img" aria-label={slot?.alt ?? title} className="mall-hero-media flex h-[102px] w-[120px] items-center justify-center rounded-control bg-[linear-gradient(135deg,#FAF7F0,#E9E1D2)]">
+        <div role="img" aria-label={alt} className="mall-hero-media flex h-[102px] w-[120px] items-center justify-center rounded-control bg-[linear-gradient(135deg,#FAF7F0,#E9E1D2)]">
           <span className="rounded-full bg-card/75 px-2 py-1 text-[12px] text-ink-secondary" data-u4-secondary>{mlc('mall.pendingImage')}</span>
         </div>
       )}

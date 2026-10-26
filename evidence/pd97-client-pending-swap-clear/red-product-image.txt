@@ -1,0 +1,61 @@
+TAP version 13
+# Subtest: PD-97：已有商品 SVG 必须渲染真图，不得换成待换占位
+not ok 1 - PD-97：已有商品 SVG 必须渲染真图，不得换成待换占位
+  ---
+  duration_ms: 3.645
+  location: 'E:\\KIMI code\\pd97-client-pending-swap-clear\\apps\\customer\\src\\components\\mall\\ProductImage.test.tsx:1:193'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /<img[^>]+src="\/products\/staple-1\.svg"/. Input:
+
+    '<div role="img" aria-label="全价成犬粮 2kg" class="flex items-center justify-center bg-[linear-gradient(135deg,#FAF7F0_0%,#F3EEE4_55%,#E9E1D2_100%)] "><span class="rounded-full bg-card/75 px-2.5 py-1 text-[12px] font-medium text-ink-secondary" data-u4-secondary="true">待换</span></div>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div role="img" aria-label="全价成犬粮 2kg" class="flex items-center justify-center bg-[linear-gradient(135deg,#FAF7F0_0%,#F3EEE4_55%,#E9E1D2_100%)] "><span class="rounded-full bg-card/75 px-2.5 py-1 text-[12px] font-medium text-ink-secondary" data-u4-secondary="true">待换</span></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd97-client-pending-swap-clear\apps\customer\src\components\mall\ProductImage.test.tsx:13:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: PD-97：商品真缺图时保留诚实替代说明，不得输出待换
+not ok 2 - PD-97：商品真缺图时保留诚实替代说明，不得输出待换
+  ---
+  duration_ms: 0.3839
+  location: 'E:\\KIMI code\\pd97-client-pending-swap-clear\\apps\\customer\\src\\components\\mall\\ProductImage.test.tsx:1:564'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /待换/. Input:
+
+    '<div role="img" aria-label="全价成犬粮 2kg" class="flex items-center justify-center bg-[linear-gradient(135deg,#FAF7F0_0%,#F3EEE4_55%,#E9E1D2_100%)] "><span class="rounded-full bg-card/75 px-2.5 py-1 text-[12px] font-medium text-ink-secondary" data-u4-secondary="true">待换</span></div>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div role="img" aria-label="全价成犬粮 2kg" class="flex items-center justify-center bg-[linear-gradient(135deg,#FAF7F0_0%,#F3EEE4_55%,#E9E1D2_100%)] "><span class="rounded-full bg-card/75 px-2.5 py-1 text-[12px] font-medium text-ink-secondary" data-u4-secondary="true">待换</span></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd97-client-pending-swap-clear\apps\customer\src\components\mall\ProductImage.test.tsx:24:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 463.5568

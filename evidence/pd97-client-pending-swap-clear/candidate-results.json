@@ -1,0 +1,279 @@
+{
+  "at": "2026-10-26T05:38:42.516Z",
+  "base": "http://127.0.0.1:7297",
+  "apiBase": "http://127.0.0.1:7297",
+  "ordersCreated": 0,
+  "checks": [
+    {
+      "id": "home",
+      "ok": true,
+      "identityOk": true,
+      "assetOk": true,
+      "state": {
+        "path": "/home",
+        "pendingCount": 0,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/brand/banner-home-1200.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-bath.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-board.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-groom.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/brand/banner-home-1200.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-bath.png",
+            "naturalOk": true
+          }
+        ],
+        "identityOk": true,
+        "assetOk": true,
+        "contentImages": [
+          {
+            "src": "/brand/banner-home-1200.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-bath.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-board.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-groom.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/brand/banner-home-1200.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/photos/icons/ic-bath.png",
+            "naturalOk": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "mall",
+      "ok": true,
+      "identityOk": true,
+      "assetOk": true,
+      "state": {
+        "path": "/mall",
+        "pendingCount": 0,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/photos/icons/ic-shop.png",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-3.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-3.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/toy-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/toy-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/clean-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/clean-2.svg",
+            "naturalOk": true
+          }
+        ],
+        "heroPending": 0,
+        "identityOk": true,
+        "assetOk": true,
+        "productImages": [
+          {
+            "src": "/products/staple-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-3.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-3.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/toy-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/toy-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/clean-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/clean-2.svg",
+            "naturalOk": true
+          }
+        ],
+        "heroImages": [
+          {
+            "src": "/photos/icons/ic-shop.png",
+            "naturalOk": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "product",
+      "ok": true,
+      "identityOk": true,
+      "assetOk": true,
+      "state": {
+        "path": "/mall/product/01M5VABCFK6KBYWD2QWN9E6MMF",
+        "pendingCount": 0,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/products/staple-1.svg",
+            "naturalOk": true
+          }
+        ],
+        "cartCount": 1,
+        "identityOk": true,
+        "assetOk": true
+      }
+    },
+    {
+      "id": "cart-in-stock",
+      "ok": true,
+      "identityOk": true,
+      "assetOk": true,
+      "state": {
+        "path": "/mall/cart",
+        "pendingCount": 0,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/products/staple-1.svg",
+            "naturalOk": true
+          }
+        ],
+        "identityOk": true,
+        "assetOk": true
+      }
+    },
+    {
+      "id": "checkout-in-stock",
+      "ok": true,
+      "identityOk": true,
+      "assetOk": true,
+      "state": {
+        "path": "/mall/checkout",
+        "pendingCount": 0,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/products/staple-1.svg",
+            "naturalOk": true
+          }
+        ],
+        "identityOk": true,
+        "assetOk": true
+      }
+    },
+    {
+      "id": "orders",
+      "ok": true,
+      "identityOk": true,
+      "assetOk": true,
+      "state": {
+        "path": "/mall/orders",
+        "pendingCount": 0,
+        "emptyCart": false,
+        "images": [
+          {
+            "src": "/products/staple-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-2.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/staple-3.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-1.svg",
+            "naturalOk": true
+          },
+          {
+            "src": "/products/snack-2.svg",
+            "naturalOk": true
+          }
+        ],
+        "orderCount": 5,
+        "identityOk": true,
+        "assetOk": true
+      }
+    }
+  ],
+  "failures": 0,
+  "hit": false,
+  "localhostUsedAsLiveHIT": false,
+  "payment": "none; order setup only via mall.createOrder on isolated single-store database"
+}

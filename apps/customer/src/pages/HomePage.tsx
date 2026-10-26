@@ -41,7 +41,7 @@ function entryNote(services: ServiceRow[], unit: string): string | null {
 function HomeImage({ src, alt, className, testId }: { src: string | null; alt: string; className: string; testId?: string }) {
   const [brokenSrc, setBrokenSrc] = useState<string | null>(null)
   if (!src || brokenSrc === src) {
-    return <div className={`${className} hv2-image-fallback`} data-testid={testId} role="img" aria-label={`${alt}，待换`}>待换</div>
+    return <div className={`${className} hv2-image-fallback`} data-testid={testId} role="img" aria-label={alt}>{alt}</div>
   }
   return <img src={src} alt={alt} className={className} data-testid={testId} loading="lazy" onError={() => setBrokenSrc(src)} />
 }
@@ -179,14 +179,13 @@ export default function HomePage() {
         : bannerIsGuest || plan?.free === true
   const bannerSlot = bannerAudienceHit ? bannerSlotRaw : undefined
   const bannerImage = resolveSlotUrl(bannerSlot?.url ?? null)
-  const magazineImages: Array<string | null> = [null, null, null]
   const groomingServices = services.filter((service) => service.type === 'grooming')
   const boardingServices = services.filter((service) => service.type === 'boarding')
   const extraService = groomingServices[1] ?? boardingServices[1] ?? null
   const featured = [
-    { key: 'grooming', title: hc('home.featuredGrooming'), sub: hc('home.featuredGroomingSub'), path: '/booking/grooming', image: magazineImages[0] },
-    { key: 'boarding', title: hc('home.featuredBoarding'), sub: hc('home.featuredBoardingSub'), path: '/booking/boarding', image: magazineImages[1] },
-    ...(extraService ? [{ key: extraService.id, title: extraService.name, sub: entryNote([extraService], extraService.type === 'boarding' ? '/晚' : '') ?? hc('home.featuredServiceGeneric'), path: extraService.type === 'boarding' ? '/booking/boarding' : '/booking/grooming', image: magazineImages[2] }] : []),
+    { key: 'grooming', title: hc('home.featuredGrooming'), sub: hc('home.featuredGroomingSub'), path: '/booking/grooming', image: '/photos/icons/ic-bath.png' },
+    { key: 'boarding', title: hc('home.featuredBoarding'), sub: hc('home.featuredBoardingSub'), path: '/booking/boarding', image: '/photos/icons/ic-board.png' },
+    ...(extraService ? [{ key: extraService.id, title: extraService.name, sub: entryNote([extraService], extraService.type === 'boarding' ? '/晚' : '') ?? hc('home.featuredServiceGeneric'), path: extraService.type === 'boarding' ? '/booking/boarding' : '/booking/grooming', image: '/photos/icons/ic-groom.png' }] : []),
   ]
   const steps = stepsQ.data ?? []
 
@@ -311,12 +310,12 @@ export default function HomePage() {
         <h2 id="home-stories-title"><CK k="home.storiesTitle">{hc('home.storiesTitle')}</CK></h2>
         <div className="hv2-story-list">
           <Link to="/member" className="hv2-story-card" data-testid="home-story-card">
-            <HomeImage src={magazineImages[0]} alt={hc('home.storyMember')} className="hv2-story-img" />
+            <HomeImage src="/brand/banner-home-1200.png" alt={hc('home.storyMember')} className="hv2-story-img" />
             <span className="hv2-story-shade" aria-hidden="true" />
             <span className="hv2-story-copy"><small>PHILIA CARE</small><strong>{hc('home.storyMember')}</strong><span>{hc('home.storyMemberSub')}</span></span>
           </Link>
           <Link to="/philia/moments" className="hv2-story-card" data-testid="home-story-card">
-            <HomeImage src={magazineImages[1]} alt={hc('home.storyCare')} className="hv2-story-img" />
+            <HomeImage src="/photos/icons/ic-bath.png" alt={hc('home.storyCare')} className="hv2-story-img hv2-story-illustration" />
             <span className="hv2-story-shade" aria-hidden="true" />
             <span className="hv2-story-copy"><small>PHILIA CARE</small><strong>{hc('home.storyCare')}</strong><span>{hc('home.storyCareSub')}</span></span>
           </Link>
