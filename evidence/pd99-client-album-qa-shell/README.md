@@ -71,3 +71,13 @@
 - 更深不更大：客户急看服务相册时，不再撞 QA 半壳；拦＝QA 相册不成册＋真实相册保留＋同名收敛；撤＝证据不足就保留未关闭，不用 REUSE、空命中、PD-97 或换 tip 冒充清零。
 - 当前状态：**本地候选证据齐，交付 HIT 待产品核；异窗监理由头子在交付 HIT 后接手。现网仍 `PENDING_MERGE_DEPLOY`。**
 - 合部另闸：Merge SHA＝Deployed SHA＝TIP-DEPLOY tip 全，DEPLOY／HEALTH×4 同轮新鲜；本卷不领取该结论。
+
+## 6. BLOCK1 打回补钉 · 完成态详情服务相册
+
+Cursor 指出 `appointment.serviceAlbum` 绕开 QA 闸，Moments 滤册不能替代详情清。复核确认 `albumRawSteps` 原样进入图片网格，完成态仍露蓝底 STEP photo。
+
+- 修改 `AppointmentDetailPage.tsx`：同一 `isQaFixturePetName` 判断原始宠物名；QA 时 `albumSteps=[]`，相册块只显示既有 `albumNoPhoto`＝“无需照片”；普通真实照片仍走原网格。
+- 新 RED：`block1-red-qa-presentation.txt`＝6 PASS／1 FAIL；GREEN：`block1-green-qa-presentation.txt`＝7/7；最终全套 `block1-unit-all.txt`＝11/11。
+- 完成态实帧：`block1-completed-album.png`，页面状态＝已完成，相册＝无需照片；DOM 检查 `STEP=0`、`QA夹具=0`。普通真实服务照片由独立对照用例保留。
+- 新候选：`index-Cfv2yXYL.js`，SHA-256 `207f903e5164b760260dfb56ae61b5402e3f6a89724d4d11703349dfa39c594e`，同时异于 `CvbMRlL3` 与 `CfOqIr5Q`；HTTP 与本地字节一致，仍不是 tip 包。
+- `npm run build` 三端 exit 0；全量 lint 仍为基线 65 errors／4 warnings；B7 仍为基线 16 PASS／1 FAIL；未扩 NOTE 跨面、未碰 `01M5EQVF`、未合未部。

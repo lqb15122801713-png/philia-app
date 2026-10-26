@@ -214,3 +214,85 @@ test('PD-99：预约详情与取消入口同源收敛 QA 夹具名', () => {
   assert.match(html, /豆豆/)
   assert.doesNotMatch(html, /QA夹具豆豆/)
 })
+
+function completedAlbumDetail(id: string, petName: string) {
+  const current = appointment(id, 'completed')
+  return {
+    appointment: {
+      ...current,
+      code: 'TEST01',
+      customerId: 'customer-1',
+      storeId: 'store-1',
+      staffId: null,
+      assignSource: null,
+      petId: 'pet-1',
+      serviceId: 'service-1',
+      paymentMode: 'pay_at_store',
+      paidAt: null,
+      paidFen: null,
+      note: null,
+      cancelReason: null,
+      cancelSource: null,
+      emergencyContactJson: null,
+      medicalAuthJson: null,
+      walkTimesPerDay: null,
+      checkedInAt: new Date('2026-10-22T09:00:00'),
+      completedAt: new Date('2026-10-22T10:30:00'),
+      rating: null,
+      review: null,
+      receptionistId: null,
+      createdAt: new Date('2026-10-22T08:00:00'),
+      updatedAt: new Date('2026-10-22T10:30:00'),
+    },
+    pet: { id: 'pet-1', name: petName, avatarUrl: null },
+    service: { id: 'service-1', name: '基础洗护（小型犬）' },
+    store: { id: 'store-1', name: '菲丽亚宠物·示例店', address: '示例路 1 号', lat: null, lng: null, phone: null },
+    steps: [],
+    boardingStay: null,
+    customer: { nickname: '客户', phoneTail: null },
+    cashierBillId: null,
+    addons: [],
+    rescheduleLogs: [],
+  }
+}
+
+function renderCompletedAlbum(id: string, petName: string, photoUrl: string) {
+  return renderAt(
+    `/appointments/${id}`,
+    <Routes><Route path="/appointments/:id" element={<AppointmentDetailPage />} /></Routes>,
+    (queryClient) => {
+      queryClient.setQueryData(['appointment', 'get', id], completedAlbumDetail(id, petName))
+      queryClient.setQueryData(['appointment', 'serviceAlbum', id], {
+        steps: [
+          { stepKey: 'disinfection', stepName: '消毒工具确认', status: 'done', photos: [] },
+          { stepKey: 'precheck', stepName: '预检', status: 'done', photos: [] },
+          { stepKey: 'grooming', stepName: '洗护', status: 'done', photos: [] },
+          { stepKey: 'detail', stepName: '精修', status: 'done', photos: [] },
+          {
+            stepKey: 'before_after',
+            stepName: '交付检查',
+            status: 'done',
+            photos: [{ url: photoUrl, thumbUrl: null, tag: 'after' }],
+          },
+          { stepKey: 'confirm', stepName: '完成确认', status: 'done', photos: [] },
+        ],
+      })
+      queryClient.setQueryData(['canvas', 'blocks'], { items: [] })
+    },
+  )
+}
+
+test('PD-99 BLOCK1：完成态详情 QA 相册显示诚实空态', () => {
+  const html = renderCompletedAlbum('qa-complete', 'QA夹具豆豆', '/qa-blue-step.jpg')
+
+  assert.match(html, /data-block-key="apptDetail.album"/)
+  assert.match(html, /无需照片/)
+  assert.doesNotMatch(html, /qa-blue-step\.jpg/)
+})
+
+test('PD-99 BLOCK1：完成态详情保留普通真实服务照片', () => {
+  const html = renderCompletedAlbum('real-complete', '豆豆', '/real-service-after.jpg')
+
+  assert.match(html, /data-block-key="apptDetail.album"/)
+  assert.match(html, /src="\/real-service-after\.jpg"/)
+})

@@ -42,7 +42,7 @@ import { apc, type AppointmentsCopyKey } from '@/copy/appointments';
 import { rc } from '@/copy/refund';
 import { sl } from '@/copy/serviceloop';
 import { queryCancelFeeTiers, queryPrepaidOf, readDetailExtras } from '@/lib/exp2Api';
-import { customerPetName } from '@/lib/customerPresentation';
+import { customerPetName, isQaFixturePetName } from '@/lib/customerPresentation';
 import type { AppointmentDetail } from '@/components/booking/types';
 import {
   APPT_STATUS_META,
@@ -574,10 +574,14 @@ export default function AppointmentDetailPage() {
   // 门店电话：stores.phone 已在仓（0042 迁移），无值提示到店/商家端联系
   const storePhone = d.store?.phone ?? null;
 
-  // 服务相册分组：completed 展示全部六步；进行中订单只显示已确认（done）步骤的照片
+  // 服务相册分组：completed 展示全部六步；进行中只显示已确认步；QA 夹具单不占位
   const albumRawSteps = albumQ.data?.steps ?? [];
-  const albumSteps =
-    appt.status === 'completed' ? albumRawSteps : albumRawSteps.filter((s) => s.status === 'done');
+  const qaFixtureAlbum = isQaFixturePetName(d.pet?.name);
+  const albumSteps = qaFixtureAlbum
+    ? []
+    : appt.status === 'completed'
+      ? albumRawSteps
+      : albumRawSteps.filter((s) => s.status === 'done');
   const albumPhotoCount = albumSteps.reduce((n, s) => n + s.photos.length, 0);
 
   /* 块渲染器（块内逻辑/条件与改造前逐字一致；文案走 copy 键 + CK 反查锚） */
@@ -867,14 +871,20 @@ export default function AppointmentDetailPage() {
       ) : null,
 
     /* 7. apptDetail.album：服务相册（v1.1-b2 B2-4）：按六步分组网格展示，before/after 打标；
-          completed 展示全部六步分组，进行中订单只显示已确认步骤的照片 */
+          completed 展示全部六步分组，进行中只显示已确认步骤；QA 夹具单显示诚实空态 */
     'apptDetail.album': () =>
-      albumEnabled && albumSteps.length > 0 ? (
+      albumEnabled && (albumSteps.length > 0 || qaFixtureAlbum) ? (
         <section className="mt-4 rounded-card bg-card p-4 shadow-card">
           <h2 className="text-title"><CK k="appointments.albumTitle">{apc('appointments.albumTitle')}</CK></h2>
-          <p className="mt-0.5 text-caption text-ink-secondary">
-            <CK k="appointments.albumSub">{apc('appointments.albumSub', { count: albumPhotoCount })}</CK>
-          </p>
+          {albumSteps.length === 0 ? (
+            <p className="mt-0.5 text-caption text-ink-secondary">
+              <CK k="appointments.albumNoPhoto">{apc('appointments.albumNoPhoto')}</CK>
+            </p>
+          ) : (
+            <p className="mt-0.5 text-caption text-ink-secondary">
+              <CK k="appointments.albumSub">{apc('appointments.albumSub', { count: albumPhotoCount })}</CK>
+            </p>
+          )}
           <div className="mt-3 space-y-4">
             {albumSteps.map((step) => (
               <div key={step.stepKey}>

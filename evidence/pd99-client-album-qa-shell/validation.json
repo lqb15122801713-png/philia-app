@@ -22,11 +22,12 @@
   "candidate": {
     "base": "http://127.0.0.1:7299",
     "tipPackage": false,
-    "bundleName": "index-CvbMRlL3.js",
-    "bundleBytes": 1423549,
-    "bundleSha256": "863af2d29590ace26455bd685bb16118283a0d7be6dc1241db576cba53b88fbe",
+    "bundleName": "index-Cfv2yXYL.js",
+    "bundleBytes": 1423869,
+    "bundleSha256": "207f903e5164b760260dfb56ae61b5402e3f6a89724d4d11703349dfa39c594e",
     "httpBundleMatchesLocalBytes": true,
     "differentFromRequiredBaselineNameAndSha": true,
+    "differentFromPreviousCandidateNameAndSha": true,
     "mutationWriteProbeHttp": 405
   },
   "productDiff": {
@@ -52,14 +53,30 @@
   "regression": {
     "red": { "file": "red-qa-presentation.txt", "tests": 5, "passed": 0, "failed": 5 },
     "green": { "file": "green-qa-presentation.txt", "tests": 5, "passed": 5, "failed": 0 },
-    "finalUnit": { "file": "final-unit-all.txt", "tests": 9, "passed": 9, "failed": 0 },
-    "buildAll": { "file": "final-build-all.txt", "status": "PASS", "customerMerchantStaff": true },
-    "targetedLintOther": { "file": "lint-targeted-other.txt", "status": "PASS" },
-    "targetedLintBaselineExisting": { "file": "lint-targeted-baseline-existing.txt", "status": "BASELINE_EXISTING_RED", "errors": 4 },
-    "fullCustomerLint": { "file": "final-lint-customer.txt", "status": "BASELINE_EXISTING_RED", "errors": 65, "warnings": 4, "sameAsBaseline": true },
-    "b7Existing": { "file": "final-b7-existing.txt", "status": "BASELINE_EXISTING_RED", "passed": 16, "failed": 1 },
+    "finalUnit": { "file": "block1-unit-all.txt", "tests": 11, "passed": 11, "failed": 0 },
+    "buildAll": { "file": "block1-build-all.txt", "status": "PASS", "customerMerchantStaff": true },
+    "targetedLintOther": { "file": "block1-lint-other.txt", "status": "PASS" },
+    "targetedLintBaselineExisting": { "file": "block1-lint-targeted.txt", "status": "BASELINE_EXISTING_RED", "errors": 3 },
+    "fullCustomerLint": { "file": "block1-lint-customer.txt", "status": "BASELINE_EXISTING_RED", "errors": 65, "warnings": 4, "sameAsBaseline": true },
+    "b7Existing": { "file": "block1-b7-existing.txt", "status": "BASELINE_EXISTING_RED", "passed": 16, "failed": 1 },
     "mutation": { "file": "mutation-red-inverted-filter.txt", "invertedFilterFailures": 2, "invertedFilterPasses": 3, "restoredFinalUnitPasses": 9 },
     "diffCheck": "PASS"
+  },
+  "block1": {
+    "observedAt": "2026-10-26T14:04:41.227Z",
+    "cursorBlock": "appointment.serviceAlbum rendered QA fixture photos without isQaFixturePetName",
+    "productDiff": { "appointmentDetailInsertions": 19, "appointmentDetailDeletions": 9, "regressionTestInsertions": 82 },
+    "red": { "file": "block1-red-qa-presentation.txt", "passed": 6, "failed": 1 },
+    "green": { "file": "block1-green-qa-presentation.txt", "passed": 7, "failed": 0 },
+    "completedAlbum": {
+      "status": "completed",
+      "qaStepTextCount": 0,
+      "qaFixtureNameCount": 0,
+      "emptyState": "无需照片",
+      "screenshot": "block1-completed-album.png",
+      "screenshotSha256": "975f4e29c6698600c156efcb86dce1d9d6481b90201db92d55a7ac17780443b7",
+      "realPhotoPreservedByRegression": true
+    }
   },
   "migration": {
     "reserved": "0140",
