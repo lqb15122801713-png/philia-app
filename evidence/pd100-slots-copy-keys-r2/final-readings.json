@@ -1,0 +1,44 @@
+{
+  "phase": "FINAL_LOCAL_CANDIDATE",
+  "bundleName": "index-_dA59x8G.js",
+  "bundleSha256": "83dcb273559a3820f51b018b3d918f9553aece1a78b316ae5e54b70ff1110c06",
+  "notReferenceBundles": ["index-BxXrf5jN.js", "index-sf4Mp8sz.js"],
+  "viewport": "1280x800",
+  "store": "pd100-r2-store (single synthetic store)",
+  "slots": {
+    "url": "http://127.0.0.1:7429/settings/slots?final=index-_dA59x8G.js",
+    "steadyState": true,
+    "keynameHomeBanner": false,
+    "keynameLoginHero": false,
+    "keynameMallHero": false,
+    "keynameExposed": false,
+    "skeletonHeavy": false,
+    "headings": ["首页品牌横幅", "员工端登录页主视觉", "商城促销横幅"],
+    "textSnapshotId": "text-eb518ec0-c7ac-49c3-bcd2-f83f4c9b1988",
+    "visualSnapshotId": "visual-023b4bf6-70de-4b75-b3d7-413ea2cc2c0c",
+    "frame": "final-slots.png"
+  },
+  "copy": {
+    "url": "http://127.0.0.1:7429/settings/copy?final=index-_dA59x8G.js",
+    "steadyState": true,
+    "keynameAboutAgreementsInRows": false,
+    "keynameStaffTitleInRows": false,
+    "keynameAboutAgreementsInHistory": false,
+    "keynameExposed": false,
+    "skeletonHeavy": false,
+    "labels": ["关于页协议入口", "员工端首页标题"],
+    "historyLabel": "关于页协议入口",
+    "textSnapshotId": "text-69667d48-22da-4b6d-9299-5f14189cbcc3",
+    "visualSnapshotId": "visual-b8149261-2b27-4139-bb49-eb4a8f243c00",
+    "frame": "final-copy.png"
+  },
+  "bucket": "PASS",
+  "scope": "local candidate only; not a production retest and not an acceptance conclusion",
+  "apiData": "real production dist served with single-store synthetic GET responses; tRPC response shape unchanged",
+  "unknownProcedures": [],
+  "blockedMutations": [],
+  "unverifiedInteractions": [
+    "Save-confirmation and emergency-unpublish dialog clicks did not produce a reliable state transition in the background browser; no interaction PASS is claimed."
+  ],
+  "frameNote": "Frames were recaptured for the final bundle. Identical pixels can reuse the browser's content-addressed attachment; snapshot IDs above are the fresh capture evidence."
+}

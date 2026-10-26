@@ -1,0 +1,27 @@
+{
+  "phase": "INTENTIONAL_RED",
+  "bundleName": "index-BaDBxrkM.js",
+  "bundleSha256": "c26da8ad928b03a58471692e037832c2005d68f68739f85fd9f477e4082b3e1c",
+  "mutations": [
+    "slotDisplayName temporarily returned slot.slotKey",
+    "labelForRule temporarily returned ruleKey"
+  ],
+  "slots": {
+    "url": "http://127.0.0.1:7427/settings/slots?negative=index-BaDBxrkM.js",
+    "homeBannerExactPresent": true,
+    "loginHeroExactPresent": true,
+    "stableForMs": 500
+  },
+  "copy": {
+    "url": "http://127.0.0.1:7427/settings/copy?negative=index-BaDBxrkM.js",
+    "aboutAgreementsExactPresent": true,
+    "stableForMs": 500
+  },
+  "bucket": "FAIL",
+  "reasonCode": "SLOTS_COPY_KEYNAME_EXPOSED",
+  "restored": true,
+  "restoredDiffSha256": "99883ccf3d6a809ac855ba8c0aa3d9d1769a29b2fbadfe7fe5029531c384cce8",
+  "restoredDiffMatchedPreNegative": true,
+  "postNegativePerformanceChange": "Reused a memoized rowByKey Map instead of repeated rows.find; final bundle is index-_dA59x8G.js.",
+  "committedAsRed": false
+}

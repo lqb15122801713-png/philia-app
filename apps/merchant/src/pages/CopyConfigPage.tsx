@@ -11,7 +11,7 @@
  * - 筛选：搜索（键名或文案 contains，大小写不敏感）+ 域下拉（全部+label 去重计数）+
  *   两个 toggle（只看高危 / 只看已改，已改=active 行 version>1）；
  * - 编辑模型：pendingChanges Map<ruleKey, newText>，有 pending 时底部浮动保存条；
- * - 保存=危险操作 D 套同族：变更摘要逐条（键名+前值→后值）；含高危键（涉钱/涉协议/涉会员
+ * - 保存=危险操作 D 套同族：变更摘要逐条（人话标签+前值→后值）；含高危键（涉钱/涉协议/涉会员
  *   口径，server 判定随行下发 highRisk）→ 警示区+口令输入框，键入「确认保存」四字解锁；
  *   确认 → config.save（confirmedHighRisk=pending 中高危键名单）→ 失效 list/versions/
  *   copyOverrides 三键 + toast；失败 toast 附服务端 message 明文（禁令词/高危未确认/未知键）；
@@ -72,6 +72,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
 
   /* 仅 active 行进编辑器（active=0 历史行不显示） */
   const rows = useMemo(() => (listQuery.data?.rules ?? []).filter((r) => r.active), [listQuery.data]);
+  const rowByKey = useMemo(() => new Map(rows.map((r) => [r.ruleKey, r])), [rows]);
   const textByKey = useMemo(() => {
     const m = new Map<string, string>();
     for (const r of rows) m.set(r.ruleKey, textOf(r.valueJson));
@@ -147,6 +148,10 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
   const [pending, setPending] = useState<Map<string, string>>(new Map());
   const [pendingPos, setPendingPos] = useState<Map<string, string>>(new Map());
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const labelForRule = (ruleKey: string): string => {
+    const row = rowByKey.get(ruleKey);
+    return pendingPos.get(ruleKey) || row?.position?.trim() || row?.screen?.trim() || cp('copyport.managementTitle');
+  };
 
   /** 草稿回填：与现值相同即撤出 pending（无净变更不入保存条） */
   const setDraft = (ruleKey: string, text: string) => {
@@ -167,7 +172,6 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
   };
 
   const pendingList = useMemo(() => {
-    const rowByKey = new Map(rows.map((r) => [r.ruleKey, r]));
     return [...pending.entries()].map(([ruleKey, after]) => ({
       ruleKey,
       after,
@@ -175,7 +179,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
       highRisk: rowByKey.get(ruleKey)?.highRisk ?? false,
       posAfter: pendingPos.get(ruleKey) ?? null,
     }));
-  }, [pending, pendingPos, rows, textByKey]);
+  }, [pending, pendingPos, rowByKey, textByKey]);
   /* 纯位置注变更也入保存条（与文案变更合流，保存条计数=并集） */
   const posOnlyList = useMemo(
     () => [...pendingPos.keys()].filter((k) => !pending.has(k)),
@@ -353,11 +357,10 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-caption-xs font-semibold text-[rgba(44,40,34,.72)]" data-testid={`copyport-pos-${r.ruleKey}`}>
-                        📍 {draftPos ?? (curPos || '—')}
-                      </div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono text-caption font-semibold text-ink">{r.ruleKey}</span>
+                        <span className="text-caption font-semibold text-ink" data-testid={`copyport-pos-${r.ruleKey}`}>
+                          📍 {labelForRule(r.ruleKey)}
+                        </span>
                         {r.highRisk ? <Badge tone="danger">{cp('copyport.highRiskBadge')}</Badge> : null}
                         {r.version > 1 ? (
                           <Badge tone="brand">{cp('copyport.changedBadge')}</Badge>
@@ -492,7 +495,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
               <div className="mt-2 space-y-2">
                 {v.changesJson.map((ch) => (
                   <div key={ch.rule_key} className="rounded-control bg-canvas px-3 py-2">
-                    <div className="font-mono text-caption font-semibold text-ink">{ch.rule_key}</div>
+                    <div className="text-caption font-semibold text-ink">{labelForRule(ch.rule_key)}</div>
                     <div className="mt-1 break-all text-caption-xs text-[rgba(44,40,34,.62)]">
                       {ch.before === null ? (
                         <span className="font-semibold text-ink">{textOf(ch.after) || '—'}</span>
@@ -541,7 +544,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
             {pendingList.map((p) => (
               <div key={p.ruleKey} className="rounded-control bg-canvas px-3 py-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-caption font-semibold text-ink">{p.ruleKey}</span>
+                  <span className="text-caption font-semibold text-ink">{labelForRule(p.ruleKey)}</span>
                   {p.highRisk ? <Badge tone="danger">{cp('copyport.highRiskBadge')}</Badge> : null}
                 </div>
                 <div className="mt-1 break-all text-caption-xs text-[rgba(44,40,34,.62)]">

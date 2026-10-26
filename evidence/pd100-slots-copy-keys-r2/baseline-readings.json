@@ -1,0 +1,35 @@
+{
+  "phase": "RED",
+  "bundleName": "index-BFrSLK_B.js",
+  "bundleSha256": "6547e36f0e3ab5ac81e3c21b5bfe3383707c313178bba7eb4d183b98248db960",
+  "viewport": "1280x800",
+  "store": "pd100-r2-store (single synthetic store)",
+  "slots": {
+    "url": "http://127.0.0.1:7426/settings/slots",
+    "steadyState": true,
+    "keynameHomeBanner": true,
+    "keynameLoginHero": true,
+    "keynameMallHero": true,
+    "homeBannerHeading": "home.banner",
+    "loginHeroHeading": "login.hero.staff",
+    "mallHeroHeading": "mall.hero",
+    "humanLabelsPresent": ["首页品牌横幅", "员工端登录页主视觉", "商城促销横幅"],
+    "frame": "baseline-slots.png"
+  },
+  "copy": {
+    "url": "http://127.0.0.1:7426/settings/copy",
+    "steadyState": true,
+    "keynameAboutAgreementsInRows": true,
+    "keynameStaffTitleInRows": true,
+    "keynameAboutAgreementsInHistory": true,
+    "humanPositionsPresent": ["关于页协议入口", "员工端首页标题"],
+    "frame": "baseline-copy.png"
+  },
+  "reasonCode": "SLOTS_COPY_KEYNAME_EXPOSED",
+  "bucket": "FAIL",
+  "notes": [
+    "Browser page.wait_for exact-text matched home.banner and about.agreements with stableForMs=500.",
+    "DOM text snapshots confirmed the other visible key names; screenshots confirm real content rather than a skeleton-heavy fallback.",
+    "The abandoned SSR test attempt did not reach these assertions and is not counted as RED evidence."
+  ]
+}
