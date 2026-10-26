@@ -580,7 +580,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
 /** 页头装配（默认出口行为不变：MainScaffold + 内核体） */
 function OwnerCopyConfig() {
   return (
-    <MainScaffold title={cp('copyport.pageTitle')} sub={cp('copyport.pageSub')} testid="copyport-page">
+    <MainScaffold title={cp('copyport.managementTitle')} sub={cp('copyport.pageSub')} testid="copyport-page">
       <CopyConfigBody />
     </MainScaffold>
   );

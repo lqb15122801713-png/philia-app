@@ -527,7 +527,7 @@ export function SlotPortBody() {
 /** 页头装配（默认出口行为不变：MainScaffold + 内核体） */
 function OwnerSlotPort() {
   return (
-    <MainScaffold title={cp('slotport.pageTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
+    <MainScaffold title={cp('slotport.managementTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
       <SlotPortBody />
     </MainScaffold>
   );

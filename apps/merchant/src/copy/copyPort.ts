@@ -11,6 +11,7 @@ import { withCopyOverrides } from '@philia/shared';
 const COPYPORT_COPY_TABLE = {
   /* ---- 页头/分组 ---- */
   'copyport.pageTitle': '文案端口',
+  'copyport.managementTitle': '界面文案',
   'copyport.pageSub': '界面文案后台可改 · 保存即生效（新渲染）· 全程留痕',
   'copyport.searchPlaceholder': '搜索键名/文案/位置注…',
   'copyport.filterHighRisk': '只看高危键',
@@ -58,6 +59,7 @@ const COPYPORT_COPY_TABLE = {
 
   /* ---- 槽位端口（端口批片 C · 控制台第八域「槽位」） ---- */
   'slotport.pageTitle': '槽位端口',
+  'slotport.managementTitle': '展示素材',
   'slotport.pageSub': '展示素材后台可换 · 新素材默认待审 · 点上线即生效（新渲染）',
   'slotport.liveBadge': '上线中',
   'slotport.liveSrcLabel': 'live 图',

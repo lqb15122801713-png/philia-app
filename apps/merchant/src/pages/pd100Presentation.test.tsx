@@ -10,8 +10,9 @@ import OrderRow from '../components/mall-admin/OrderCard'
 import type { StoreOrder } from '../components/mall-admin/format'
 import MonitorHubPage from './MonitorHubPage'
 import OrdersPage from './OrdersPage'
-import { SlotPortBody } from './SlotPortPage'
-import { CopyConfigBody } from './CopyConfigPage'
+import SlotPortPage, { SlotPortBody } from './SlotPortPage'
+import CopyConfigPage, { CopyConfigBody } from './CopyConfigPage'
+import MatrixPage from './MatrixPage'
 
 Object.assign(globalThis, { React })
 
@@ -142,4 +143,40 @@ test('PD-100 YKNXD2 专帧只读章与加深禁点同屏', () => {
   assert.doesNotMatch(html, /发货 ›|退款 ›|disabled:opacity-35/)
   assert.match(html, /disabled:opacity-100/)
   assert.match(html, /line-through/)
+})
+
+test('PD-100 旧覆盖下双端口页题仍显示人话', () => {
+  setCopyOverrides([
+    { key: 'copyport.pageTitle', text: '文案端口' },
+    { key: 'slotport.pageTitle', text: '槽位端口' },
+  ])
+  const copyQuery = newQueryClient()
+  copyQuery.setQueryData(['auth', 'me'], {
+    id: 'pd100-owner',
+    nickname: '店主',
+    roles: ['merchant_owner'],
+    storeId: 'pd100-store',
+  })
+  const slotQuery = newQueryClient()
+  slotQuery.setQueryData(['auth', 'me'], {
+    id: 'pd100-owner',
+    nickname: '店主',
+    roles: ['merchant_owner'],
+    storeId: 'pd100-store',
+  })
+  const copyHtml = renderPage(<CopyConfigPage />, copyQuery)
+  const slotHtml = renderPage(<SlotPortPage />, slotQuery)
+  assert.match(copyHtml, />界面文案</)
+  assert.match(slotHtml, />展示素材</)
+})
+
+test('PD-100 矩阵不暴露端口工程列与源码脚注', () => {
+  setCopyOverrides([
+    { key: 'mtx.colCopy', text: '文案端口' },
+    { key: 'mtx.colSlots', text: '槽位' },
+  ])
+  const html = renderPage(<MatrixPage />)
+  assert.match(html, /界面文案/)
+  assert.match(html, /展示素材/)
+  assert.doesNotMatch(html, /lib\/roles\.ts/)
 })
