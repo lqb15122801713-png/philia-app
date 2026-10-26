@@ -22,10 +22,11 @@
  *   收不到，支付到「待发货」出现的最坏延迟 = 60s 轮询兜底。
  */
 
-import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
+import { EventType, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { LoadingPanel } from '@/components/ContentStatus'
 import MainScaffold, { QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import OrderRow from '@/components/mall-admin/OrderCard'
@@ -155,21 +156,12 @@ export default function OrdersPage() {
       {/* 订单表 */}
       <div className="u3-panel">
         {ordersQuery.isPending ? (
-          /* 加载中骨架块（animate-pulse，禁转圈）：订单表行 = shared Skeleton 组合 */
-          <div>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-6 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5"
-              >
-                <Skeleton className="h-3.5 w-32 rounded-chip" />
-                <Skeleton className="h-3.5 w-20 rounded-chip" />
-                <Skeleton className="h-3.5 w-28 rounded-chip" />
-                <Skeleton className="h-3.5 w-14 rounded-chip" />
-                <Skeleton className="ml-auto h-3.5 w-16 rounded-chip" />
-              </div>
-            ))}
-          </div>
+          <LoadingPanel
+            title="正在读取商城订单…"
+            body="订单号、状态和可执行操作将在读取完成后显示。"
+            testid="orders-loading"
+            onRetry={() => void ordersQuery.refetch()}
+          />
         ) : ordersQuery.isError ? (
           <div className="px-[17px] py-10 text-center">
             <div className="text-caption text-[rgba(44,40,34,.62)]">
@@ -215,11 +207,6 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
-
-      {/* W-09 回馈金列口径注（片 5 段 4 已接真值 · 回馈金仅抵商品） */}
-      <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="orders-rebate-note">
-        {od('order.rebatePendingNote')}
-      </p>
 
       {/* key=order.id：每次打开重挂载，表单态天然重置（配合 ShipOrderDialog 头注） */}
       <ShipOrderDialog

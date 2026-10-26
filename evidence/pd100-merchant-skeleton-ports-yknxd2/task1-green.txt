@@ -1,0 +1,57 @@
+TAP version 13
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MonitorHubPage (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\MonitorHubPage.tsx:186:33)
+#     at MerchantEventsProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\components\\dashboard\\MerchantEventsProvider.tsx:70:50)
+#     at QueryClientProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\@tanstack\\react-query\\src\\QueryClientProvider.tsx:30:3)
+#     at Router (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:421:13)
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MonitorHubPage (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\MonitorHubPage.tsx:186:33)
+#     at MerchantEventsProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\components\\dashboard\\MerchantEventsProvider.tsx:70:50)
+#     at QueryClientProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\@tanstack\\react-query\\src\\QueryClientProvider.tsx:30:3)
+#     at Router (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:421:13)
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Subtest: PD-100 监控部分查询等待时已到达卡片不消失
+ok 1 - PD-100 监控部分查询等待时已到达卡片不消失
+  ---
+  duration_ms: 13.5954
+  ...
+# Subtest: PD-100 监控全等待显示可读状态而非整页骨架
+ok 2 - PD-100 监控全等待显示可读状态而非整页骨架
+  ---
+  duration_ms: 1.5247
+  ...
+# Subtest: PD-100 展示素材等待显示真实状态而非灰骨架
+ok 3 - PD-100 展示素材等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.0242
+  ...
+# Subtest: PD-100 界面文案等待显示真实状态而非灰骨架
+ok 4 - PD-100 界面文案等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.1556
+  ...
+# Subtest: PD-100 商城订单等待显示真实状态而非灰骨架
+ok 5 - PD-100 商城订单等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.3168
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 542.1682

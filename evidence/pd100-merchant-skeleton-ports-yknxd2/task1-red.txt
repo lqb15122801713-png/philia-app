@@ -1,0 +1,137 @@
+TAP version 13
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MonitorHubPage (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\MonitorHubPage.tsx:185:33)
+#     at MerchantEventsProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\components\\dashboard\\MerchantEventsProvider.tsx:70:50)
+#     at QueryClientProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\@tanstack\\react-query\\src\\QueryClientProvider.tsx:30:3)
+#     at Router (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:421:13)
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MonitorHubPage (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\MonitorHubPage.tsx:185:33)
+#     at MerchantEventsProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\components\\dashboard\\MerchantEventsProvider.tsx:70:50)
+#     at QueryClientProvider (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\@tanstack\\react-query\\src\\QueryClientProvider.tsx:30:3)
+#     at Router (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:421:13)
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+#     at MemoryRouter (E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\node_modules\\react-router\\lib\\components.tsx:225:3)
+# Subtest: PD-100 监控部分查询等待时已到达卡片不消失
+not ok 1 - PD-100 监控部分查询等待时已到达卡片不消失
+  ---
+  duration_ms: 14.6097
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:2113'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    BoardSkeleton (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\packages\shared\src\components\Skeleton.tsx:42:3)
+    renderWithHooks (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderNode (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6274:12)
+    renderHostElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5646:3)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5967:5)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+  ...
+# Subtest: PD-100 监控全等待显示可读状态而非整页骨架
+not ok 2 - PD-100 监控全等待显示可读状态而非整页骨架
+  ---
+  duration_ms: 1.3577
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:2493'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    BoardSkeleton (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\packages\shared\src\components\Skeleton.tsx:42:3)
+    renderWithHooks (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderNode (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6274:12)
+    renderHostElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5646:3)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5967:5)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+  ...
+# Subtest: PD-100 展示素材等待显示真实状态而非灰骨架
+not ok 3 - PD-100 展示素材等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.0394
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:2735'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    Skeleton (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\packages\shared\src\components\Skeleton.tsx:14:3)
+    renderWithHooks (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderNode (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6274:12)
+    renderHostElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5646:3)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5967:5)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+  ...
+# Subtest: PD-100 界面文案等待显示真实状态而非灰骨架
+not ok 4 - PD-100 界面文案等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.0904
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:2975'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    Skeleton (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\packages\shared\src\components\Skeleton.tsx:14:3)
+    renderWithHooks (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderNode (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6274:12)
+    renderHostElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5646:3)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5967:5)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+  ...
+# Subtest: PD-100 商城订单等待显示真实状态而非灰骨架
+not ok 5 - PD-100 商城订单等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.1496
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:3217'
+  failureType: 'testCodeFailure'
+  error: 'React is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    Skeleton (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\packages\shared\src\components\Skeleton.tsx:14:3)
+    renderWithHooks (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5662:16)
+    renderIndeterminateComponent (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5736:15)
+    renderElement (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:5961:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6119:11)
+    renderNodeDestructive (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+    renderNode (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6274:12)
+    renderChildrenArray (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6226:7)
+    renderNodeDestructiveImpl (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6156:7)
+    renderNodeDestructive (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\node_modules\react-dom\cjs\react-dom-server-legacy.node.development.js:6091:14)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 0
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 551.38

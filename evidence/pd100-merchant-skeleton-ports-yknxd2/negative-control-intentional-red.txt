@@ -1,0 +1,135 @@
+TAP version 13
+# Subtest: PD-100 监控部分查询等待时已到达卡片不消失
+ok 1 - PD-100 监控部分查询等待时已到达卡片不消失
+  ---
+  duration_ms: 15.898
+  ...
+# Subtest: PD-100 监控全等待显示可读状态而非整页骨架
+not ok 2 - PD-100 监控全等待显示可读状态而非整页骨架
+  ---
+  duration_ms: 2.4927
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:2922'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /animate-pulse/. Input:
+    
+    '<div class="px-[18px] pb-6 pt-[16px]" data-testid="monitor-hub-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">在店监控</h1><div class="mt-1 text-caption-xs text-ink-placeholder">服务中 0 单 · 寄养 0 只 · 实时同步</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><button type="button" aria-pressed="false" class="u3-chipf ">服务中 0</button><button type="button" aria-pressed="false" class="u3-chipf ">寄养 0</button></div></div><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="monitor-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取在店情况…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">洗护、寄养与异常记录将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="monitor-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="px-[18px] pb-6 pt-[16px]" data-testid="monitor-hub-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">在店监控</h1><div class="mt-1 text-caption-xs text-ink-placeholder">服务中 0 单 · 寄养 0 只 · 实时同步</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><button type="button" aria-pressed="false" class="u3-chipf ">服务中 0</button><button type="button" aria-pressed="false" class="u3-chipf ">寄养 0</button></div></div><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="monitor-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取在店情况…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">洗护、寄养与异常记录将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="monitor-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:93:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 展示素材等待显示真实状态而非灰骨架
+not ok 3 - PD-100 展示素材等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.0785
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:3164'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /animate-pulse/. Input:
+    
+    '<section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="slotport-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取展示素材…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">素材、待审版本与上线记录将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="slotport-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="slotport-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取展示素材…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">素材、待审版本与上线记录将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="slotport-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:99:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 界面文案等待显示真实状态而非灰骨架
+not ok 4 - PD-100 界面文案等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.2587
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:3404'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /animate-pulse/. Input:
+    
+    '<section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="copyport-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取界面文案…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">文案、筛选项与变更留痕将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="copyport-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="copyport-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取界面文案…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">文案、筛选项与变更留痕将在这里显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="copyport-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:105:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 商城订单等待显示真实状态而非灰骨架
+not ok 5 - PD-100 商城订单等待显示真实状态而非灰骨架
+  ---
+  duration_ms: 1.6082
+  location: 'E:\\KIMI code\\pd100-merchant-skeleton-ports-yknxd2\\apps\\merchant\\src\\pages\\pd100Presentation.test.tsx:1:3646'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /animate-pulse/. Input:
+    
+    '<div class="px-[18px] pb-6 pt-[16px]" data-testid="orders-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">商城订单</h1><div class="mt-1 text-caption-xs text-ink-placeholder">待发货 0 · 已发货 0 · 售后 0</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><input type="search" data-testid="orders-search" placeholder="搜索单号 / 客户…" class="u1-ring w-full rounded-control bg-card px-3.5 py-3.5 text-caption text-ink placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)] lg:w-56" value=""/></div></div><div class="mb-3.5 flex flex-wrap gap-2"><button type="button" class="u3-chipf on" data-testid="orders-tab-paid">待发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-shipped">已发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-refunding">售后·退款</button></div><div class="u3-panel"><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="orders-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取商城订单…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">订单号、状态和可执行操作将在读取完成后显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="orders-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="px-[18px] pb-6 pt-[16px]" data-testid="orders-page"><div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 class="font-serif-cn text-title-lg font-bold leading-7">商城订单</h1><div class="mt-1 text-caption-xs text-ink-placeholder">待发货 0 · 已发货 0 · 售后 0</div></div><div class="flex flex-wrap items-center gap-2.5 lg:shrink-0 lg:flex-nowrap"><input type="search" data-testid="orders-search" placeholder="搜索单号 / 客户…" class="u1-ring w-full rounded-control bg-card px-3.5 py-3.5 text-caption text-ink placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)] lg:w-56" value=""/></div></div><div class="mb-3.5 flex flex-wrap gap-2"><button type="button" class="u3-chipf on" data-testid="orders-tab-paid">待发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-shipped">已发货</button><button type="button" class="u3-chipf " data-testid="orders-tab-refunding">售后·退款</button></div><div class="u3-panel"><section class="u3-panel px-[17px] py-12 text-center" role="status" aria-busy="true" data-testid="orders-loading"><h2 class="text-body-sm font-semibold text-ink">正在读取商城订单…</h2><div aria-hidden="true" class="animate-pulse mx-auto mt-3 h-3 w-32 rounded-chip bg-sunken"></div><p class="mx-auto mt-2 max-w-md text-caption leading-6 text-ink-secondary">订单号、状态和可执行操作将在读取完成后显示。</p><div class="mt-5 flex justify-center"><button type="button" data-testid="orders-loading-retry" class="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50">重新加载</button></div></section></div></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd100-merchant-skeleton-ports-yknxd2\apps\merchant\src\pages\pd100Presentation.test.tsx:111:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-100 旧覆盖不得复活订单读口待补脚注
+ok 6 - PD-100 旧覆盖不得复活订单读口待补脚注
+  ---
+  duration_ms: 0.6422
+  ...
+# Subtest: PD-100 YKNXD2 专帧只读章与加深禁点同屏
+ok 7 - PD-100 YKNXD2 专帧只读章与加深禁点同屏
+  ---
+  duration_ms: 10.9905
+  ...
+# Subtest: PD-100 旧覆盖下双端口页题仍显示人话
+ok 8 - PD-100 旧覆盖下双端口页题仍显示人话
+  ---
+  duration_ms: 1.4028
+  ...
+# Subtest: PD-100 矩阵不暴露端口工程列与源码脚注
+ok 9 - PD-100 矩阵不暴露端口工程列与源码脚注
+  ---
+  duration_ms: 1.9608
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 5
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 549.419
