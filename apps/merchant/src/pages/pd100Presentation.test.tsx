@@ -142,6 +142,7 @@ test('PD-100 YKNXD2 专帧只读章与加深禁点同屏', () => {
   assert.equal((html.match(/disabled=""/g) ?? []).length, 2)
   assert.doesNotMatch(html, /发货 ›|退款 ›|disabled:opacity-35/)
   assert.match(html, /disabled:opacity-100/)
+  assert.match(html, /text-\[rgba\(44,40,34,\.68\)\]/)
   assert.match(html, /line-through/)
 })
 
