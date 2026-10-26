@@ -1,0 +1,62 @@
+TAP version 13
+# Subtest: PD-98：同类型同文同链接同秒的重复通知只展示一组且保留全部 ID
+ok 1 - PD-98：同类型同文同链接同秒的重复通知只展示一组且保留全部 ID
+  ---
+  duration_ms: 3.8946
+  ...
+# Subtest: PD-98 R2：类型不同不误并，同源同秒链接差不再拆成重复行
+not ok 2 - PD-98 R2：类型不同不误并，同源同秒链接差不再拆成重复行
+  ---
+  duration_ms: 2.265
+  location: 'E:\\KIMI code\\pd98-staff-notif-dedupe-r2\\apps\\staff\\src\\lib\\notifications.test.ts:1:1750'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    3 !== 2
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-notif-dedupe-r2\apps\staff\src\lib\notifications.test.ts:68:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-98 R2：25 组同源同秒链接差重复全部收敛且 50 个 ID 不丢
+not ok 3 - PD-98 R2：25 组同源同秒链接差重复全部收敛且 50 个 ID 不丢
+  ---
+  duration_ms: 1.9081
+  location: 'E:\\KIMI code\\pd98-staff-notif-dedupe-r2\\apps\\staff\\src\\lib\\notifications.test.ts:1:2460'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    50 !== 25
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 25
+  actual: 50
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-notif-dedupe-r2\apps\staff\src\lib\notifications.test.ts:84:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-98：同组优先展示未读行且一次已读覆盖重复 ID
+ok 4 - PD-98：同组优先展示未读行且一次已读覆盖重复 ID
+  ---
+  duration_ms: 0.759
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 2
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 200.4602

@@ -1,0 +1,381 @@
+{
+  "phase": "baseline",
+  "at": "2026-10-26T14:04:01.373Z",
+  "scope": "真实员工 dist＋现网基线字段 mock；非 tip 包；未点全部已读；未写业务数据",
+  "bundle": {
+    "name": "index-XpRzbUj5.js",
+    "sha256": "cc2704440cd0a0fad21a9315fedcbdd7f85687d19e96fa7e253c180d91b3c1e9",
+    "forbiddenNames": [
+      "index-DRu9UKUe.js",
+      "index-DcDp2v-Y.js"
+    ]
+  },
+  "source": {
+    "file": "live-notification-fields.json",
+    "sha256": "cab1a0b5e62a3cb3bc84e300444383588accfb6359f8eeb5a1a71a5f773437cc",
+    "rowCount": 50,
+    "dupPairGroups": 25,
+    "actualDist": "index-DRu9UKUe.js"
+  },
+  "page": {
+    "rowCount": 50,
+    "dupPairGroups": 25,
+    "careTitleHits": 50,
+    "careDistinctKeys": 25,
+    "unread": "未读 35 条",
+    "allReadVisible": true,
+    "mutations": [],
+    "unknown": [],
+    "rows": [
+      {
+        "id": "ntf-row-01M5W4Y79JSPPZ249TWKP9BHQV",
+        "title": "照护打卡提醒",
+        "time": "10-26 21:03",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5W4Y78880CRB6ZMC13PB65C",
+        "title": "照护打卡提醒",
+        "time": "10-26 21:03",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5VNPMAQRTZZD05GFDQZJK5J",
+        "title": "照护打卡提醒",
+        "time": "10-26 16:37",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5VNPM98VBW20TSDSV197DYY",
+        "title": "照护打卡提醒",
+        "time": "10-26 16:37",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5V7HR6ZE356QNSC2DQH078H",
+        "title": "照护打卡提醒",
+        "time": "10-26 12:29",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5V7HR5GTT1M8R4X7CG5XBM9",
+        "title": "照护打卡提醒",
+        "time": "10-26 12:29",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5TR8DWVF4K9E8T48PNCR20Z",
+        "title": "照护打卡提醒",
+        "time": "10-26 08:02",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5TR8DVN6MCH7FDMDTR78BJG",
+        "title": "照护打卡提醒",
+        "time": "10-26 08:02",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5SJFY0K53GBAA7B1F9GKG0Q",
+        "title": "照护打卡提醒",
+        "time": "10-25 21:02",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5SJFXZA8N0XDT0HB74ZJHSQ",
+        "title": "照护打卡提醒",
+        "time": "10-25 21:02",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5S4878XQJ2F1F0V94HSRK8R",
+        "title": "照护打卡提醒",
+        "time": "10-25 16:53",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5S4877R9PA4R1RRAY4HFWS5",
+        "title": "照护打卡提醒",
+        "time": "10-25 16:53",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5RNE1N3KKKE5GCS5KWWXXDE",
+        "title": "照护打卡提醒",
+        "time": "10-25 12:34",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5RNE1KV8SM0HC6YKJZBJDES",
+        "title": "照护打卡提醒",
+        "time": "10-25 12:34",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5R5ZNANS531XZP5K8SN18R4",
+        "title": "照护打卡提醒",
+        "time": "10-25 08:04",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5R5ZN9M2K38VWSGC1TQMHWR",
+        "title": "照护打卡提醒",
+        "time": "10-25 08:04",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5Q1Y32BYYAS07JRCY2ZFWBS",
+        "title": "照护打卡提醒",
+        "time": "10-24 21:34",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5Q1Y314ADSNRKRMN5WGJYG4",
+        "title": "照护打卡提醒",
+        "time": "10-24 21:34",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5PJFPQMAC7BCQ9CW4Y9NTCB",
+        "title": "照护打卡提醒",
+        "time": "10-24 17:04",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5PJFPPK92J3VRYNG540HSC6",
+        "title": "照护打卡提醒",
+        "time": "10-24 17:04",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5P3D8FPRDCCXXQF16PWZNM7",
+        "title": "照护打卡提醒",
+        "time": "10-24 12:41",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5P3D8EDQ2A3XDF29NTHR1P6",
+        "title": "照护打卡提醒",
+        "time": "10-24 12:41",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5NKYW5B3BKVBA7YD229QEBJ",
+        "title": "照护打卡提醒",
+        "time": "10-24 08:11",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5NKYW4BCH7QZAGA0CG66238",
+        "title": "照护打卡提醒",
+        "time": "10-24 08:11",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5MEJMCTZT2G17CT15190WTD",
+        "title": "照护打卡提醒",
+        "time": "10-23 21:18",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5MEJMBG8GSQRM9NBRCVYRKW",
+        "title": "照护打卡提醒",
+        "time": "10-23 21:18",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5M0NG6QMBEPCFGQHQHX02TZ",
+        "title": "照护打卡提醒",
+        "time": "10-23 17:14",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5M0NG5DQV65MANKXDS0S8AC",
+        "title": "照护打卡提醒",
+        "time": "10-23 17:14",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5KJ1Z6SZB0QYVD48BA605R0",
+        "title": "照护打卡提醒",
+        "time": "10-23 12:59",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5KJ1Z5HKZ8W0FF46P0C6Y2X",
+        "title": "照护打卡提醒",
+        "time": "10-23 12:59",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5K2KJWKNVGCBW4WYA68MFW3",
+        "title": "照护打卡提醒",
+        "time": "10-23 08:29",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5K2KJVF6V1JSBYM4G5HS93R",
+        "title": "照护打卡提醒",
+        "time": "10-23 08:29",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5HV4ZTKP1R13H1TGPAYMHXQ",
+        "title": "照护打卡提醒",
+        "time": "10-22 21:00",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5HV4ZS3BZQCQ39GMNA1ZP7N",
+        "title": "照护打卡提醒",
+        "time": "10-22 21:00",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5HCJE34992ED94D1F2G48H1",
+        "title": "照护打卡提醒",
+        "time": "10-22 16:45",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5HCJE1PPCN5R5K2BWYE2JV3",
+        "title": "照护打卡提醒",
+        "time": "10-22 16:45",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5GYSP911802NX9NG0SRSRZ7",
+        "title": "照护打卡提醒",
+        "time": "10-22 12:44",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5GYSP7V39KR9H12FT6KM7P3",
+        "title": "照护打卡提醒",
+        "time": "10-22 12:44",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5GFC2TGE5DZRSQ23SYGWXNB",
+        "title": "照护打卡提醒",
+        "time": "10-22 08:14",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5GFC2SKSWE72TPJA7FSZ01W",
+        "title": "照护打卡提醒",
+        "time": "10-22 08:14",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5F8GK4G2SHFTFAHGD34435J",
+        "title": "照护打卡提醒",
+        "time": "10-21 20:55",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5F8GK3KBCQD917YHHKH7SPR",
+        "title": "照护打卡提醒",
+        "time": "10-21 20:55",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5ESNRMGPV31MCFTA5A9507F",
+        "title": "照护打卡提醒",
+        "time": "10-21 16:36",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5ESNRK8BJY8KY73GGYHX74C",
+        "title": "照护打卡提醒",
+        "time": "10-21 16:36",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5EADRMDX70VDQEHXX6TN62V",
+        "title": "照护打卡提醒",
+        "time": "10-21 12:10",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5EADRJYX1XN4HRM1N5R9F63",
+        "title": "照护打卡提醒",
+        "time": "10-21 12:10",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5DWDKJTN2D1MKD4K61S4RXH",
+        "title": "照护打卡提醒",
+        "time": "10-21 08:05",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5DWDKHSTT8VHCDE4B1XZ9SJ",
+        "title": "照护打卡提醒",
+        "time": "10-21 08:05",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5CQPH3GYNS05223MXMQKDQM",
+        "title": "照护打卡提醒",
+        "time": "10-20 21:23",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      },
+      {
+        "id": "ntf-row-01M5CQPH2GZQRN2KBBB24GFYF9",
+        "title": "照护打卡提醒",
+        "time": "10-20 21:23",
+        "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录"
+      }
+    ]
+  },
+  "screenshot": {
+    "file": "E:\\KIMI code\\pd98-staff-notif-dedupe-r2\\evidence\\pd98-staff-notif-dedupe-r2\\shots\\baseline\\notifications.png",
+    "sha256": "a9533ed75c5b77462014689e55a5ecada5aca6e1e59c039602a40ec7d09c799f"
+  },
+  "clickedAllRead": false,
+  "results": [
+    {
+      "ok": true,
+      "name": "真实通知列表与原未读数完成加载",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "name": "同源去重后 50 行收敛为 25 行",
+      "detail": 50
+    },
+    {
+      "ok": false,
+      "name": "同文同秒成对不再进入交付面",
+      "detail": 25
+    },
+    {
+      "ok": false,
+      "name": "25 个不同提醒各保留一行",
+      "detail": {
+        "careTitleHits": 50,
+        "careDistinctKeys": 25
+      }
+    },
+    {
+      "ok": true,
+      "name": "未读总数仍来自原接口，未清未读冒充去重",
+      "detail": "未读 35 条"
+    },
+    {
+      "ok": true,
+      "name": "全部已读可见但未点击，业务 mutation 为零",
+      "detail": {
+        "allReadVisible": true,
+        "mutations": []
+      }
+    },
+    {
+      "ok": true,
+      "name": "tRPC mock 过程全部已知",
+      "detail": []
+    }
+  ],
+  "failures": 3
+}

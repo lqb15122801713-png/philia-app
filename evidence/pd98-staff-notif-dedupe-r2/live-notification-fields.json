@@ -1,0 +1,464 @@
+{
+  "at": "2026-10-26T13:56:33.309Z",
+  "source": "http://120.53.102.45:7200/trpc/push.listNotifications",
+  "baselineTip": "50d6a66f2162de881c32ab57268e076f81aeca4f",
+  "actualDist": "index-DRu9UKUe.js",
+  "rowCount": 50,
+  "exactDuplicateGroups": 25,
+  "minuteDuplicateGroups": 25,
+  "clickedAllRead": false,
+  "businessWrites": false,
+  "sessionCleanup": "logout in finally",
+  "rows": [
+    {
+      "id": "01M5W4Y79JSPPZ249TWKP9BHQV",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-26T13:03:33.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5W4Y78880CRB6ZMC13PB65C",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-26T13:03:33.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5VNPMAQRTZZD05GFDQZJK5J",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-26T08:37:15.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5VNPM98VBW20TSDSV197DYY",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-26T08:37:15.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5V7HR6ZE356QNSC2DQH078H",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-26T04:29:55.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5V7HR5GTT1M8R4X7CG5XBM9",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-26T04:29:55.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5TR8DWVF4K9E8T48PNCR20Z",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-26T00:02:41.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5TR8DVN6MCH7FDMDTR78BJG",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-26T00:02:41.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5SJFY0K53GBAA7B1F9GKG0Q",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-25T13:02:41.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5SJFXZA8N0XDT0HB74ZJHSQ",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-25T13:02:41.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5S4878XQJ2F1F0V94HSRK8R",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-25T08:53:48.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5S4877R9PA4R1RRAY4HFWS5",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-25T08:53:48.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5RNE1N3KKKE5GCS5KWWXXDE",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-25T04:34:51.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5RNE1KV8SM0HC6YKJZBJDES",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-25T04:34:51.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5R5ZNANS531XZP5K8SN18R4",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-25T00:04:51.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5R5ZN9M2K38VWSGC1TQMHWR",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-25T00:04:51.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5Q1Y32BYYAS07JRCY2ZFWBS",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-24T13:34:50.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5Q1Y314ADSNRKRMN5WGJYG4",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-24T13:34:50.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5PJFPQMAC7BCQ9CW4Y9NTCB",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-24T09:04:50.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5PJFPPK92J3VRYNG540HSC6",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-24T09:04:50.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5P3D8FPRDCCXXQF16PWZNM7",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-24T04:41:22.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5P3D8EDQ2A3XDF29NTHR1P6",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-24T04:41:22.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5NKYW5B3BKVBA7YD229QEBJ",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-24T00:11:22.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5NKYW4BCH7QZAGA0CG66238",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-24T00:11:22.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5MEJMCTZT2G17CT15190WTD",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-23T13:18:03.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5MEJMBG8GSQRM9NBRCVYRKW",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-23T13:18:03.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5M0NG6QMBEPCFGQHQHX02TZ",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-23T09:14:57.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5M0NG5DQV65MANKXDS0S8AC",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-23T09:14:57.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5KJ1Z6SZB0QYVD48BA605R0",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-23T04:59:37.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5KJ1Z5HKZ8W0FF46P0C6Y2X",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-23T04:59:37.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5K2KJWKNVGCBW4WYA68MFW3",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-23T00:29:37.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5K2KJVF6V1JSBYM4G5HS93R",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-23T00:29:37.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5HV4ZTKP1R13H1TGPAYMHXQ",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-22T13:00:04.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5HV4ZS3BZQCQ39GMNA1ZP7N",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-22T13:00:04.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5HCJE34992ED94D1F2G48H1",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-22T08:45:16.000Z",
+      "readAt": "2026-10-22T09:12:11.000Z"
+    },
+    {
+      "id": "01M5HCJE1PPCN5R5K2BWYE2JV3",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-22T08:45:16.000Z",
+      "readAt": null
+    },
+    {
+      "id": "01M5GYSP911802NX9NG0SRSRZ7",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-22T04:44:34.000Z",
+      "readAt": "2026-10-22T07:11:23.000Z"
+    },
+    {
+      "id": "01M5GYSP7V39KR9H12FT6KM7P3",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-22T04:44:34.000Z",
+      "readAt": "2026-10-22T07:11:26.000Z"
+    },
+    {
+      "id": "01M5GFC2TGE5DZRSQ23SYGWXNB",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-22T00:14:59.000Z",
+      "readAt": "2026-10-22T07:11:30.000Z"
+    },
+    {
+      "id": "01M5GFC2SKSWE72TPJA7FSZ01W",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-22T00:14:59.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5F8GK4G2SHFTFAHGD34435J",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-21T12:55:53.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5F8GK3KBCQD917YHHKH7SPR",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-21T12:55:53.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5ESNRMGPV31MCFTA5A9507F",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-21T08:36:34.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5ESNRK8BJY8KY73GGYHX74C",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-21T08:36:34.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5EADRMDX70VDQEHXX6TN62V",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-21T04:10:03.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5EADRJYX1XN4HRM1N5R9F63",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-21T04:10:03.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5DWDKJTN2D1MKD4K61S4RXH",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-21T00:05:18.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5DWDKHSTT8VHCDE4B1XZ9SJ",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-21T00:05:18.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5CQPH3GYNS05223MXMQKDQM",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBTHNY3FCYZCXZRJVEFD29/checkin",
+      "createdAt": "2026-10-20T13:23:33.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    },
+    {
+      "id": "01M5CQPH2GZQRN2KBBB24GFYF9",
+      "type": "boarding.careRemind",
+      "title": "照护打卡提醒",
+      "body": "【旺财】在住寄养已超过 4 小时未打卡，请及时完成照护记录",
+      "link": "/boarding/01M3KBT3HSJQVBGQB8XBXW7D65/checkin",
+      "createdAt": "2026-10-20T13:23:33.000Z",
+      "readAt": "2026-10-22T07:36:01.000Z"
+    }
+  ]
+}

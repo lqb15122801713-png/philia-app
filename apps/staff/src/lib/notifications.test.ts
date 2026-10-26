@@ -56,7 +56,7 @@ test('PD-98：同类型同文同链接同秒的重复通知只展示一组且保
   ])
 })
 
-test('PD-98：类型或链接不同的通知不被同文分组误合并', async () => {
+test('PD-98 R2：类型不同不误并，同源同秒链接差不再拆成重复行', async () => {
   const { groupDuplicateNotifications } = await loadGrouping()
   assert.ok(groupDuplicateNotifications, '先提供真实的通知分组实现')
   const groups = groupDuplicateNotifications([
@@ -65,8 +65,25 @@ test('PD-98：类型或链接不同的通知不被同文分组误合并', async 
     row('care-other-type', '2026-10-26T16:37:00+08:00', { type: 'boarding.other' }),
   ])
 
-  assert.equal(groups.length, 3)
-  assert.deepEqual(groups.map((group) => group.notification.id), ['care-a', 'care-other-link', 'care-other-type'])
+  assert.equal(groups.length, 2)
+  assert.deepEqual(groups.map((group) => group.ids), [['care-a', 'care-other-link'], ['care-other-type']])
+})
+
+test('PD-98 R2：25 组同源同秒链接差重复全部收敛且 50 个 ID 不丢', async () => {
+  const { groupDuplicateNotifications } = await loadGrouping()
+  assert.ok(groupDuplicateNotifications, '先提供真实的通知分组实现')
+  const rows = Array.from({ length: 25 }, (_, index) => {
+    const createdAt = new Date(Date.UTC(2026, 9, 1, index)).toISOString()
+    return [
+      row(`care-${index}-a`, createdAt, { link: '/boarding/stay-a/checkin' }),
+      row(`care-${index}-b`, createdAt, { link: '/boarding/stay-b/checkin' }),
+    ]
+  }).flat()
+  const groups = groupDuplicateNotifications(rows)
+
+  assert.equal(groups.length, 25)
+  assert.equal(new Set(groups.flatMap((group) => group.ids)).size, 50)
+  assert.ok(groups.every((group) => group.ids.length === 2))
 })
 
 test('PD-98：同组优先展示未读行且一次已读覆盖重复 ID', async () => {
