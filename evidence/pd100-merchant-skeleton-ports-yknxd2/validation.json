@@ -3,7 +3,7 @@
   "includesOriginalPD102": true,
   "branch": "feat/pd100-merchant-skeleton-ports-yknxd2",
   "baselineTip": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
-  "finalHead": "999cd8da7f7011ccee15ae52f3224ba7a1d15701",
+  "productHead": "999cd8da7f7011ccee15ae52f3224ba7a1d15701",
   "migration": "0141 故意空留",
   "candidate": {
     "bundle": "index-BFrSLK_B.js",
