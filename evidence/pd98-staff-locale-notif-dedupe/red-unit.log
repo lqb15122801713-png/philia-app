@@ -1,0 +1,90 @@
+TAP version 13
+# Subtest: PD-98：可用时间只接受 24 小时 HH:MM，不接受 AM/PM 或越界时间
+not ok 1 - PD-98：可用时间只接受 24 小时 HH:MM，不接受 AM/PM 或越界时间
+  ---
+  duration_ms: 4.6408
+  location: 'E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\apps\\staff\\src\\lib\\localeInput.test.ts:1:549'
+  failureType: 'testCodeFailure'
+  error: '先提供真实的时间格式校验'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff\src\lib\localeInput.test.ts:17:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-98：请假日只接受真实存在的 YYYY-MM-DD，不接受美式斜杠日
+not ok 2 - PD-98：请假日只接受真实存在的 YYYY-MM-DD，不接受美式斜杠日
+  ---
+  duration_ms: 2.0921
+  location: 'E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\apps\\staff\\src\\lib\\localeInput.test.ts:1:1061'
+  failureType: 'testCodeFailure'
+  error: '先提供真实的日期格式校验'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff\src\lib\localeInput.test.ts:34:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-98：同类型同文同链接同秒的重复通知只展示一组且保留全部 ID
+not ok 3 - PD-98：同类型同文同链接同秒的重复通知只展示一组且保留全部 ID
+  ---
+  duration_ms: 4.6752
+  location: 'E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\apps\\staff\\src\\lib\\notifications.test.ts:1:946'
+  failureType: 'testCodeFailure'
+  error: '先提供真实的通知分组实现'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff\src\lib\notifications.test.ts:42:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-98：类型或链接不同的通知不被同文分组误合并
+not ok 4 - PD-98：类型或链接不同的通知不被同文分组误合并
+  ---
+  duration_ms: 1.9619
+  location: 'E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\apps\\staff\\src\\lib\\notifications.test.ts:1:1750'
+  failureType: 'testCodeFailure'
+  error: '先提供真实的通知分组实现'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff\src\lib\notifications.test.ts:61:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-98：同组优先展示未读行且一次已读覆盖重复 ID
+not ok 5 - PD-98：同组优先展示未读行且一次已读覆盖重复 ID
+  ---
+  duration_ms: 1.4077
+  location: 'E:\\KIMI code\\pd98-staff-locale-notif-dedupe\\apps\\staff\\src\\lib\\notifications.test.ts:1:2447'
+  failureType: 'testCodeFailure'
+  error: '先提供真实的通知分组实现'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd98-staff-locale-notif-dedupe\apps\staff\src\lib\notifications.test.ts:74:10)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 0
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 233.1921
