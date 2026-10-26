@@ -54,6 +54,12 @@
     { "file": "10-orders-loading.png", "sha256": "aa69d568a78d9eea21ba98618d6c1b176897598ea68af423626849725dde5edb" }
   ],
   "noReuseForClearance": true,
+  "pullRequest": {
+    "number": 201,
+    "url": "https://github.com/lqb15122801713-png/philia-app/pull/201",
+    "state": "OPEN",
+    "merged": false
+  },
   "hit": "PENDING_EXTERNAL_DELIVERY_HIT",
   "mergeSha": null,
   "deployedSha": null,

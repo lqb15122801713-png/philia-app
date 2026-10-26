@@ -2,6 +2,7 @@
 
 - 窗：`PD-100-merchant-skeleton-ports-yknxd2`（含原 PD-102；同 mig0141／同 PR）
 - 分支：`feat/pd100-merchant-skeleton-ports-yknxd2`
+- PR：[`#201`](https://github.com/lqb15122801713-png/philia-app/pull/201)（OPEN，未合并）
 - 基线：`42bb0f67945fe774f2c22d098fed185a0a0929a5`／DEPLOY `20261026160104`
 - 最终产品提交：`999cd8da7f7011ccee15ae52f3224ba7a1d15701`（卷宗另提交；交付分支 tip 以 PR 实时值为准）
 - mig：**0141 故意空留**；无 schema、无迁移文件、无 journal 变更；不占 0142／0143／0144，亦不撞 0117／0119／0122–0140。
