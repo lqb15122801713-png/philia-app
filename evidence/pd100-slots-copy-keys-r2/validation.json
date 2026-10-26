@@ -1,0 +1,74 @@
+{
+  "baseTip": "015a4ca8e262c9a5aad662fa1ec3a23c77aab0ee",
+  "deployReference": "20261026214133",
+  "branch": "feat/pd100-slots-copy-keys-r2",
+  "worktree": "E:/KIMI code/pd100-slots-copy-keys-r2",
+  "migration": "本窗无 mig／0146 故意空留",
+  "candidate": {
+    "bundleName": "index-_dA59x8G.js",
+    "bundleSha256": "83dcb273559a3820f51b018b3d918f9553aece1a78b316ae5e54b70ff1110c06",
+    "notReferenceBundles": ["index-BxXrf5jN.js", "index-sf4Mp8sz.js"]
+  },
+  "commands": [
+    {
+      "command": "npm run build:merchant",
+      "exitCode": 0,
+      "evidence": "final-build.txt",
+      "result": "tsc -b && vite build; 1958 modules; index-_dA59x8G.js"
+    },
+    {
+      "command": "node ../../server/node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.app.json --test <all 5 merchant test files>",
+      "exitCode": 0,
+      "evidence": "final-unit.txt",
+      "result": "19 tests, 19 pass, 0 fail"
+    },
+    {
+      "command": "npm run lint -w @philia/merchant",
+      "exitCode": 1,
+      "evidence": "final-full-lint.txt",
+      "result": "INC-PREEXISTING-LINT: 47 errors / 5 warnings, same totals as the untouched PD-100 baseline evidence"
+    },
+    {
+      "command": "npx eslint src/pages/SlotPortPage.tsx src/pages/CopyConfigPage.tsx",
+      "exitCode": 1,
+      "evidence": "final-targeted-lint.txt",
+      "result": "INC-PREEXISTING-LINT: CopyConfigPage 1 error / 1 warning; no new lint issue"
+    },
+    {
+      "command": "git show HEAD:apps/merchant/src/pages/CopyConfigPage.tsx | npx eslint --stdin --stdin-filename src/pages/CopyConfigPage.tsx",
+      "exitCode": 1,
+      "evidence": "baseline-targeted-lint.txt",
+      "result": "same pre-existing react-hooks/set-state-in-effect error and unused-disable warning"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "no whitespace errors"
+    }
+  ],
+  "browser": {
+    "baseline": "baseline-readings.json: SLOTS_COPY_KEYNAME_EXPOSED reproduced",
+    "negativeControl": "negative-control-readings.json: intentional raw-key returns reproduced FAIL, then restored",
+    "final": "final-readings.json: human labels present; keynameExposed=false on both ports",
+    "mutations": [],
+    "unknownProcedures": []
+  },
+  "scope": {
+    "productFiles": [
+      "apps/merchant/src/pages/SlotPortPage.tsx",
+      "apps/merchant/src/pages/CopyConfigPage.tsx"
+    ],
+    "apiShapeChanged": false,
+    "schemaChanged": false,
+    "monitorYknxd2GrayChainSourceTouched": false,
+    "aestheticOrNoteExpansion": false,
+    "fixture01M5EQVFTouched": false,
+    "secondStoreCreated": false,
+    "usageUsed": false
+  },
+  "notes": [
+    "No broken SSR regression test was shipped; React 18 server renderer cannot render the existing ToasterMount portal. Browser evidence exercises the actual dist instead.",
+    "Final build and unit tests were rerun after the intentional-red restore and the rowByKey performance change.",
+    "Full lint is not claimed green; it remains an explicit pre-existing INC."
+  ]
+}

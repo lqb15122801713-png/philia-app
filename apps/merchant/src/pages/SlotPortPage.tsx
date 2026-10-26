@@ -5,7 +5,7 @@
  * - 仅 owner：墨轨入口按 isOwner 收起；本页自装页内闸门（非 owner → RoleGuidePage 引导页，
  *   非 403 白屏）；server 端 merchantOwnerProcedure 为硬闸门；
  * - 数据源：slotPort.list（全槽注册表：live 行 + pending 行 + 版本计数 + 操作人昵称）；
- * - 展示：每槽一卡=槽名（slotKey mono + alt 中文名）+ 当前内容预览（live url 有值 → img，
+ * - 展示：每槽一卡=人话槽名（取版本内容 alt 中文名）+ 当前内容预览（live url 有值 → img，
  *   resolveSlotUrl 归一化：/api 前缀拼 getApiBase()，其余原样；url=null → 渐变占位块+「占位中」
  *   签，R10 不画假件）+ live url／alt 只读明文行（PD-60 O-M06，有 live 才出）+ 状态签（上线中 /
  *   待审数）+ 版本计数（v{live.version} · 共 N 版）；
@@ -44,6 +44,11 @@ type SlotVersion = NonNullable<SlotRow['live']>;
 
 /** 占位块渐变=shared tokens 唯一来源（端口批片 C 顺带件①：收编字面量，不另写） */
 const PLACEHOLDER_GRADIENT = gradients.philiaBanner;
+
+function slotDisplayName(slot: SlotRow | undefined): string {
+  const version = slot?.live ?? slot?.pending[0] ?? slot?.archived[0];
+  return version?.contentJson.alt ?? cp('slotport.managementTitle');
+}
 
 /** D-42 文案与人群编辑字段形（空串=不带该字段；audience 缺省 all；priority 空=不带） */
 type SlotCopyFields = { title_main: string; title_sub: string; cta_text: string; audience: 'all' | 'anon' | 'free' | 'anon_free'; priority: string };
@@ -91,7 +96,7 @@ function SlotCard({
   /* PD-20 D-41：预览此版（pending 版 iframe 真预览；仅 owner 页内可点） */
   onPreview: (slotKey: string, versionId: string) => void;
 }) {
-  const alt = slot.live?.contentJson.alt ?? slot.pending[0]?.contentJson.alt ?? slot.slotKey;
+  const alt = slotDisplayName(slot);
   /* 可回退=有上线版 且 非 pending 版本数 ≥2（当前 live + 至少一版 archived） */
   const canRevert = slot.live !== null && slot.totalVersions - slot.pending.length >= 2;
   const disabled = uploading || acting;
@@ -102,9 +107,7 @@ function SlotCard({
   return (
     <div className="u3-panel mb-3.5" data-testid={`slotport-card-${slot.slotKey}`}>
       <div className="u3-panel-head">
-        <h3>
-          <span className="font-mono">{slot.slotKey}</span>
-        </h3>
+        <h3>{alt}</h3>
         <span className="aside" style={numStyle}>
           {slot.live
             ? cp('slotport.versionInfo', { version: slot.live.version, total: slot.totalVersions })
@@ -120,7 +123,6 @@ function SlotCard({
             className="h-20 w-32 shrink-0 rounded-input"
           />
           <div className="min-w-0 flex-1">
-            <div className="text-caption text-ink">{alt}</div>
             {/* PD-60 O-M06：live 图 url＋alt 只读明文透出（对照截图/排查用；不可编辑，编辑走上传替换流） */}
             {slot.live ? (
               <div
@@ -416,8 +418,9 @@ export function SlotPortBody() {
   /* D-40 紧急下线：双确认（KillSwitchStrip 工艺同族）→ slotPort.unpublish（live→archived）；
      与页顶「一键关停」支付通道零耦合——本动作只管本槽展示物料 */
   const onUnpublish = (slotKey: string) => {
-    if (!window.confirm(cp('slotport.unpublishConfirm1', { slot: slotKey }))) return;
-    if (!window.confirm(cp('slotport.unpublishConfirm2', { slot: slotKey }))) return;
+    const displayName = slotDisplayName(slots.find((slot) => slot.slotKey === slotKey));
+    if (!window.confirm(cp('slotport.unpublishConfirm1', { slot: displayName }))) return;
+    if (!window.confirm(cp('slotport.unpublishConfirm2', { slot: displayName }))) return;
     void (async () => {
       setActing(true);
       try {
@@ -495,7 +498,7 @@ export function SlotPortBody() {
       {previewTarget ? (
         <div className="u3-panel mt-4" data-testid="slotport-preview-panel">
           <div className="u3-panel-head">
-            <h3 className="font-mono">{previewTarget.slotKey}</h3>
+            <h3>{slotDisplayName(slots.find((slot) => slot.slotKey === previewTarget.slotKey))}</h3>
             <span className="aside">{cp('slotport.previewPanelTitle')}</span>
           </div>
           <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]">
