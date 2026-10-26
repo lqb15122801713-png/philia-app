@@ -10,12 +10,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { skc, type SkeletonCopyKey } from '../../copy/skeleton';
 import { badgeAriaText, badgeCapText } from '../../lib/unreadBadge';
 
-/* ---- apphead（serif 屏题+mono 注） ---- */
-export function SkAppHead({ title, no }: { title: string; no: string }) {
+/* ---- apphead（serif 屏题＋可选 mono 注） ---- */
+export function SkAppHead({ title, no }: { title: string; no?: string }) {
   return (
     <div className="sk-apphead">
       <span className="tt">{title}</span>
-      <span className="no">{no}</span>
+      {no ? <span className="no">{no}</span> : null}
     </div>
   );
 }

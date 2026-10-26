@@ -1,0 +1,410 @@
+{
+  "generatedAt": "2026-10-26T11:01:20.775Z",
+  "status": "LOCAL_CANDIDATE_EVIDENCE_COMPLETE",
+  "delivery": "PENDING_DELIVERY_HIT_AND_EXTERNAL_REVIEW",
+  "mergeDeploy": "PENDING_MERGE_DEPLOY",
+  "tipPackage": false,
+  "baselineTip": "42bb0f67945fe774f2c22d098fed185a0a0929a5",
+  "deploy": "20261026160104",
+  "migration": "0139 故意空留",
+  "liveBundle": {
+    "name": "index-DcDp2v-Y.js",
+    "sha256": "061fdc83250b6a5d74ba04210a9b9ee24ab8bc44f3c9f439414b77167affa9b1",
+    "bytes": 734701
+  },
+  "candidateBundle": {
+    "name": "index-XpRzbUj5.js",
+    "sha256": "cc2704440cd0a0fad21a9315fedcbdd7f85687d19e96fa7e253c180d91b3c1e9",
+    "bytes": 740747
+  },
+  "commands": [
+    {
+      "command": "npm run build",
+      "log": "final-build-all.log",
+      "exitCode": 0
+    },
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json --test apps/staff/src/lib/notifications.test.ts apps/staff/src/lib/localeInput.test.ts apps/staff/src/components/boarding/boardingExposure.test.tsx",
+      "log": "final-test-staff-all.log",
+      "exitCode": 0,
+      "pass": 10,
+      "fail": 0
+    },
+    {
+      "command": "npx eslint <PD-98 touched files>",
+      "log": "final-lint-targeted.log",
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 1
+    },
+    {
+      "command": "npm run lint -w @philia/staff",
+      "log": "final-lint-staff-full.log",
+      "exitCode": 1,
+      "status": "BASELINE_RED_UNCHANGED",
+      "errors": 25,
+      "warnings": 1
+    },
+    {
+      "command": "PD98_PHASE=final node apps/staff/scripts/pd98-staff-locale-notif-dedupe-check.mjs",
+      "log": "final-browser.log",
+      "exitCode": 0,
+      "assertions": 16
+    }
+  ],
+  "screenshotComparisons": [
+    {
+      "name": "my-schedule-top",
+      "baseline": "7a951e449883ffafeb57f352742753a7ecdfce5f352a2539730bfe797df3788e",
+      "final": "00c5fd714dab85071c08247852b8a96ead14d09a9b29b4ca589434ab0c98b1a4",
+      "different": true
+    },
+    {
+      "name": "my-schedule-locale",
+      "baseline": "7a951e449883ffafeb57f352742753a7ecdfce5f352a2539730bfe797df3788e",
+      "final": "00c5fd714dab85071c08247852b8a96ead14d09a9b29b4ca589434ab0c98b1a4",
+      "different": true
+    },
+    {
+      "name": "schedule",
+      "baseline": "48a3ee52681d4fb9cd0b038677021102892f7ae70047961ead2f232064c7cc5f",
+      "final": "3cb38b383c47f60e2b4769619fb89cb012cf6b66df9c3dc494ad72ac7b4d9586",
+      "different": true
+    },
+    {
+      "name": "me",
+      "baseline": "b32f26ae986a6d3739e755d21f6ab9d104d3b33cf389beb9301d6652a50d211b",
+      "final": "2681c3e0f95d4de1e16a5eaec811798b86c9da687c505dc75acbad7c74f299e3",
+      "different": true
+    },
+    {
+      "name": "notifications-before",
+      "baseline": "886a399aa449e0fccd23b0d77f2f06955d58e3d462a9e952c6f440d1b91c3ae8",
+      "final": "bf4fd16a7c43068201b9ff6789792f6f44de9ee658a16307427476b771278121",
+      "different": true
+    },
+    {
+      "name": "notifications-after",
+      "baseline": "48b24105533e6ca7cfefd4325bd08401482e3446c116ef0364da2f5a95e4d512",
+      "final": "f86e0930de2b8aac9f5e8c6dba7bc4459d97c4a536b354345858fc0ea747dc7d",
+      "different": true
+    }
+  ],
+  "defects": [
+    {
+      "id": "AE-STAFF-R58-06",
+      "status": "LOCAL_CANDIDATE_COVERED_PENDING_DELIVERY_HIT",
+      "evidence": "browser-baseline.json vs browser-final.json"
+    },
+    {
+      "id": "AE-STAFF-R58-07",
+      "status": "LOCAL_CANDIDATE_COVERED_PENDING_DELIVERY_HIT",
+      "evidence": "browser-baseline.json vs browser-final.json"
+    },
+    {
+      "id": "AE-STAFF-R58-08",
+      "status": "LOCAL_CANDIDATE_COVERED_PENDING_DELIVERY_HIT",
+      "evidence": "browser-baseline.json vs browser-final.json"
+    },
+    {
+      "id": "NOTIF-DUP-ROWS-OBS",
+      "status": "LOCAL_CANDIDATE_COVERED_PENDING_DELIVERY_HIT",
+      "evidence": "browser-baseline.json vs browser-final.json"
+    },
+    {
+      "id": "EN-SUBTITLE-EXPOSURE-OBS",
+      "status": "LOCAL_CANDIDATE_COVERED_PENDING_DELIVERY_HIT",
+      "evidence": "browser-baseline.json vs browser-final.json"
+    }
+  ],
+  "reuseForClear": false,
+  "checks": [
+    {
+      "id": "baseline-defects-reproduced",
+      "ok": true,
+      "actual": 8
+    },
+    {
+      "id": "candidate-browser-all-green",
+      "ok": true,
+      "actual": {
+        "failures": 0,
+        "assertions": 16
+      }
+    },
+    {
+      "id": "candidate-dist-name-differs",
+      "ok": true,
+      "actual": "index-XpRzbUj5.js"
+    },
+    {
+      "id": "candidate-dist-sha-matches-report",
+      "ok": true,
+      "actual": "cc2704440cd0a0fad21a9315fedcbdd7f85687d19e96fa7e253c180d91b3c1e9"
+    },
+    {
+      "id": "live-and-candidate-sha-differ",
+      "ok": true,
+      "actual": {
+        "live": "061fdc83250b6a5d74ba04210a9b9ee24ab8bc44f3c9f439414b77167affa9b1",
+        "candidate": "cc2704440cd0a0fad21a9315fedcbdd7f85687d19e96fa7e253c180d91b3c1e9"
+      }
+    },
+    {
+      "id": "candidate-dist-linked-by-html",
+      "ok": true,
+      "actual": "index-XpRzbUj5.js"
+    },
+    {
+      "id": "live-html-uses-control-dist",
+      "ok": true,
+      "actual": "index-DcDp2v-Y.js"
+    },
+    {
+      "id": "baseline-native-locale-controls",
+      "ok": true,
+      "actual": [
+        {
+          "id": "mysched-avail-start",
+          "type": "time",
+          "value": "09:00"
+        },
+        {
+          "id": "mysched-avail-end",
+          "type": "time",
+          "value": "18:00"
+        },
+        {
+          "id": "mysched-leave-start",
+          "type": "date",
+          "value": "2026-10-26"
+        },
+        {
+          "id": "mysched-leave-end",
+          "type": "date",
+          "value": "2026-10-26"
+        }
+      ]
+    },
+    {
+      "id": "candidate-locale-values",
+      "ok": true,
+      "actual": [
+        {
+          "id": "mysched-avail-start",
+          "type": "text",
+          "value": "09:00"
+        },
+        {
+          "id": "mysched-avail-end",
+          "type": "text",
+          "value": "18:00"
+        },
+        {
+          "id": "mysched-leave-start",
+          "type": "text",
+          "value": "2026-10-26"
+        },
+        {
+          "id": "mysched-leave-end",
+          "type": "text",
+          "value": "2026-10-26"
+        }
+      ]
+    },
+    {
+      "id": "candidate-schedule-date-locale",
+      "ok": true,
+      "actual": {
+        "type": "text",
+        "value": "2026-10-26"
+      }
+    },
+    {
+      "id": "candidate-subtitles-absent",
+      "ok": true,
+      "actual": {
+        "mySchedule": null,
+        "schedule": null,
+        "me": null,
+        "notifications": null
+      }
+    },
+    {
+      "id": "candidate-role-english-absent",
+      "ok": true,
+      "actual": {
+        "body": "我的\n小\n小美\n前台 · 工号 98-STAFF · 入职 2026-01 · 今日休息\n0\n本月完成单\n—\n好评率\n0\n本月寄养打卡\n薪资提成\n本月提成逐单明细 · 绩效 · 扣减\n›\nXP 成长\n段位 · 本店榜 · 规则一句话\n›\n我的评价\n本人收到的客户评价\n本月已评 0 条\n我的排班\n—\n盘点任务\n日盘/周盘执行 · 安心包效期\n›\n寄养负责中\n0 只在店（任务台全天行打卡）\n设置\n实时同步与通知\n›\n\n通知 / 公告 / 心声 / 自检 / 问题上报\n\n消息通知\n派单 · 系统消息 · 未读高亮\n6\n门店公告\n置顶在前 · 已读回执\n›\n员工心声\n建议吐槽 · 限时响应\n›\n每日自检\n逐项打点 · 照片留证\n›\n问题上报\nPDCA 整改闭环\n›\n帮助与规范\n六步影像规范 · 核销流程\n›\n退出登录\n\nPhilia 员工端 · 内测 v1.1\n\n工位\n预约\n打卡\n我的\n6",
+        "subtitle": null
+      }
+    },
+    {
+      "id": "baseline-notification-pairs",
+      "ok": true,
+      "actual": [
+        "ntf-row-care-1637-a",
+        "ntf-row-care-1637-b",
+        "ntf-row-care-1229-a",
+        "ntf-row-care-1229-b",
+        "ntf-row-care-0802-a",
+        "ntf-row-care-0802-b"
+      ]
+    },
+    {
+      "id": "candidate-notification-groups",
+      "ok": true,
+      "actual": {
+        "before": [
+          "ntf-row-care-1637-a",
+          "ntf-row-care-1229-a",
+          "ntf-row-care-0802-a",
+          "ntf-row-care-0802-b"
+        ],
+        "after": 4
+      }
+    },
+    {
+      "id": "candidate-group-mark-read",
+      "ok": true,
+      "actual": [
+        {
+          "procedures": [
+            "push.markRead"
+          ],
+          "body": "{\"0\":{\"json\":{\"ids\":[\"care-1637-a\",\"care-1637-b\"]}}}"
+        }
+      ]
+    },
+    {
+      "id": "candidate-unread-source-preserved",
+      "ok": true,
+      "actual": {
+        "before": "未读 6 条",
+        "after": "未读 4 条"
+      }
+    },
+    {
+      "id": "mark-all-not-used",
+      "ok": true,
+      "actual": 0
+    },
+    {
+      "id": "mock-procedures-known",
+      "ok": true,
+      "actual": []
+    },
+    {
+      "id": "browser-cleanup",
+      "ok": true,
+      "actual": "PD98_PORT_9398_AFTER=000"
+    },
+    {
+      "id": "unit-tests-green",
+      "ok": true,
+      "actual": "10 pass / 0 fail"
+    },
+    {
+      "id": "three-app-build-green",
+      "ok": true,
+      "actual": "customer / merchant / staff built"
+    },
+    {
+      "id": "targeted-lint-no-new-error",
+      "ok": true,
+      "actual": "0 error / 1 baseline warning"
+    },
+    {
+      "id": "full-lint-baseline-unchanged",
+      "ok": true,
+      "actual": "baseline and final: 25 errors / 1 warning; not claimed green"
+    },
+    {
+      "id": "mutation-red-captured",
+      "ok": true,
+      "actual": "exact-millisecond mutation produced 5 !== 3"
+    },
+    {
+      "id": "mutation-restored",
+      "ok": true,
+      "actual": "same-second grouping restored"
+    },
+    {
+      "id": "screenshots-differ-from-baseline",
+      "ok": true,
+      "actual": [
+        {
+          "name": "my-schedule-top",
+          "baseline": "7a951e449883ffafeb57f352742753a7ecdfce5f352a2539730bfe797df3788e",
+          "final": "00c5fd714dab85071c08247852b8a96ead14d09a9b29b4ca589434ab0c98b1a4",
+          "different": true
+        },
+        {
+          "name": "my-schedule-locale",
+          "baseline": "7a951e449883ffafeb57f352742753a7ecdfce5f352a2539730bfe797df3788e",
+          "final": "00c5fd714dab85071c08247852b8a96ead14d09a9b29b4ca589434ab0c98b1a4",
+          "different": true
+        },
+        {
+          "name": "schedule",
+          "baseline": "48a3ee52681d4fb9cd0b038677021102892f7ae70047961ead2f232064c7cc5f",
+          "final": "3cb38b383c47f60e2b4769619fb89cb012cf6b66df9c3dc494ad72ac7b4d9586",
+          "different": true
+        },
+        {
+          "name": "me",
+          "baseline": "b32f26ae986a6d3739e755d21f6ab9d104d3b33cf389beb9301d6652a50d211b",
+          "final": "2681c3e0f95d4de1e16a5eaec811798b86c9da687c505dc75acbad7c74f299e3",
+          "different": true
+        },
+        {
+          "name": "notifications-before",
+          "baseline": "886a399aa449e0fccd23b0d77f2f06955d58e3d462a9e952c6f440d1b91c3ae8",
+          "final": "bf4fd16a7c43068201b9ff6789792f6f44de9ee658a16307427476b771278121",
+          "different": true
+        },
+        {
+          "name": "notifications-after",
+          "baseline": "48b24105533e6ca7cfefd4325bd08401482e3446c116ef0364da2f5a95e4d512",
+          "final": "f86e0930de2b8aac9f5e8c6dba7bc4459d97c4a536b354345858fc0ea747dc7d",
+          "different": true
+        }
+      ]
+    },
+    {
+      "id": "health-four-fresh",
+      "ok": true,
+      "actual": "7200–7203 = 200"
+    },
+    {
+      "id": "migration-0139-left-empty",
+      "ok": true,
+      "actual": {
+        "reserved": "0139 故意空留",
+        "alsoNotOccupied": "0140",
+        "files": []
+      }
+    },
+    {
+      "id": "scope-staff-only",
+      "ok": true,
+      "actual": [
+        "apps/staff/scripts/pd98-staff-locale-notif-dedupe-check.mjs",
+        "apps/staff/src/components/skeleton/index.tsx",
+        "apps/staff/src/lib/localeInput.test.ts",
+        "apps/staff/src/lib/localeInput.ts",
+        "apps/staff/src/lib/notifications.test.ts",
+        "apps/staff/src/lib/notifications.ts",
+        "apps/staff/src/pages/MePage.tsx",
+        "apps/staff/src/pages/MySchedulePage.tsx",
+        "apps/staff/src/pages/SchedulePage.tsx",
+        "apps/staff/src/pages/staff2/NotificationsPage.tsx"
+      ]
+    },
+    {
+      "id": "no-reuse-for-clear",
+      "ok": true,
+      "actual": "真实员工 dist＋英文区域设置＋tRPC mock；不是现网 tip 包，不冒领合部结论"
+    }
+  ],
+  "failures": 0
+}

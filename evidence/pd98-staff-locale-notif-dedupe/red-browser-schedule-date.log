@@ -1,0 +1,18 @@
+PASS 真 /my-schedule 排班请假数据完成加载
+PASS 09 可用时间与请假使用区域设置无关的文本控件 — [{"id":"mysched-avail-start","type":"text","value":"09:00"},{"id":"mysched-avail-end","type":"text","value":"18:00"},{"id":"mysched-leave-start","type":"text","value":"2026-10-26"},{"id":"mysched-leave-end","type":"text","value":"2026-10-26"}]
+PASS 09 时间与请假日值保持 24h 与 YYYY-MM-DD — ["09:00","18:00","2026-10-26","2026-10-26"]
+PASS 我的排班不渲染 MY SCHEDULE 英文编号
+PASS 真 /schedule 完成加载
+PASS 预约页不渲染 SCHEDULE 英文编号
+FAIL 预约日期芯片不受英文区域设置影响并保持 YYYY-MM-DD — {"type":"date","value":"2026-10-26"}
+PASS 真 /me 员工身份卡完成加载
+PASS 我的页不渲染 ME／frontdesk／groomer 英文字样 — {"subtitle":null}
+PASS 真 /notifications 六条 mock 通知与未读计数完成加载
+PASS 两组同秒重复与两组独立提醒收口为四行 — ["ntf-row-care-1637-a","ntf-row-care-1229-a","ntf-row-care-0802-a","ntf-row-care-0802-b"]
+PASS 通知页不渲染 NOTIFICATIONS 英文编号
+PASS 点一组重复通知时同组两个 ID 一起已读 — [{"procedures":["push.markRead"],"body":"{\"0\":{\"json\":{\"ids\":[\"care-1637-a\",\"care-1637-b\"]}}}"}]
+PASS 同组已读后未读数减二且不重新冒出重复行 — {"rows":4,"unread":"未读 4 条"}
+PASS 全程未点全部已读
+PASS tRPC mock 过程全部已知 — []
+报告：E:\KIMI code\pd98-staff-locale-notif-dedupe\evidence\pd98-staff-locale-notif-dedupe\browser-candidate.json
+帧目录：E:\KIMI code\pd98-staff-locale-notif-dedupe\evidence\pd98-staff-locale-notif-dedupe\shots\candidate
