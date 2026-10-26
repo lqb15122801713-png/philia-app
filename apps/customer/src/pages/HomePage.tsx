@@ -269,7 +269,7 @@ export default function HomePage() {
           {featured.map((item, index) => (
             <Link to={item.path} className="hv2-featured-card" data-testid="home-featured-card" key={item.key}>
               <div className="hv2-featured-media">
-                <HomeImage src={item.image} alt={item.title} className="hv2-featured-img" />
+                <HomeImage src={item.image} alt={item.title} className="hv2-featured-img hv2-featured-illustration" />
                 <span className="hv2-image-label">PHILIA CARE</span>
                 <span className="hv2-featured-cta">{hc('home.bannerCta')}</span>
               </div>

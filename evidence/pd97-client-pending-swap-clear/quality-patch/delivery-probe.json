@@ -1,0 +1,37 @@
+{
+  "observedAt": "2026-10-26T15:35:50+08:00",
+  "candidate": {
+    "bundleName": "index-DQdVze0c.js",
+    "bundleSha256": "46e17e34aedf64fc86c97239e643c6605b6f1224377be80ffef93ad969747d1a",
+    "tipPackage": false,
+    "differentFromRequiredBaseline": true
+  },
+  "requiredBaseline": {
+    "bundleName": "index-0tBLrJnt.js"
+  },
+  "sixSurfaces": {
+    "home": { "ok": true, "identityOk": true, "assetOk": true, "pendingCount": 0 },
+    "mall": { "ok": true, "identityOk": true, "assetOk": true, "pendingCount": 0 },
+    "product": { "ok": true, "identityOk": true, "assetOk": true, "pendingCount": 0 },
+    "cartInStock": { "ok": true, "identityOk": true, "assetOk": true, "pendingCount": 0 },
+    "checkoutInStock": { "ok": true, "identityOk": true, "assetOk": true, "pendingCount": 0 },
+    "orders": { "ok": true, "identityOk": true, "assetOk": true, "pendingCount": 0 }
+  },
+  "failures": 0,
+  "ordersCreatedOnIsolatedSingleStore": 5,
+  "evidence": {
+    "results": "evidence/pd97-client-pending-swap-clear/quality-patch/after-results.json",
+    "runLog": "evidence/pd97-client-pending-swap-clear/quality-patch/after-e2e.txt",
+    "buildLog": "evidence/pd97-client-pending-swap-clear/quality-patch/build-customer.txt",
+    "screenshots": [
+      "evidence/pd97-client-pending-swap-clear/quality-patch/after-home.png",
+      "evidence/pd97-client-pending-swap-clear/quality-patch/after-mall.png",
+      "evidence/pd97-client-pending-swap-clear/quality-patch/after-product.png",
+      "evidence/pd97-client-pending-swap-clear/quality-patch/after-cart-in-stock.png",
+      "evidence/pd97-client-pending-swap-clear/quality-patch/after-checkout-in-stock.png",
+      "evidence/pd97-client-pending-swap-clear/quality-patch/after-orders.png"
+    ]
+  },
+  "localhostUsedAsLiveHIT": false,
+  "liveHitStatus": "PENDING_MERGE_DEPLOY"
+}

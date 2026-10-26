@@ -1,0 +1,7 @@
+GREEN home identity=true asset=true pending=0
+GREEN mall identity=true asset=true pending=0
+GREEN product identity=true asset=true pending=0
+GREEN cart-in-stock identity=true asset=true pending=0
+GREEN checkout-in-stock identity=true asset=true pending=0
+GREEN orders identity=true asset=true pending=0
+汇总：6/6 GREEN；ordersCreated=5
