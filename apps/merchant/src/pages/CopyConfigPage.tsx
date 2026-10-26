@@ -18,9 +18,10 @@
  * - 保存即生效=只管新渲染（copy_overrides 覆盖层 120s 轮询兜底，本页 invalidate 立即拉新）。
  */
 
-import { Skeleton, usePhiliaClient, type PhiliaClient } from '@philia/shared';
+import { usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { LoadingPanel } from '../components/ContentStatus';
 import MainScaffold, { SearchInput } from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
@@ -258,17 +259,12 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
   /* ---------------- 加载 / 错误三态 ---------------- */
   if (listQuery.isPending) {
     return (
-      <div className="u3-panel" aria-label="加载中">
-        <div className="u3-panel-head">
-          <Skeleton className="h-4 w-24 rounded-chip" />
-        </div>
-        {['w-[46%]', 'w-[55%]', 'w-[64%]', 'w-[73%]', 'w-[82%]'].map((w, i) => (
-          <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
-            <Skeleton className={`h-3 rounded-chip ${w}`} />
-            <Skeleton className="mt-2 h-8 w-2/3 rounded-control" />
-          </div>
-        ))}
-      </div>
+      <LoadingPanel
+        title="正在读取界面文案…"
+        body="文案、筛选项与变更留痕将在这里显示。"
+        testid="copyport-loading"
+        onRetry={() => void listQuery.refetch()}
+      />
     );
   }
 
@@ -461,10 +457,8 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
           <h3>{cp('copyport.historyTitle')}</h3>
         </div>
         {versionsQuery.isPending ? (
-          <div className="space-y-2 px-[17px] py-4" aria-label="加载中">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-9 rounded-control" />
-            ))}
+          <div className="px-[17px] py-5 text-caption text-ink-secondary" role="status">
+            正在读取变更留痕…
           </div>
         ) : versionsQuery.isError ? (
           <div className="px-[17px] py-4 text-caption-xs text-danger-deep">
