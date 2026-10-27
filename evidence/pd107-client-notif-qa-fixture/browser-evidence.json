@@ -1,0 +1,80 @@
+{
+  "schema": "pd107-client-notif-qa-fixture-browser-v1",
+  "device": "responsive 390x844, deviceScaleFactor 2, mobile touch",
+  "baseline": {
+    "url": "http://120.53.102.45:7201/notifications",
+    "textSnapshotId": "text-eb1fdcc5-0eac-4bed-8667-228271bdf279",
+    "capturedAtEpochMs": 1793064165669,
+    "documentScanTruncated": false,
+    "serviceQaFixturePrefixCount": 10,
+    "screenshot": "baseline-live-notifications.png",
+    "screenshotSha256": "acf5f24c1aa8f447000d585e420e3208722aad0c010c54dc76c5316370303194",
+    "examples": [
+      "【QA夹具豆豆】的预约时间已调整，请查看最新安排",
+      "【QA夹具豆豆】的预约已安排服务人员",
+      "【QA夹具豆豆】已到店，服务即将开始"
+    ]
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7107",
+    "tipPackage": false,
+    "sameUpstreamReadonlyData": true,
+    "documentScanTruncated": false,
+    "serviceItemsScanned": 17,
+    "qaFixturePrefixCount": 0,
+    "samples": {
+      "rescheduled": "豆豆的预约时间已调整，请查看最新安排",
+      "assigned": "豆豆的预约已安排服务人员",
+      "checkedIn": "豆豆已到店，服务即将开始"
+    },
+    "direct": {
+      "textSnapshotId": "text-0eec52f0-d709-4607-b3a6-cc3ba8c3cb5d",
+      "capturedAtEpochMs": 1793064100485,
+      "screenshot": "candidate-notifications-direct.png",
+      "screenshotSha256": "83e60b572c793a8856ab565710a03854c0035f4140429f02f93e6beb44a2ee9f"
+    },
+    "fromBell": {
+      "entry": "home link named 消息, actual page.element.click to /notifications",
+      "textSnapshotId": "text-24f26d60-aa0a-47b4-8c6f-732e87c8d80a",
+      "capturedAtEpochMs": 1793064273810,
+      "screenshot": "candidate-notifications-from-bell.png",
+      "screenshotSha256": "a65daa585af34ce80e2463c862e110a9fc5c458e2e8ae0be60a5cbb7bef7f77e"
+    },
+    "fromMe": {
+      "entry": "me link me-notify-entry, keyboard Enter to /notifications",
+      "textSnapshotId": "text-bb1f2e5d-0c4c-47ca-a0a1-25f66edf35df",
+      "capturedAtEpochMs": 1793064721258,
+      "screenshot": "candidate-notifications-from-me.png",
+      "screenshotSha256": "b4254e87f19c7095e1febcfaa6f60988e36bc3d9b704ddfc69be8aa7c0110f6a",
+      "pointerAttempts": "two built-in-browser pointer clicks stayed at /me; not claimed as touch PASS and not attributed to this diff; keyboard Enter succeeded"
+    },
+    "final": {
+      "textSnapshotId": "text-d16be56d-b2aa-4c0f-a5d0-7e8c997950eb",
+      "capturedAtEpochMs": 1793065326157,
+      "screenshot": "final-notifications.png",
+      "screenshotSha256": "83e60b572c793a8856ab565710a03854c0035f4140429f02f93e6beb44a2ee9f",
+      "note": "fresh final capture has the same pixels as the direct candidate because the rendered UI is identical; bell and me entry captures have distinct bytes; no R44/R45 REUSE frame is used"
+    }
+  },
+  "network": {
+    "notificationQuery": "GET /trpc/push.listNotifications,push.unreadCount,... = 200",
+    "canvasLayout": "GET /trpc/canvas.liveLayout = 200",
+    "blockedMutationProbe": "POST /trpc/push.markRead = 405 before upstream",
+    "incidentalMembershipToken": "POST /trpc/membership.myCardToken = 405 before upstream; no token mutation claimed",
+    "log": "preview.txt"
+  },
+  "boundaries": {
+    "forbiddenFixture01M5EQVFTouched": false,
+    "secondStoreCreated": false,
+    "seedOrSchemaWrites": false,
+    "notificationReadOrDeleteClicked": false,
+    "paymentUsed": false,
+    "reuseOrFakeClearedUsed": false,
+    "localhostPresentedAsLive": false
+  },
+  "cleanup": {
+    "browserTabs": 0,
+    "previewStopped": true,
+    "activeBackgroundTasks": 0
+  }
+}

@@ -1,0 +1,8 @@
+DIFF_CHECK_EXIT=0
+ M apps/customer/src/lib/customerPresentation.ts
+ M apps/customer/src/pages/NotifyCenterPage.tsx
+?? apps/customer/src/pages/notifyPresentation.test.tsx
+?? evidence/pd107-client-notif-qa-fixture/
+ apps/customer/src/lib/customerPresentation.ts | 9 ++++++++-
+ apps/customer/src/pages/NotifyCenterPage.tsx  | 5 +++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)

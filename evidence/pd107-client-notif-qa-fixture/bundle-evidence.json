@@ -1,0 +1,28 @@
+{
+  "schema": "pd107-client-notif-qa-fixture-bundle-v1",
+  "observedAt": "2026-10-27T09:45:44+08:00",
+  "live": {
+    "url": "http://120.53.102.45:7201/",
+    "tip": "e890fa401f6bf649109379c198254905f7126cdd",
+    "deploy": "20261027001820",
+    "bundleName": "index-C2YJDxM1.js",
+    "bundleBytes": 1413565,
+    "bundleSha256": "11c8b4f6e5fec0947ddccf3c84bdd9ed26a46d3d978a86c1e25af04440eff5d7",
+    "health": [200, 200, 200, 200]
+  },
+  "localBaselineBuild": {
+    "bundleName": "index-Cfv2yXYL.js",
+    "source": "pre-change npm run build:customer output"
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7107",
+    "tipPackage": false,
+    "bundleName": "index-CJu1diFP.js",
+    "bundleBytes": 1424040,
+    "bundleSha256": "10af6c545686f82b19f52fce185f55ab9ddeaf1a1ede15ca6ac98fd5d99ca2ca",
+    "httpBundleMatchesLocalBytes": true,
+    "differentFromLiveName": true,
+    "differentFromLiveBytes": true,
+    "differentFromLocalBaselineName": true
+  }
+}
