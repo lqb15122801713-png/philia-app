@@ -32,6 +32,7 @@ import { fmtHM, fmtMD } from '@/components/booking/format'
 import { mc } from '../components/member/copy'
 import { ntf, type NtfCopyKey } from '@/copy/notify'
 import { readLastBooking } from '@/lib/bookingPrefill'
+import { customerNotificationText } from '@/lib/customerPresentation'
 
 type ChipKey = 'all' | 'unread' | 'trade' | 'service' | 'account' | 'marketing'
 
@@ -285,13 +286,13 @@ export default function NotifyCenterPage() {
                             item.readAt ? 'text-ink-secondary' : 'font-semibold text-ink'
                           }`}
                         >
-                          {item.title}
+                          {customerNotificationText(item.title)}
                         </p>
                         <span className="shrink-0 font-number text-caption-xs text-ink-placeholder">
                           {fmtAt(item.createdAt)}
                         </span>
                       </div>
-                      <p className="mt-1 line-clamp-2 text-caption leading-5 text-ink-secondary">{item.body}</p>
+                      <p className="mt-1 line-clamp-2 text-caption leading-5 text-ink-secondary">{customerNotificationText(item.body)}</p>
                     </div>
                     <button
                       type="button"

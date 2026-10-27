@@ -1,0 +1,98 @@
+{
+  "schema": "pd107-client-notif-qa-fixture-validation-v1",
+  "observedAt": "2026-10-27T09:45:44+08:00",
+  "worktree": "E:/KIMI code/pd107-client-notif-qa-fixture",
+  "branch": "feat/pd107-client-notif-qa-fixture",
+  "baseline": {
+    "tip": "e890fa401f6bf649109379c198254905f7126cdd",
+    "deploy": "20261027001820",
+    "liveBundle": "index-C2YJDxM1.js",
+    "liveBundleBytes": 1413565,
+    "liveBundleSha256": "11c8b4f6e5fec0947ddccf3c84bdd9ed26a46d3d978a86c1e25af04440eff5d7",
+    "localBuildBundle": "index-Cfv2yXYL.js",
+    "liveServiceQaFixturePrefixCount": 10
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7107",
+    "tipPackage": false,
+    "bundleName": "index-CJu1diFP.js",
+    "bundleBytes": 1424040,
+    "bundleSha256": "10af6c545686f82b19f52fce185f55ab9ddeaf1a1ede15ca6ac98fd5d99ca2ca",
+    "httpBundleMatchesLocalBytes": true,
+    "differentFromRequiredBaselineNameAndBytes": true,
+    "differentFromLocalBaselineName": true,
+    "serviceQaFixturePrefixCount": 0
+  },
+  "productDiff": {
+    "files": 2,
+    "insertions": 11,
+    "deletions": 3,
+    "paths": [
+      "apps/customer/src/lib/customerPresentation.ts",
+      "apps/customer/src/pages/NotifyCenterPage.tsx"
+    ],
+    "regressionTest": "apps/customer/src/pages/notifyPresentation.test.tsx"
+  },
+  "defects": {
+    "linXiaoR45FailL": "baseline live notifications contain QA fixture prefixes in reschedule, assignment and check-in bodies; candidate renders the same service progress with 豆豆 and no QA fixture prefix",
+    "blindCustomerR44StillOpen": "AE-CLIENT-R44-01 candidate evidence only; not a formal close or live retest verdict"
+  },
+  "regression": {
+    "initialRed": { "tests": 1, "passed": 0, "failed": 1, "reason": "real NotifyCenterPage rendered fixture names before the product change" },
+    "mutationRed": { "file": "mutation-red-unfiltered.txt", "tests": 1, "passed": 0, "failed": 1, "mutation": "customerNotificationText returned input unchanged" },
+    "finalUnit": { "file": "final-unit-all.txt", "tests": 12, "passed": 12, "failed": 0 },
+    "testAssembly": "first combined run had 3 React-is-not-defined failures in unrelated existing tests; final run used evidence/test-react-setup.mjs only, with no product or other-test edit",
+    "buildAll": { "file": "final-build-all.txt", "status": "PASS", "customerMerchantStaff": true },
+    "targetedLint": { "file": "final-targeted-lint.txt", "exitCode": 0 },
+    "fullCustomerLint": { "file": "final-full-lint.txt", "status": "BASELINE_EXISTING_RED", "errors": 65, "warnings": 4, "sameAsBaseline": true },
+    "diffCheck": { "file": "final-diff-check.txt", "exitCode": 0 }
+  },
+  "migration": {
+    "reserved": "0147",
+    "status": "0147 故意空留",
+    "schemaFiles": 0,
+    "forbiddenUntouched": ["0117", "0119", "0122-0146"],
+    "pd106NotUsed": true
+  },
+  "boundaries": {
+    "serverChanges": 0,
+    "schemaChanges": 0,
+    "lockfileChanges": 0,
+    "secondStoreCreated": false,
+    "forbiddenFixture01M5EQVFTouched": false,
+    "directProductionDatabaseWrites": false,
+    "payment": "none; no payment or refund mutation",
+    "bookingPetFormExpanded": false,
+    "pwaExpanded": false,
+    "paymentAgreementExpanded": false,
+    "staffNotificationDensityExpanded": false,
+    "merchantCockpitExpanded": false,
+    "albumRefrozen": false,
+    "reuseUsedAsCleared": false,
+    "fakeClearedUsed": false,
+    "localhostUsedAsLiveHIT": false,
+    "usageInspected": false,
+    "actionInstalled": false,
+    "secondWindowOpened": false
+  },
+  "environment": {
+    "dependencyInstall": "Windows root npm ci nested postinstall recursion failed; server npm ci from its own directory installed 110 packages, then root npm ci --ignore-scripts installed 688 packages; lockfiles and product scripts unchanged",
+    "mePointer": "INCONCLUSIVE_BUILTIN_BROWSER_POINTER; keyboard Enter verified the actual me link; no route change made"
+  },
+  "live": {
+    "health": [200, 200, 200, 200],
+    "bundleName": "index-C2YJDxM1.js",
+    "status": "PENDING_MERGE_DEPLOY",
+    "mergeShaEqualsDeployedSha": "NOT_APPLICABLE_BEFORE_MERGE"
+  },
+  "deliveryState": "PR_OPEN_NOT_MERGED",
+  "deliveryHit": "PENDING_PRODUCT_REVIEW",
+  "externalReview": "PENDING_AFTER_DELIVERY_HIT_IN_SEPARATE_WINDOW",
+  "pullRequest": {
+    "number": 204,
+    "url": "https://github.com/lqb15122801713-png/philia-app/pull/204",
+    "state": "OPEN",
+    "merged": false,
+    "recordedAt": "2026-10-27T09:56:17+08:00"
+  }
+}
