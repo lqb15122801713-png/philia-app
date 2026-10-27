@@ -3,6 +3,7 @@
 - 窗：`PD-107-client-notif-qa-fixture`
 - WT：`E:\KIMI code\pd107-client-notif-qa-fixture`
 - 分支：`feat/pd107-client-notif-qa-fixture`
+- PR：#204 https://github.com/lqb15122801713-png/philia-app/pull/204（OPEN，只开不合）
 - 基线：`e890fa401f6bf649109379c198254905f7126cdd`／DEPLOY `20261027001820`
 - mig：**0147 故意空留**；零 schema；未占 0117／0119／0122–0146；未抢 PD-106
 - 状态：本地候选证据齐，候交付 HIT；现网 `PENDING_MERGE_DEPLOY`，不写验收通过，不正式销缺陷。
