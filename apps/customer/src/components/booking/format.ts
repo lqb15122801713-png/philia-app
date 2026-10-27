@@ -78,6 +78,9 @@ export const PAYMENT_MODE_META: Record<string, { label: string; hint: string }> 
 export const paymentModeLabel = (m: string | null) =>
   (m && PAYMENT_MODE_META[m]?.label) || '到店付';
 
+export const groomingServiceLabel = (name: string) =>
+  /美容|造型|修毛|剪/.test(name) ? '美容' : '洗澡';
+
 export const APPT_TYPE_LABEL: Record<string, string> = {
   grooming: '洗护美容',
   boarding: '寄养',
