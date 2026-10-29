@@ -1,0 +1,55 @@
+{
+  "window": "PD-111-merchant-daily-close-revert",
+  "sourceRun": "candidate-hit-green.json",
+  "sourceRunSha256": "0499330f5412ced51ebdbdf6139e2826bd55919a7fc94d987bd929a743478870",
+  "reuseAcrossRuns": false,
+  "afterAbortHashesIdenticalAcrossPaths": true,
+  "note": "全部帧来自同一次 candidate-hit 新跑；仅比较开闸与对应撤后，不把其他轮次或其他场景帧错对。三撤后像素相同是同一可编辑稳态的预期结果；各路独立 acted、nativeClose、reopen 与摄帧时间戳在 candidate-hit-green.json 中另证，非同文件复用。",
+  "pairs": [
+    {
+      "path": "cancel",
+      "open": "eq-03-dialog-open-nofill.png",
+      "afterAbort": "eq-04-abort-cancel.png",
+      "openSha256": "f648f53617992599d5be65009fa7db4f535d752cc475d8acbc564f85d3b17ef1",
+      "afterAbortSha256": "c00e5cc3c67cb01dcd5fc2d8131d76cd977e0352d5ef5b4641d71dc9d444a596",
+      "distinctHashes": true,
+      "meanAbsRgb": 44.9812,
+      "semanticDiff": true,
+      "afterCapturedAt": "2026-10-29T11:56:03.403197+00:00"
+    },
+    {
+      "path": "esc-trusted",
+      "open": "eq-03-dialog-open-nofill.png",
+      "afterAbort": "eq-05-abort-esc-trusted.png",
+      "openSha256": "f648f53617992599d5be65009fa7db4f535d752cc475d8acbc564f85d3b17ef1",
+      "afterAbortSha256": "c00e5cc3c67cb01dcd5fc2d8131d76cd977e0352d5ef5b4641d71dc9d444a596",
+      "distinctHashes": true,
+      "meanAbsRgb": 44.9812,
+      "semanticDiff": true,
+      "afterCapturedAt": "2026-10-29T11:56:04.337205+00:00"
+    },
+    {
+      "path": "esc-synthetic",
+      "open": "eq-03-dialog-open-nofill.png",
+      "afterAbort": "eq-06-abort-esc-synthetic.png",
+      "openSha256": "f648f53617992599d5be65009fa7db4f535d752cc475d8acbc564f85d3b17ef1",
+      "afterAbortSha256": "c00e5cc3c67cb01dcd5fc2d8131d76cd977e0352d5ef5b4641d71dc9d444a596",
+      "distinctHashes": true,
+      "meanAbsRgb": 44.9812,
+      "semanticDiff": true,
+      "afterCapturedAt": "2026-10-29T11:56:05.254445+00:00"
+    },
+    {
+      "path": "overlay",
+      "open": "eq-03-dialog-open-nofill.png",
+      "afterAbort": "eq-07-abort-overlay.png",
+      "openSha256": "f648f53617992599d5be65009fa7db4f535d752cc475d8acbc564f85d3b17ef1",
+      "afterAbortSha256": "c00e5cc3c67cb01dcd5fc2d8131d76cd977e0352d5ef5b4641d71dc9d444a596",
+      "distinctHashes": true,
+      "meanAbsRgb": 44.9812,
+      "semanticDiff": true,
+      "afterCapturedAt": "2026-10-29T11:56:06.171382+00:00"
+    }
+  ],
+  "allSemanticDiff": true
+}

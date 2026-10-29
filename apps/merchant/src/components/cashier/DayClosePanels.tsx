@@ -36,9 +36,11 @@
  *   即 actualInput=null→实点默认同步账面→无 FILL 直点必出确认 dialog；abort 仅
  *   setPendingDayClose(null)，tender 缓存不回退，同页再点必重开；Esc 双路（原生
  *   cancel＋window keydown 兜底）与遮罩／取消主交互一行未动；
+ * PD-111：取消／Esc／遮罩统一先走原生 dialog.close()，close 事件再归空
+ *   pendingDayClose；撤后表单保持可编辑、可重开，三路均可观测同一关闭语义。
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { cc } from '@/copy/cashier'
@@ -487,9 +489,14 @@ export function DayCloseConfirmDialog({
   onClose: () => void
 }) {
   const layerRef = useRef<HTMLDialogElement | null>(null)
+  const abort = useCallback(() => {
+    const el = layerRef.current
+    if (el?.open) el.close()
+    else onClose()
+  }, [onClose])
 
   /* PD-86：原生 <dialog> showModal() 顶层模态——input 就绪且层已挂载时开；
-     关=React 状态归 null 直接卸载（onCancel preventDefault 后同走此路，无双开缝） */
+     PD-111：三撤统一走原生 close，close 事件再归空 input，避免绕过平台关闭态直接卸载。 */
   useEffect(() => {
     const el = layerRef.current
     if (!input || !el || el.open) return
@@ -500,16 +507,19 @@ export function DayCloseConfirmDialog({
     }
   }, [input])
 
-  /* Esc=中止双路：原生 cancel 事件（可信键路，onCancel preventDefault 改走 React
-     状态关）＋ window keydown 兜底（合成事件路）；hooks 序先于 null 早退 */
+  /* Esc=中止双路：原生 cancel＋window keydown 兜底；两路都汇入 abort，
+     阻止按键默认行为避免可信 Esc 重复关闭；hooks 序先于 null 早退。 */
   useEffect(() => {
     if (!input) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        abort()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [input, onClose])
+  }, [input, abort])
 
   if (!input) return null
   const diff = !blind && book !== null ? input.actualCashFen - book : null
@@ -520,14 +530,14 @@ export function DayCloseConfirmDialog({
       aria-label={cc('cashier.dayCloseConfirmTitle')}
       onCancel={(e) => {
         e.preventDefault()
-        onClose()
+        abort()
       }}
-      onClose={() => onClose()}
+      onClose={onClose}
       className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center overflow-visible border-0 bg-transparent p-4 backdrop:bg-transparent"
     >
       <div
         className="absolute inset-0 bg-[rgba(44,40,34,.28)]"
-        onClick={onClose}
+        onClick={abort}
         aria-hidden
         data-testid="dayclose-confirm-overlay"
       />
@@ -541,7 +551,7 @@ export function DayCloseConfirmDialog({
           <h3 className="text-title font-semibold">{cc('cashier.dayCloseConfirmTitle')}</h3>
           <button
             type="button"
-            onClick={onClose}
+            onClick={abort}
             aria-label="关闭"
             className="rounded-full p-1 text-ink-placeholder transition-colors hover:bg-[rgba(44,40,34,.06)]"
           >
@@ -595,7 +605,7 @@ export function DayCloseConfirmDialog({
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 px-5 pb-4 pt-2">
-          <SheetBtn data-testid="dayclose-confirm-cancel" onClick={onClose}>
+          <SheetBtn data-testid="dayclose-confirm-cancel" onClick={abort}>
             取消
           </SheetBtn>
           <SheetBtn
