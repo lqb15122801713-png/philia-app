@@ -25,6 +25,7 @@ import ActivePetSwitcher from '@/components/pets/ActivePetSwitcher'
 import { pc } from '@/copy/pets'
 import { sl } from '@/copy/serviceloop'
 import { readLastBooking } from '@/lib/bookingPrefill'
+import { customerPetName } from '@/lib/customerPresentation'
 import { upsertPetExp2 } from '@/lib/exp2Api'
 import { mc } from '../components/member/copy'
 import {
@@ -778,23 +779,23 @@ export default function PetsPage() {
                 {pet.avatarUrl ? (
                   <img
                     src={pet.avatarUrl}
-                    alt={pet.name}
+                    alt={customerPetName(pet.name)}
                     className="h-14 w-14 rounded-full object-cover ring-1 ring-line-ring"
                   />
                 ) : (
                   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
-                    <span className="u1-serif text-title-lg font-semibold text-ink">{pet.name.slice(0, 1)}</span>
+                    <span className="u1-serif text-title-lg font-semibold text-ink">{customerPetName(pet.name).slice(0, 1)}</span>
                   </span>
                 )}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-title">{pet.name}</p>
+                  <p className="truncate text-title">{customerPetName(pet.name)}</p>
                   {/* U4-D3：试样 11「编辑 ›」安静文字链（11px 墨 60%），铅笔圆钮退役 */}
                   <button
                     type="button"
                     onClick={() => openEdit(pet)}
-                    aria-label={`${pc('pets.editTitle')} ${pet.name}`}
+                    aria-label={`${pc('pets.editTitle')} ${customerPetName(pet.name)}`}
                     className="shrink-0 text-caption-xs text-ink-secondary"
                   >
                     <CK k="pets.editEntry">{pc('pets.editEntry')}</CK>

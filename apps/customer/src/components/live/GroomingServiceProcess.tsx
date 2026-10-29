@@ -8,6 +8,7 @@ import ServiceProcessHeader from './ServiceProcessHeader'
 import ServiceProcessTimeline from './ServiceProcessTimeline'
 import { buildServiceProcessModel, type ServiceProcessModel, type ServiceProcessStep } from './serviceProcessModel'
 import type { ServiceProcessPreviewAppointment, ServiceProcessPreviewState } from './serviceProcessPreview'
+import { customerPetName } from '@/lib/customerPresentation'
 
 export interface ServiceProcessLayoutBlock {
   blockKey: string
@@ -124,15 +125,16 @@ export default function GroomingServiceProcess({
   const completed = model.viewState === 'completed'
   const notStarted = model.viewState === 'not-started'
   const initialExpandedKey = previewState === 'expanded' ? 'wash' : previewState === 'step-empty' ? 'styling' : undefined
+  const displayPetName = customerPetName(petName)
   const sections: Record<string, ReactNode> = {
     'apptLive.header': (
       <>
         <header className="relative mb-3 flex h-10 items-center justify-center">
           <ProcessBackButton fallbackPath={fallbackPath} />
-          <h1 className="text-body font-semibold">{petName} · 洗护过程</h1>
+          <h1 className="text-body font-semibold">{displayPetName} · 洗护过程</h1>
         </header>
         <ServiceProcessHeader
-          petName={petName}
+          petName={displayPetName}
           serviceName={serviceName}
           meta={summaryMeta(appointment, storeName, model, previewState)}
           model={model}

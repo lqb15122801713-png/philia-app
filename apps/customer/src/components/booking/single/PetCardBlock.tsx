@@ -16,6 +16,7 @@ import { bkc } from '@/copy/booking';
 import PetPickerFlat from './PetPickerFlat';
 import BottomSheet from './BottomSheet';
 import type { PetItem } from '../types';
+import { customerPetName } from '@/lib/customerPresentation';
 
 const SPECIES_LABEL: Record<string, string> = { dog: '狗狗', cat: '猫咪', other: '其他' };
 
@@ -94,7 +95,7 @@ export default function PetCardBlock({
         {pet ? (
           <>
             {pet.avatarUrl ? (
-              <img src={pet.avatarUrl} alt={pet.name} className="h-12 w-12 rounded-full object-cover" />
+              <img src={pet.avatarUrl} alt={customerPetName(pet.name)} className="h-12 w-12 rounded-full object-cover" />
             ) : (
               /* U1-D：彩色 emoji 改 VI 线图标（全域禁彩色图标） */
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
@@ -103,7 +104,7 @@ export default function PetCardBlock({
             )}
             <span className="flex-1">
               <span className="block text-body font-semibold">
-                {pet.name}
+                {customerPetName(pet.name)}
                 <span className="ml-2 text-caption font-normal text-ink-secondary">
                   {SPECIES_LABEL[pet.species] ?? pet.species}
                   {pet.breed ? ` · ${pet.breed}` : ''}

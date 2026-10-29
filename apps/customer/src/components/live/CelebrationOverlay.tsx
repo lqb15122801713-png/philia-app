@@ -10,6 +10,7 @@
  */
 
 import { CelebrationPop } from '@philia/shared'
+import { customerPetName } from '@/lib/customerPresentation'
 
 export default function CelebrationOverlay({
   visible,
@@ -25,7 +26,7 @@ export default function CelebrationOverlay({
         <CelebrationPop size={64} />
         <p className="mt-4 text-title">服务完成</p>
         <p className="mt-1 text-center text-caption text-ink-secondary">
-          {petName ?? '宝贝'}已经美美的啦，记得给个好评哦
+          {customerPetName(petName, '宝贝')}已经美美的啦，记得给个好评哦
         </p>
       </div>
     </div>

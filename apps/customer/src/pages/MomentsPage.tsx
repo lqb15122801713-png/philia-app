@@ -34,7 +34,7 @@ import PageHeader from '@/components/PageHeader'
 import type { PhotoWallPhoto } from '@philia/shared'
 import { EmptyState, ErrorState, LoadingBlock, formatDateCn } from '../components/home/common'
 import { readLastBooking } from '@/lib/bookingPrefill'
-import { isQaFixturePetName } from '@/lib/customerPresentation'
+import { customerPetName, isQaFixturePetName } from '@/lib/customerPresentation'
 import { mc } from '../components/member/copy'
 import { sl } from '@/copy/serviceloop'
 
@@ -66,7 +66,7 @@ function AlbumCard({ album }: { album: Album }) {
   const [copied, setCopied] = useState(false)
 
   const share = async () => {
-    const title = sl('album.shareTitle', { pet: album.petName ?? sl('album.petFallback') })
+    const title = sl('album.shareTitle', { pet: customerPetName(album.petName, sl('album.petFallback')) })
     const text = sl('album.shareText', {
       date: album.doneAt ? formatDateCn(album.doneAt) : '',
       service: album.serviceName ?? sl('album.serviceFallback'),
@@ -109,7 +109,7 @@ function AlbumCard({ album }: { album: Album }) {
       >
         <img
           src={album.cover.thumbUrl ?? album.cover.url}
-          alt={sl('album.photoAlt', { pet: album.petName ?? sl('album.petFallback') })}
+          alt={sl('album.photoAlt', { pet: customerPetName(album.petName, sl('album.petFallback')) })}
           className="w-full object-cover"
           loading="lazy"
         />
@@ -120,7 +120,7 @@ function AlbumCard({ album }: { album: Album }) {
           />
         </span>
         <span className="tt">
-          {album.petName ?? sl('album.petFallback')} · {album.serviceName ?? sl('album.serviceFallback')}
+          {customerPetName(album.petName, sl('album.petFallback'))} · {album.serviceName ?? sl('album.serviceFallback')}
         </span>
         <span className="src">
           {inService ? (

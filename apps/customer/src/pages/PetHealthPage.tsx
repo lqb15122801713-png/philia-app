@@ -31,6 +31,7 @@ import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient, useToast, typ
 import PageHeader from '@/components/PageHeader'
 import { hc } from '@/copy/health'
 import { readLastBooking } from '@/lib/bookingPrefill'
+import { customerPetName } from '@/lib/customerPresentation'
 import { mc } from '../components/member/copy'
 import {
   EmptyState,
@@ -564,7 +565,7 @@ export default function PetHealthPage() {
           title={
             pet ? (
               <>
-                {pet.name} · <CK k="health.title">{hc('health.title')}</CK>
+                {customerPetName(pet.name)} · <CK k="health.title">{hc('health.title')}</CK>
               </>
             ) : (
               <CK k="health.title">{hc('health.title')}</CK>

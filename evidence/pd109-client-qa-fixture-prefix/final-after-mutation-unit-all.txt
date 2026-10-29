@@ -1,0 +1,140 @@
+TAP version 13
+# Subtest: PD-67：预约时段图例只保留一处现行口径
+ok 1 - PD-67：预约时段图例只保留一处现行口径
+  ---
+  duration_ms: 5.5338
+  ...
+# Subtest: PD-64 M-1：距开场 <1h 的 slot 不可进入已选态；409 后底栏无已选
+ok 2 - PD-64 M-1：距开场 <1h 的 slot 不可进入已选态；409 后底栏无已选
+  ---
+  duration_ms: 1.1648
+  ...
+# Subtest: PD-97：已有商品 SVG 必须渲染真图，不得换成待换占位
+ok 3 - PD-97：已有商品 SVG 必须渲染真图，不得换成待换占位
+  ---
+  duration_ms: 2.7129
+  ...
+# Subtest: PD-97：商品真缺图时保留诚实替代说明，不得输出待换
+ok 4 - PD-97：商品真缺图时保留诚实替代说明，不得输出待换
+  ---
+  duration_ms: 0.4066
+  ...
+# Subtest: PD-109：共享选宠列表收敛宠名
+ok 5 - PD-109：共享选宠列表收敛宠名
+  ---
+  duration_ms: 6.1443
+  ...
+# Subtest: PD-109：共享宠物卡收敛宠名
+ok 6 - PD-109：共享宠物卡收敛宠名
+  ---
+  duration_ms: 1.2082
+  ...
+# Subtest: PD-109：寄养疫苗提示收敛宠名
+ok 7 - PD-109：寄养疫苗提示收敛宠名
+  ---
+  duration_ms: 1.0372
+  ...
+# Subtest: PD-109：服务过程摘要收敛宠名
+ok 8 - PD-109：服务过程摘要收敛宠名
+  ---
+  duration_ms: 0.4014
+  ...
+# Subtest: PD-109：服务完成提示收敛宠名
+ok 9 - PD-109：服务完成提示收敛宠名
+  ---
+  duration_ms: 0.5983
+  ...
+# Subtest: PD-109：再次预约摘要收敛宠名
+ok 10 - PD-109：再次预约摘要收敛宠名
+  ---
+  duration_ms: 0.8961
+  ...
+# Subtest: PD-109：首页服务中面板收敛宠名
+ok 11 - PD-109：首页服务中面板收敛宠名
+  ---
+  duration_ms: 0.5377
+  ...
+# Subtest: PD-109：完整洗护过程收敛宠名
+ok 12 - PD-109：完整洗护过程收敛宠名
+  ---
+  duration_ms: 2.962
+  ...
+# Subtest: PD-109：客读宠名去除裸前缀与括号夹具前缀
+ok 13 - PD-109：客读宠名去除裸前缀与括号夹具前缀
+  ---
+  duration_ms: 0.9914
+  ...
+# Subtest: PD-109：普通宠名原样保留
+ok 14 - PD-109：普通宠名原样保留
+  ---
+  duration_ms: 0.1393
+  ...
+# Subtest: PD-109：空宠名使用客读回退
+ok 15 - PD-109：空宠名使用客读回退
+  ---
+  duration_ms: 0.0919
+  ...
+# Subtest: PD-107：消息中心历史服务通知去 QA 夹具名并保留服务进度
+ok 16 - PD-107：消息中心历史服务通知去 QA 夹具名并保留服务进度
+  ---
+  duration_ms: 12.9601
+  ...
+# Subtest: PD-99：QA 夹具相册不成册，普通真实相册仍保留
+ok 17 - PD-99：QA 夹具相册不成册，普通真实相册仍保留
+  ---
+  duration_ms: 9.1267
+  ...
+# Subtest: PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+ok 18 - PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+  ---
+  duration_ms: 1.8722
+  ...
+# Subtest: PD-99：首页服务中条同源收敛 QA 夹具名
+ok 19 - PD-99：首页服务中条同源收敛 QA 夹具名
+  ---
+  duration_ms: 3.837
+  ...
+# Subtest: PD-99：预约列表同源收敛 QA 夹具名
+ok 20 - PD-99：预约列表同源收敛 QA 夹具名
+  ---
+  duration_ms: 1.9025
+  ...
+# Subtest: PD-99：预约详情与取消入口同源收敛 QA 夹具名
+ok 21 - PD-99：预约详情与取消入口同源收敛 QA 夹具名
+  ---
+  duration_ms: 5.5505
+  ...
+# Subtest: PD-99 BLOCK1：完成态详情 QA 相册显示诚实空态
+ok 22 - PD-99 BLOCK1：完成态详情 QA 相册显示诚实空态
+  ---
+  duration_ms: 2.1339
+  ...
+# Subtest: PD-99 BLOCK1：完成态详情保留普通真实服务照片
+ok 23 - PD-99 BLOCK1：完成态详情保留普通真实服务照片
+  ---
+  duration_ms: 1.906
+  ...
+# Subtest: PD-109：默认洗护预约 pill 使用统一客读宠名
+ok 24 - PD-109：默认洗护预约 pill 使用统一客读宠名
+  ---
+  duration_ms: 1.8214
+  ...
+# Subtest: PD-109：预约成功回显使用统一客读宠名
+ok 25 - PD-109：预约成功回显使用统一客读宠名
+  ---
+  duration_ms: 0.9944
+  ...
+# Subtest: PD-109：共享宠物切换器使用统一客读宠名
+ok 26 - PD-109：共享宠物切换器使用统一客读宠名
+  ---
+  duration_ms: 0.7069
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 699.4793

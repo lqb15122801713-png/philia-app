@@ -21,6 +21,7 @@
 
 import { Link } from 'react-router-dom';
 import { fmtHM } from '@/components/booking/format';
+import { customerPetName } from '@/lib/customerPresentation';
 
 export interface InServicePanelProps {
   appointmentId: string;
@@ -68,7 +69,7 @@ export default function InServicePanel({
       {/* r1：标题 + SSE 真值状态点 */}
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="u1-serif text-title" data-testid="home-inservice-step">
-          {petName} · 洗护中
+          {customerPetName(petName)} · 洗护中
         </h2>
         <span
           data-testid="home-inservice-sync"

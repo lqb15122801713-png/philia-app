@@ -1,0 +1,193 @@
+TAP version 13
+# Subtest: PD-109：共享选宠列表收敛宠名
+not ok 1 - PD-109：共享选宠列表收敛宠名
+  ---
+  duration_ms: 7.868
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:2098'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<div class="space-y-2"><button type="button" class="flex min-h-[44px] w-full items-center gap-3 rounded-card border p-4 text-left transition active:scale-[0.99] border-[1.5px] border-[#5C5040]"><span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#F3EEE4]" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paw-print h-5 w-5 text-ink" aria-hidden="true"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="20" cy="16" r="2"></circle><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"></path></svg></span><span class="flex-1"><span class="block text-body font-semibold">QA夹具豆豆</span><span class="block text-caption text-ink-secondary">狗狗 · 比熊 · 8kg</span></span><span class="flex h-5 w-5 items-center justify-center rounded-full bg-[#5C5040]"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-card" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></button></div>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="space-y-2"><button type="button" class="flex min-h-[44px] w-full items-center gap-3 rounded-card border p-4 text-left transition active:scale-[0.99] border-[1.5px] border-[#5C5040]"><span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#F3EEE4]" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paw-print h-5 w-5 text-ink" aria-hidden="true"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="20" cy="16" r="2"></circle><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"></path></svg></span><span class="flex-1"><span class="block text-body font-semibold">QA夹具豆豆</span><span class="block text-caption text-ink-secondary">狗狗 · 比熊 · 8kg</span></span><span class="flex h-5 w-5 items-center justify-center rounded-full bg-[#5C5040]"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-card" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></button></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:49:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: PD-109：共享宠物卡收敛宠名
+not ok 2 - PD-109：共享宠物卡收敛宠名
+  ---
+  duration_ms: 1.1418
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:2298'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<button type="button" data-testid="gs-pet-card" class="flex w-full items-center gap-3 py-2 text-left transition active:scale-[0.99] "><span class="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paw-print h-6 w-6 text-ink" aria-hidden="true"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="20" cy="16" r="2"></circle><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"></path></svg></span><span class="flex-1"><span class="block text-body font-semibold">QA夹具豆豆<span class="ml-2 text-caption font-normal text-ink-secondary">狗狗 · 比熊</span></span><span class="mt-0.5 block font-number text-v2-trace text-ink-secondary">8kg · 比熊</span></span><span class="border-b border-[#A89779] pb-px text-caption font-medium text-ink">更换 ▸</span></button>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<button type="button" data-testid="gs-pet-card" class="flex w-full items-center gap-3 py-2 text-left transition active:scale-[0.99] "><span class="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paw-print h-6 w-6 text-ink" aria-hidden="true"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="20" cy="16" r="2"></circle><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"></path></svg></span><span class="flex-1"><span class="block text-body font-semibold">QA夹具豆豆<span class="ml-2 text-caption font-normal text-ink-secondary">狗狗 · 比熊</span></span><span class="mt-0.5 block font-number text-v2-trace text-ink-secondary">8kg · 比熊</span></span><span class="border-b border-[#A89779] pb-px text-caption font-medium text-ink">更换 ▸</span></button>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:53:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-109：寄养疫苗提示收敛宠名
+not ok 3 - PD-109：寄养疫苗提示收敛宠名
+  ---
+  duration_ms: 1.0512
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:2480'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<div class="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky" data-testid="bs-confirm-bar"><div class="mx-auto max-w-lg bg-gradient-to-b from-canvas/0 via-canvas to-canvas px-4 pb-3 pt-3"><a data-testid="bs-vaccine-bar" class="pointer-events-auto mb-2 flex items-center justify-between rounded-control bg-danger-light px-4 py-2.5 text-body text-danger-deep" href="/philia/pets"><span>QA夹具豆豆还没有疫苗有效期记录，请先补录</span><span class="ml-2 shrink-0 font-medium">▸</span></a><button type="button" disabled="" data-testid="bs-confirm" data-state="disabled" data-block-reason="vaccine" class="pointer-events-auto h-12 w-full rounded-[18px] text-body font-semibold transition-transform duration-120 ease-philia-spring cursor-not-allowed bg-line text-ink-placeholder shadow-none">确认预约 · 共 1 晚 ¥1</button><p data-testid="bs-confirm-assurance" class="mt-2 text-center text-caption-xs text-ink-secondary">每日照看日志 · 照片记录</p></div></div>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky" data-testid="bs-confirm-bar"><div class="mx-auto max-w-lg bg-gradient-to-b from-canvas/0 via-canvas to-canvas px-4 pb-3 pt-3"><a data-testid="bs-vaccine-bar" class="pointer-events-auto mb-2 flex items-center justify-between rounded-control bg-danger-light px-4 py-2.5 text-body text-danger-deep" href="/philia/pets"><span>QA夹具豆豆还没有疫苗有效期记录，请先补录</span><span class="ml-2 shrink-0 font-medium">▸</span></a><button type="button" disabled="" data-testid="bs-confirm" data-state="disabled" data-block-reason="vaccine" class="pointer-events-auto h-12 w-full rounded-[18px] text-body font-semibold transition-transform duration-120 ease-philia-spring cursor-not-allowed bg-line text-ink-placeholder shadow-none">确认预约 · 共 1 晚 ¥1</button><p data-testid="bs-confirm-assurance" class="mt-2 text-center text-caption-xs text-ink-secondary">每日照看日志 · 照片记录</p></div></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:57:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-109：服务过程摘要收敛宠名
+not ok 4 - PD-109：服务过程摘要收敛宠名
+  ---
+  duration_ms: 0.4471
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:2771'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<header class="u1-card flex items-center gap-3.5 px-4 py-3.5"><span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oak-light ring-[1.5px] ring-brand-primary ring-offset-2"><span class="u1-serif text-title-lg font-semibold text-ink">Q</span></span><div class="min-w-0 flex-1"><p class="truncate text-title font-extrabold">QA夹具豆豆 · 洗护</p></div></header>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<header class="u1-card flex items-center gap-3.5 px-4 py-3.5"><span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oak-light ring-[1.5px] ring-brand-primary ring-offset-2"><span class="u1-serif text-title-lg font-semibold text-ink">Q</span></span><div class="min-w-0 flex-1"><p class="truncate text-title font-extrabold">QA夹具豆豆 · 洗护</p></div></header>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:61:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-109：服务完成提示收敛宠名
+not ok 5 - PD-109：服务完成提示收敛宠名
+  ---
+  duration_ms: 1.2436
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:2991'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<div class="fixed inset-0 z-modal flex items-center justify-center bg-ink/35 px-8"><div class="flex w-full max-w-xs flex-col items-center rounded-card bg-card px-6 py-8 shadow-elevated"><style>@keyframes philia-celebrate-pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}</style><span aria-hidden="true" class="flex items-center justify-center rounded-full bg-ink shadow-elevated" style="width:64px;height:64px;animation:philia-celebrate-pop .55s cubic-bezier(0.34,1.56,0.64,1) both"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-brand-primary" aria-hidden="true" style="width:32px;height:32px"><path d="M20 6 9 17l-5-5"></path></svg></span><p class="mt-4 text-title">服务完成</p><p class="mt-1 text-center text-caption text-ink-secondary">QA夹具豆豆已经美美的啦，记得给个好评哦</p></div></div>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="fixed inset-0 z-modal flex items-center justify-center bg-ink/35 px-8"><div class="flex w-full max-w-xs flex-col items-center rounded-card bg-card px-6 py-8 shadow-elevated"><style>@keyframes philia-celebrate-pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}</style><span aria-hidden="true" class="flex items-center justify-center rounded-full bg-ink shadow-elevated" style="width:64px;height:64px;animation:philia-celebrate-pop .55s cubic-bezier(0.34,1.56,0.64,1) both"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check text-brand-primary" aria-hidden="true" style="width:32px;height:32px"><path d="M20 6 9 17l-5-5"></path></svg></span><p class="mt-4 text-title">服务完成</p><p class="mt-1 text-center text-caption text-ink-secondary">QA夹具豆豆已经美美的啦，记得给个好评哦</p></div></div>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:65:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-109：再次预约摘要收敛宠名
+not ok 6 - PD-109：再次预约摘要收敛宠名
+  ---
+  duration_ms: 1.4183
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:3191'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<section data-testid="home-rebook-panel" class="rounded-card bg-card p-4 shadow-card" aria-label="上次预约配置"><div class="flex items-baseline justify-between"><h2 class="text-title">上次预约配置</h2><a data-testid="home-rebook-adjust" class="border-b border-[#A89779] pb-px text-caption font-medium text-ink" href="/booking/grooming?storeId=store-1&amp;serviceId=service-1&amp;petId=pet-1">调整服务或时间 ›</a></div><dl class="mt-2 border-t border-[rgba(44,40,34,.10)]"><div class="flex items-baseline justify-between gap-3 py-2"><dt class="shrink-0 text-caption text-ink-secondary">宠物</dt><dd class="truncate text-body font-semibold" data-testid="home-rebook-pet">QA夹具豆豆</dd></div><div class="flex items-baseline justify-between gap-3 py-2 border-t border-[rgba(44,40,34,.10)]"><dt class="shrink-0 text-caption text-ink-secondary">服务</dt><dd class="truncate text-body font-semibold" data-testid="home-rebook-service">洗护<span class="ml-1.5 text-caption font-normal text-ink-secondary">约 60 分钟</span></dd></div><div class="flex items-baseline justify-between gap-3 py-2 border-t border-[rgba(44,40,34,.10)]"><dt class="shrink-0 text-caption text-ink-secondary">门店</dt><dd class="truncate text-body font-semibold" data-testid="home-rebook-store">门店</dd></div><div class="flex items-baseline justify-between gap-3 py-2 border-t border-[rgba(44,40,34,.10)]"><dt class="shrink-0 text-caption text-ink-secondary">时间</dt><dd class="truncate text-body font-semibold font-number" data-testid="home-rebook-slot" data-slot-start="1793340000000">明天 14:00<span class="ml-1.5 text-caption font-normal text-ink-secondary">最早可约</span></dd></div></dl><p class="mt-1 text-caption text-ink-secondary" data-testid="home-rebook-payment">收款方式：到店付</p><a data-testid="home-rebook-cta" class="mt-3 flex h-12 w-full items-center justify-center rounded-card bg-[#F2DC8C] text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92" href="/appointments">查看我的预约 ›</a></section>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<section data-testid="home-rebook-panel" class="rounded-card bg-card p-4 shadow-card" aria-label="上次预约配置"><div class="flex items-baseline justify-between"><h2 class="text-title">上次预约配置</h2><a data-testid="home-rebook-adjust" class="border-b border-[#A89779] pb-px text-caption font-medium text-ink" href="/booking/grooming?storeId=store-1&amp;serviceId=service-1&amp;petId=pet-1">调整服务或时间 ›</a></div><dl class="mt-2 border-t border-[rgba(44,40,34,.10)]"><div class="flex items-baseline justify-between gap-3 py-2"><dt class="shrink-0 text-caption text-ink-secondary">宠物</dt><dd class="truncate text-body font-semibold" data-testid="home-rebook-pet">QA夹具豆豆</dd></div><div class="flex items-baseline justify-between gap-3 py-2 border-t border-[rgba(44,40,34,.10)]"><dt class="shrink-0 text-caption text-ink-secondary">服务</dt><dd class="truncate text-body font-semibold" data-testid="home-rebook-service">洗护<span class="ml-1.5 text-caption font-normal text-ink-secondary">约 60 分钟</span></dd></div><div class="flex items-baseline justify-between gap-3 py-2 border-t border-[rgba(44,40,34,.10)]"><dt class="shrink-0 text-caption text-ink-secondary">门店</dt><dd class="truncate text-body font-semibold" data-testid="home-rebook-store">门店</dd></div><div class="flex items-baseline justify-between gap-3 py-2 border-t border-[rgba(44,40,34,.10)]"><dt class="shrink-0 text-caption text-ink-secondary">时间</dt><dd class="truncate text-body font-semibold font-number" data-testid="home-rebook-slot" data-slot-start="1793340000000">明天 14:00<span class="ml-1.5 text-caption font-normal text-ink-secondary">最早可约</span></dd></div></dl><p class="mt-1 text-caption text-ink-secondary" data-testid="home-rebook-payment">收款方式：到店付</p><a data-testid="home-rebook-cta" class="mt-3 flex h-12 w-full items-center justify-center rounded-card bg-[#F2DC8C] text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92" href="/appointments">查看我的预约 ›</a></section>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:69:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: PD-109：首页服务中面板收敛宠名
+not ok 7 - PD-109：首页服务中面板收敛宠名
+  ---
+  duration_ms: 0.6083
+  location: 'E:\\KIMI code\\pd109-client-qa-fixture-prefix\\apps\\customer\\src\\components\\petDisplayName.test.tsx:1:3577'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /QA夹具/. Input:
+
+    '<section data-testid="home-inservice-panel" class="u1-card p-4" aria-label="服务进行中"><div class="flex items-baseline justify-between gap-3"><h2 class="u1-serif text-title" data-testid="home-inservice-step">QA夹具豆豆 · 洗护中</h2><span data-testid="home-inservice-sync" data-connected="false" class="flex shrink-0 items-center gap-[5px] text-caption-xs leading-4 text-ink-secondary"><i class="h-1.5 w-1.5 rounded-full bg-ink/30" aria-hidden="true"></i>重连中</span></div><div class="mb-[9px] mt-3 h-0.5 w-full overflow-hidden rounded-full bg-line-ring" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" data-testid="home-inservice-progress" data-step-order="" data-done-count="0"><div class="h-full rounded-full bg-[#F2DC8C] transition-[width] duration-200" style="width:0%"></div></div><p class="text-caption-xs leading-4 text-ink-secondary">共 6 步 · 等待开工</p><div class="mt-[11px] flex items-center gap-1.5"><a data-testid="home-inservice-live" class="ml-auto shrink-0 text-caption-xs font-bold leading-4 text-ink" href="/appointments/appt-1/live">查看全程 ›</a></div></section>'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<section data-testid="home-inservice-panel" class="u1-card p-4" aria-label="服务进行中"><div class="flex items-baseline justify-between gap-3"><h2 class="u1-serif text-title" data-testid="home-inservice-step">QA夹具豆豆 · 洗护中</h2><span data-testid="home-inservice-sync" data-connected="false" class="flex shrink-0 items-center gap-[5px] text-caption-xs leading-4 text-ink-secondary"><i class="h-1.5 w-1.5 rounded-full bg-ink/30" aria-hidden="true"></i>重连中</span></div><div class="mb-[9px] mt-3 h-0.5 w-full overflow-hidden rounded-full bg-line-ring" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" data-testid="home-inservice-progress" data-step-order="" data-done-count="0"><div class="h-full rounded-full bg-[#F2DC8C] transition-[width] duration-200" style="width:0%"></div></div><p class="text-caption-xs leading-4 text-ink-secondary">共 6 步 · 等待开工</p><div class="mt-[11px] flex items-center gap-1.5"><a data-testid="home-inservice-live" class="ml-auto shrink-0 text-caption-xs font-bold leading-4 text-ink" href="/appointments/appt-1/live">查看全程 ›</a></div></section>'
+  operator: 'doesNotMatch'
+  stack: |-
+    assertClean (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:45:10)
+    TestContext.<anonymous> (E:\KIMI code\pd109-client-qa-fixture-prefix\apps\customer\src\components\petDisplayName.test.tsx:73:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 0
+# fail 7
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 462.4435

@@ -10,6 +10,9 @@ import HomePage from './HomePage'
 import MomentsPage from './MomentsPage'
 import AppointmentsPage from './AppointmentsPage'
 import AppointmentDetailPage from './AppointmentDetailPage'
+import GroomingSinglePage from './GroomingSinglePage'
+import BookingSuccessPage from './BookingSuccessPage'
+import ActivePetSwitcher from '@/components/pets/ActivePetSwitcher'
 
 const testWindow = {
   location: new URL('http://test.local/'),
@@ -295,4 +298,49 @@ test('PD-99 BLOCK1：完成态详情保留普通真实服务照片', () => {
 
   assert.match(html, /data-block-key="apptDetail.album"/)
   assert.match(html, /src="\/real-service-after\.jpg"/)
+})
+
+const qaPets = [
+  { id: 'pet-1', name: 'QA夹具豆豆', species: 'dog', breed: '比熊', weightKg: 8, avatarUrl: null, vaccineValidUntil: null },
+  { id: 'pet-2', name: '团团', species: 'cat', breed: '英短', weightKg: 5, avatarUrl: null, vaccineValidUntil: null },
+]
+
+test('PD-109：默认洗护预约 pill 使用统一客读宠名', () => {
+  const html = renderAt('/booking/grooming', <GroomingSinglePage />, (queryClient) => {
+    queryClient.setQueryData(['auth', 'me'], { id: 'customer-1', nickname: '客户', roles: ['customer'] })
+    queryClient.setQueryData(['store', 'listNearby'], { stores: [] })
+    queryClient.setQueryData(['pet', 'list'], qaPets)
+    queryClient.setQueryData(['canvas', 'blocks'], { items: [] })
+  })
+
+  assert.match(html, /data-testid="u2-chip-pet"[^>]*title="豆豆"/)
+  assert.doesNotMatch(html, /QA夹具/)
+})
+
+test('PD-109：预约成功回显使用统一客读宠名', () => {
+  const current = appointment('qa-success', 'confirmed')
+  const detail = {
+    appointment: { ...current, note: null, medicalAuthJson: null },
+    pet: { id: 'pet-1', name: 'QA夹具豆豆', avatarUrl: null },
+    service: { id: 'service-1', name: '基础洗护（小型犬）' },
+    store: { id: 'store-1', name: '菲丽亚宠物·示例店' },
+  }
+  const html = renderAt('/booking/success?aid=qa-success', <BookingSuccessPage />, (queryClient) => {
+    queryClient.setQueryData(['appointment', 'get', 'qa-success'], detail)
+  })
+
+  assert.match(html, /已为豆豆锁定档期/)
+  assert.match(html, /豆豆 · 基础洗护（小型犬）/)
+  assert.doesNotMatch(html, /QA夹具/)
+})
+
+test('PD-109：共享宠物切换器使用统一客读宠名', () => {
+  const html = renderAt('/philia/pets', <ActivePetSwitcher />, (queryClient) => {
+    queryClient.setQueryData(['auth', 'me'], { id: 'customer-1', activePetId: 'pet-1', roles: ['customer'] })
+    queryClient.setQueryData(['pet', 'list'], qaPets)
+  })
+
+  assert.match(html, /data-testid="active-pet-switcher"/)
+  assert.match(html, /豆豆/)
+  assert.doesNotMatch(html, /QA夹具/)
 })

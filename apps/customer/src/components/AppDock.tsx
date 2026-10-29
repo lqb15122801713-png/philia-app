@@ -3,6 +3,7 @@ import { BookOpen, Calendar, CalendarCheck, Home, Phone, QrCode, Store, User, X 
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMe, usePhiliaClient } from '@philia/shared'
+import { customerPetName } from '@/lib/customerPresentation'
 
 export function PawMark({ className = '' }: { className?: string }) {
   return (
@@ -222,7 +223,7 @@ export default function AppDock() {
                 <CalendarCheck className="h-6 w-6 shrink-0 text-ink" strokeWidth={1.5} />
                 <span className="flex-1">
                   <span className="block text-body font-semibold">一键预约</span>
-                  <span className="block text-caption text-ink-secondary">{lastAppt ? `上次服务：${lastAppt.serviceName ?? '洗护'}${lastAppt.petName ? ` · ${lastAppt.petName}` : ''}` : '还没有历史预约，去挑一个服务开始吧'}</span>
+                  <span className="block text-caption text-ink-secondary">{lastAppt ? `上次服务：${lastAppt.serviceName ?? '洗护'}${lastAppt.petName ? ` · ${customerPetName(lastAppt.petName)}` : ''}` : '还没有历史预约，去挑一个服务开始吧'}</span>
                 </span>
                 <span className="text-ink-secondary" aria-hidden="true">›</span>
               </button>

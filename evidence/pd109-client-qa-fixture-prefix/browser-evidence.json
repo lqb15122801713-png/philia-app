@@ -1,0 +1,118 @@
+{
+  "schema": "pd109-client-qa-fixture-prefix-browser-v1",
+  "device": "responsive 390x844, deviceScaleFactor 2, mobile touch",
+  "baseline": {
+    "url": "http://120.53.102.45:7201/booking/grooming",
+    "textSnapshotId": "text-9ee88950-820c-4011-8882-dba03c1dfc2e",
+    "visualSnapshotId": "visual-492fe4f7-e4cf-447c-b857-51951ab6caeb",
+    "capturedAtEpochMs": 1793252017919,
+    "petPill": "QA夹具豆豆",
+    "screenshot": "baseline-live-booking-grooming.png",
+    "screenshotSha256": "b5c8b03b2a6db6de0cb86b56ee4e7726773398ecde0b19edaa3ce164d228d98e"
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7109",
+    "tipPackage": false,
+    "sameUpstreamReadonlyData": true,
+    "localhostPresentedAsLiveHIT": false,
+    "bookingGrooming": {
+      "url": "/booking/grooming",
+      "textSnapshotId": "text-16ba9881-a4d1-499b-a4e6-2d52432da0dc",
+      "visualSnapshotId": "visual-4bff51a8-2232-40d7-8898-6eca02b9c178",
+      "capturedAtEpochMs": 1793253935426,
+      "petPill": "豆豆",
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false,
+      "screenshot": "candidate-booking-grooming.png",
+      "screenshotSha256": "6694a74954e9e2338b374144b6c5c3d23b065452dff15856c181194601673d28"
+    },
+    "bookingPetSheet": {
+      "entry": "u2-chip-pet keyboard Enter after pointer click did not open the sheet",
+      "textSnapshotId": "text-86754c2e-c315-461f-845f-efd9ebfa960b",
+      "visualSnapshotId": "visual-294c02bc-65e7-4876-b29d-06477674d8e0",
+      "capturedAtEpochMs": 1793254058743,
+      "visiblePetName": "豆豆",
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false,
+      "screenshot": "candidate-pet-sheet.png",
+      "screenshotSha256": "eca7c6337e9f5e38b4f077a6b4d160a4b111f2e5b218a1a42e5af203e45f6a08"
+    },
+    "notificationsDirect": {
+      "textSnapshotId": "text-bf60c6f9-afb8-4616-a58b-e14c89b8031c",
+      "visualSnapshotId": "visual-e6a5389e-0c9d-4aae-af6b-bbe44af9e391",
+      "capturedAtEpochMs": 1793254136059,
+      "serviceItemsScanned": 17,
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false,
+      "samples": ["豆豆的预约时间已调整，请查看最新安排", "豆豆的预约已安排服务人员", "豆豆已到店，服务即将开始"],
+      "screenshot": "candidate-notifications-direct.png",
+      "screenshotSha256": "83e60b572c793a8856ab565710a03854c0035f4140429f02f93e6beb44a2ee9f",
+      "note": "fresh PD-109 capture; bytes match the PD-107 candidate image because the rendered UI is identical, not an old-frame REUSE"
+    },
+    "notificationsFromBell": {
+      "entry": "home link named 消息; keyboard Enter to /notifications",
+      "textSnapshotId": "text-48ad3e04-54cb-4d68-80ca-50977ad17784",
+      "capturedAtEpochMs": 1793254249746,
+      "serviceItemsScanned": 17,
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false
+    },
+    "notificationsFromMe": {
+      "entry": "me link 消息 ›; keyboard Enter to /notifications",
+      "textSnapshotId": "text-4bfd593c-01fc-4c5e-ac12-6ad7908f520f",
+      "capturedAtEpochMs": 1793254314518,
+      "serviceItemsScanned": 17,
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false
+    },
+    "appointmentsList": {
+      "textSnapshotId": "text-aaf0b479-79ed-4ff9-bf08-92fd349dbffb",
+      "capturedAtEpochMs": 1793254360055,
+      "qaFixturePrefixCount": 0,
+      "sample": "菲丽亚宠物·示例店 · 豆豆"
+    },
+    "appointmentDetail": {
+      "entry": "confirmed appointment link keyboard Enter",
+      "appointmentId": "01M5HFS6MVD5034YJV1RQXM2HK",
+      "textSnapshotId": "text-f56a86a9-cdd6-49fd-836a-14c8ac796322",
+      "capturedAtEpochMs": 1793254392428,
+      "petField": "宠物 豆豆",
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false,
+      "visualCapture": "PAGE_NOT_READY; DOM evidence captured; no claim of a screenshot"
+    },
+    "petsPage": {
+      "textSnapshotId": "text-54b98c84-8815-4676-9fa1-aea6331ee9ef",
+      "capturedAtEpochMs": 1793254433088,
+      "petName": "豆豆",
+      "qaFixturePrefixCount": 0,
+      "editOrCreateClicked": false
+    },
+    "activePetSheet": {
+      "entry": "全部宠物 keyboard Enter; no setActive selection made",
+      "textSnapshotId": "text-43ca4c38-5fed-44a8-95b3-3c40bb677d96",
+      "capturedAtEpochMs": 1793254489036,
+      "visiblePetName": "豆豆",
+      "qaFixturePrefixCount": 0,
+      "scanTruncated": false,
+      "visualCapture": "PAGE_NOT_READY; DOM evidence captured; no claim of a screenshot"
+    }
+  },
+  "network": {
+    "log": "preview.txt",
+    "readQueries": "pet.list, appointment.listMine, appointment.get, push.listNotifications and canvas/store queries returned 200",
+    "blockedAutomaticMutations": ["POST /trpc/membership.myCardToken = 405 before upstream", "POST /trpc/push.subscribe = 405 before upstream"],
+    "bookingCreateOrPaymentCalled": false
+  },
+  "boundaries": {
+    "forbiddenFixture01M5EQVFTouched": false,
+    "secondStoreCreated": false,
+    "seedOrSchemaWrites": false,
+    "notificationReadOrDeleteClicked": false,
+    "appointmentCancelOrCreateClicked": false,
+    "petEditCreateOrSetActiveClicked": false,
+    "paymentUsed": false,
+    "reuseOrFakeClearedUsed": false,
+    "otherVisibleFixtureCopyExpanded": false
+  }
+}

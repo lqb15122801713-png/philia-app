@@ -10,6 +10,7 @@
 
 import { Link } from 'react-router-dom';
 import { fenToYuan } from '../format';
+import { customerPetName } from '@/lib/customerPresentation';
 
 export interface VaccineBlock {
   petName: string;
@@ -53,8 +54,8 @@ export default function BoardingConfirmBar({
           >
             <span>
               {vaccineBlock.until
-                ? `${vaccineBlock.petName}的疫苗将于 ${vaccineBlock.until} 到期，请先补录`
-                : `${vaccineBlock.petName}还没有疫苗有效期记录，请先补录`}
+                ? `${customerPetName(vaccineBlock.petName)}的疫苗将于 ${vaccineBlock.until} 到期，请先补录`
+                : `${customerPetName(vaccineBlock.petName)}还没有疫苗有效期记录，请先补录`}
             </span>
             <span className="ml-2 shrink-0 font-medium">▸</span>
           </Link>

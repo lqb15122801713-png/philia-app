@@ -14,6 +14,7 @@ import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeL
 import { createAppointmentExp2 } from '@/lib/exp2Api';
 import { mc } from '@/components/member/copy';
 import { bkc } from '@/copy/booking';
+import { customerPetName } from '@/lib/customerPresentation';
 
 const GROOMING_DEFAULT_ORDER = [
   'bookingGrooming.header',
@@ -228,8 +229,8 @@ export default function GroomingSinglePage() {
           <button type="button" data-testid="u2-chip-store" onClick={() => setActiveSheet('store')} className={chipClass} title={store?.name ?? '选择门店'}>
             <span className="max-w-36 truncate">{store?.name ?? '选择门店'}</span><span aria-hidden="true">▾</span>
           </button>
-          <button type="button" data-testid="u2-chip-pet" onClick={() => setActiveSheet('pet')} className={chipClass} title={pet?.name ?? '选择宠物'}>
-            <span className="max-w-24 truncate">{pet?.name ?? '选择宠物'}</span><span aria-hidden="true">▾</span>
+          <button type="button" data-testid="u2-chip-pet" onClick={() => setActiveSheet('pet')} className={chipClass} title={customerPetName(pet?.name, '选择宠物')}>
+            <span className="max-w-24 truncate">{customerPetName(pet?.name, '选择宠物')}</span><span aria-hidden="true">▾</span>
           </button>
           <button type="button" data-testid="u2-chip-service" onClick={() => setActiveSheet('service')} className={chipClass} title={service ? groomingServiceLabel(service.name) : bkc('booking.groomingServiceTitle')}>
             <span className="max-w-36 truncate">{service ? groomingServiceLabel(service.name) : bkc('booking.groomingServiceTitle')}</span><span aria-hidden="true">▾</span>
@@ -342,7 +343,7 @@ export default function GroomingSinglePage() {
                     }}
                     className={`min-h-14 w-full rounded-[16px] border p-4 text-left ${item.id === petId ? 'border-brand-cta' : 'border-line'}`}
                   >
-                    <span className="block text-body font-semibold">{item.name}</span>
+                    <span className="block text-body font-semibold">{customerPetName(item.name)}</span>
                     <span className="mt-1 block text-caption text-ink-secondary">{[item.species, item.breed, item.weightKg ? `${item.weightKg}kg` : null].filter(Boolean).join(' · ')}</span>
                   </button>
                 ))}

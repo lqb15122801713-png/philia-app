@@ -27,6 +27,7 @@ import { ErrorState, LoadingBlock } from '../components/home/common'
 import { readLastBooking } from '@/lib/bookingPrefill'
 import { mc } from '../components/member/copy'
 import { sl } from '@/copy/serviceloop'
+import { customerPetName } from '@/lib/customerPresentation'
 
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const CERT_DETAIL_DEFAULT_ORDER = ['certDetail.header', 'certDetail.card', 'certDetail.error'] as const
@@ -153,7 +154,7 @@ export default function CertDetailPage() {
             <p className="u1-num text-center text-caption-xs tracking-[0.3em] text-ink-placeholder">
               <CK k="cert.brandMark">{sl('cert.brandMark')}</CK>
             </p>
-            <h2 className="u1-serif mt-2 text-center text-title-lg font-black">{cert.payload.petName}</h2>
+            <h2 className="u1-serif mt-2 text-center text-title-lg font-black">{customerPetName(cert.payload.petName)}</h2>
             <p className="mt-1 text-center text-caption text-ink-secondary">
               {cert.payload.serviceName} · {cert.payload.storeName}
             </p>

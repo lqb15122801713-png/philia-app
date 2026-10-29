@@ -22,6 +22,7 @@ import { Skeleton, useMe } from '@philia/shared';
 import { bkc } from '@/copy/booking';
 import type { PetItem } from './types';
 import { isoToDate, toISODate } from './format';
+import { customerPetName } from '@/lib/customerPresentation';
 
 const SPECIES_LABEL: Record<string, string> = { dog: '狗狗', cat: '猫咪', other: '其他' };
 
@@ -119,7 +120,7 @@ export default function PetPicker({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-body font-semibold text-danger-deep">
-                    {p.name}
+                    {customerPetName(p.name)}
                     <span className="ml-2 text-caption font-normal">
                       {SPECIES_LABEL[p.species] ?? p.species}
                       {p.breed ? ` · ${p.breed}` : ''}
@@ -163,7 +164,7 @@ export default function PetPicker({
             }`}
           >
             {p.avatarUrl ? (
-              <img src={p.avatarUrl} alt={p.name} className="h-11 w-11 rounded-full object-cover" />
+              <img src={p.avatarUrl} alt={customerPetName(p.name)} className="h-11 w-11 rounded-full object-cover" />
             ) : (
               /* U1-D：彩色 emoji 改 VI 线图标（全域禁彩色图标） */
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F3EEE4]" aria-hidden="true">
@@ -171,7 +172,7 @@ export default function PetPicker({
               </span>
             )}
             <span className="flex-1">
-              <span className="block text-body font-semibold">{p.name}</span>
+              <span className="block text-body font-semibold">{customerPetName(p.name)}</span>
               <span className="block text-caption text-ink-secondary">
                 {SPECIES_LABEL[p.species] ?? p.species}
                 {p.breed ? ` · ${p.breed}` : ''}
@@ -203,14 +204,14 @@ export default function PetPicker({
             }`}
           >
             {p.avatarUrl ? (
-              <img src={p.avatarUrl} alt={p.name} className="h-11 w-11 rounded-full object-cover" />
+              <img src={p.avatarUrl} alt={customerPetName(p.name)} className="h-11 w-11 rounded-full object-cover" />
             ) : (
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-secondary-light text-[20px]">
                 {p.species === 'cat' ? '🐱' : '🐶'}
               </span>
             )}
             <span className="flex-1">
-              <span className="block text-body font-semibold">{p.name}</span>
+              <span className="block text-body font-semibold">{customerPetName(p.name)}</span>
               <span className="block text-caption text-ink-secondary">
                 {SPECIES_LABEL[p.species] ?? p.species}
                 {p.breed ? ` · ${p.breed}` : ''}
