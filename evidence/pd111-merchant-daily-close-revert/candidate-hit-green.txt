@@ -1,0 +1,199 @@
+[pd89-eq] 临时库 file:E:/KIMI code/pd111-merchant-daily-close-revert/.runtime/pd111-1793274952466/philia.db
+[migrate] 迁移目录: E:\KIMI code\pd111-merchant-daily-close-revert\server\drizzle
+[migrate] 迁移完成，已应用 97 条迁移：
+  - hash=7014c5ccfe81…  applied_at=2026-09-04T15:18:00.969Z
+  - hash=0122c83421e6…  applied_at=2026-09-05T08:33:07.454Z
+  - hash=41cc69252b32…  applied_at=2026-09-07T05:42:13.796Z
+  - hash=0491570327e3…  applied_at=2026-09-07T12:12:51.482Z
+  - hash=16c93b003662…  applied_at=2026-09-07T13:05:47.657Z
+  - hash=61fd44979ca3…  applied_at=2026-09-10T10:47:02.075Z
+  - hash=fb0930039ea4…  applied_at=2026-09-15T09:26:26.154Z
+  - hash=92304936f6a2…  applied_at=2026-09-16T04:36:18.626Z
+  - hash=f31318aa10b3…  applied_at=2026-09-18T13:36:16.072Z
+  - hash=ad086c981c7c…  applied_at=2026-09-18T14:10:48.344Z
+  - hash=b1bec436d838…  applied_at=2026-09-19T04:49:23.220Z
+  - hash=718fe33401f9…  applied_at=2026-09-20T10:52:47.309Z
+  - hash=c157f149f638…  applied_at=2026-09-20T11:41:31.954Z
+  - hash=bb504ef2fc66…  applied_at=2026-09-21T05:18:58.698Z
+  - hash=392ff71d809f…  applied_at=2026-09-21T16:47:49.606Z
+  - hash=adae3c6b06fe…  applied_at=2026-09-22T17:39:35.324Z
+  - hash=0cc7c2b3ec9a…  applied_at=2026-09-25T01:33:20.000Z
+  - hash=24373d7bfa0a…  applied_at=2026-10-01T04:22:04.956Z
+  - hash=aeb961c16565…  applied_at=2026-10-01T14:13:47.439Z
+  - hash=59c2650dbe17…  applied_at=2026-10-01T14:13:47.440Z
+  - hash=27f08ef818da…  applied_at=2026-10-01T14:13:47.441Z
+  - hash=f78727f45036…  applied_at=2026-10-01T16:44:56.660Z
+  - hash=2a45dc237896…  applied_at=2026-10-02T00:07:46.438Z
+  - hash=fedc7fb3784f…  applied_at=2026-10-02T12:00:14.395Z
+  - hash=5f887b2308f2…  applied_at=2026-10-02T13:55:39.401Z
+  - hash=6252b75656a3…  applied_at=2026-10-02T15:20:00.000Z
+  - hash=fbb520f3e90d…  applied_at=2026-10-02T17:10:00.000Z
+  - hash=f4b30ebaba0f…  applied_at=2026-10-03T05:20:54.442Z
+  - hash=26b341b70852…  applied_at=2026-10-03T05:30:00.000Z
+  - hash=be9b66d3cf06…  applied_at=2026-10-03T05:31:00.000Z
+  - hash=b26212a9eeee…  applied_at=2026-10-03T09:59:12.532Z
+  - hash=4a95868fb422…  applied_at=2026-10-03T11:14:52.804Z
+  - hash=666674a68615…  applied_at=2026-10-03T14:07:39.428Z
+  - hash=27ebacb9ddfd…  applied_at=2026-10-03T15:48:57.824Z
+  - hash=d32e0d8606c0…  applied_at=2026-10-03T16:41:24.607Z
+  - hash=95f48bb50fd6…  applied_at=2026-10-04T01:05:02.427Z
+  - hash=99a1c4f15ed0…  applied_at=2026-10-04T04:26:25.122Z
+  - hash=1bfe8bd77198…  applied_at=2026-10-04T05:53:28.351Z
+  - hash=fd3320ab7106…  applied_at=2026-10-04T09:41:58.567Z
+  - hash=05211e2dceca…  applied_at=2026-10-04T13:42:47.949Z
+  - hash=9a71ed706c83…  applied_at=2026-10-05T02:40:00.000Z
+  - hash=a54f05c89ee9…  applied_at=2026-10-05T07:20:00.000Z
+  - hash=389eb4b81932…  applied_at=2026-10-05T08:20:00.000Z
+  - hash=c73fc1554227…  applied_at=2026-10-05T16:20:00.000Z
+  - hash=714fcf71c348…  applied_at=2026-10-05T17:20:00.000Z
+  - hash=bdc0173ac303…  applied_at=2026-10-05T18:20:00.000Z
+  - hash=c0287ad3d759…  applied_at=2026-10-06T03:05:57.560Z
+  - hash=83739d136ac2…  applied_at=2026-10-06T05:10:59.535Z
+  - hash=dfcee209d6df…  applied_at=2026-10-06T06:30:38.822Z
+  - hash=495f8dce5be0…  applied_at=2026-10-06T07:18:02.407Z
+  - hash=251cc7de44cf…  applied_at=2026-10-06T08:58:20.698Z
+  - hash=0f6502df9210…  applied_at=2026-10-06T10:28:19.109Z
+  - hash=65b1eac21ddc…  applied_at=2026-10-06T11:28:10.335Z
+  - hash=e3d80be121b0…  applied_at=2026-10-06T12:23:48.357Z
+  - hash=7c416a043eff…  applied_at=2026-10-06T12:58:45.885Z
+  - hash=c7598ee0ed80…  applied_at=2026-10-06T14:36:05.776Z
+  - hash=7c9ba6a56cb0…  applied_at=2026-10-07T06:15:17.419Z
+  - hash=87f56f4907f6…  applied_at=2026-10-07T07:01:31.565Z
+  - hash=03c96ea1fa4b…  applied_at=2026-10-07T09:28:41.644Z
+  - hash=c3f86d33b055…  applied_at=2026-10-07T10:08:31.463Z
+  - hash=be8f74bed2ea…  applied_at=2026-10-07T11:17:46.148Z
+  - hash=96d3a673261c…  applied_at=2026-10-07T12:23:16.258Z
+  - hash=dd1bbe658be5…  applied_at=2026-10-07T13:28:38.224Z
+  - hash=bd93301d45ac…  applied_at=2026-10-07T16:36:24.130Z
+  - hash=b3519c342bec…  applied_at=2026-10-08T03:38:39.886Z
+  - hash=5bf277429188…  applied_at=2026-10-08T07:14:12.536Z
+  - hash=258e360491f6…  applied_at=2026-10-08T09:20:00.000Z
+  - hash=57721982f13a…  applied_at=2026-10-08T13:20:00.000Z
+  - hash=35063ab36264…  applied_at=2026-10-08T16:00:00.000Z
+  - hash=fbf606455389…  applied_at=2026-10-08T18:00:00.000Z
+  - hash=55d5d983f3db…  applied_at=2026-10-11T00:00:00.000Z
+  - hash=5c0847923ce3…  applied_at=2026-10-11T09:20:00.000Z
+  - hash=4205efb22bf0…  applied_at=2026-10-11T21:20:00.000Z
+  - hash=1f88600cfe47…  applied_at=2026-10-12T00:00:00.000Z
+  - hash=c483fb432a08…  applied_at=2026-10-12T10:20:00.000Z
+  - hash=68f0bd62dd9e…  applied_at=2026-10-12T21:20:00.000Z
+  - hash=bb7b419987ea…  applied_at=2026-10-13T02:49:43.000Z
+  - hash=c30b97e9e2b9…  applied_at=2026-10-14T04:06:40.000Z
+  - hash=75838894519b…  applied_at=2026-10-14T05:53:20.000Z
+  - hash=39851f0344d6…  applied_at=2026-10-14T07:20:00.000Z
+  - hash=a08f982cccb5…  applied_at=2026-10-15T06:55:00.000Z
+  - hash=7f4be30d7e40…  applied_at=2026-10-15T07:20:00.000Z
+  - hash=54f0c6b236ea…  applied_at=2026-10-15T10:10:00.000Z
+  - hash=4555737e910f…  applied_at=2026-10-16T08:40:00.000Z
+  - hash=294a4e25aad0…  applied_at=2026-10-20T02:40:01.738Z
+  - hash=fc921caa4287…  applied_at=2026-10-20T08:43:40.033Z
+  - hash=051e5879e5af…  applied_at=2026-10-20T12:53:15.487Z
+  - hash=45dabf181791…  applied_at=2026-10-20T13:05:00.000Z
+  - hash=d1de96961c22…  applied_at=2026-10-20T15:01:09.590Z
+  - hash=b5f7e09dc833…  applied_at=2026-10-20T15:20:00.000Z
+  - hash=b1e1abe6680a…  applied_at=2026-10-21T02:03:14.736Z
+  - hash=72b6070eee09…  applied_at=2026-10-22T03:59:12.888Z
+  - hash=8adc111b2b43…  applied_at=2026-10-22T07:13:00.412Z
+  - hash=4d85554b990c…  applied_at=2026-10-22T07:27:25.587Z
+  - hash=5e01e9d54e71…  applied_at=2026-10-22T11:15:24.796Z
+  - hash=2c9edc53d60f…  applied_at=2026-10-23T03:20:00.000Z
+  - hash=31e5b1c879ca…  applied_at=2026-10-23T03:21:00.000Z
+[seed] 开始（先清空业务表，保证幂等）…
+[seed] 完成，各表行数：
+  users                  6
+  user_roles             6
+  stores                 1
+  staff                  4
+  staff_invites          0
+  pets                   2
+  services               7
+  appointments           0
+  store_slots            154
+  boarding_slots         0
+  appointment_steps      0
+  step_photos            0
+  boarding_stays         0
+  boarding_daily_logs    0
+  products               13
+  orders                 0
+  cashier_bills          0
+  cashier_bill_items     0
+  cashier_payments       0
+  push_subscriptions     0
+  event_outbox           0
+  notifications          0
+  attendance_records     0
+  attendance_approvals   0
+  stock_movements        0
+  inventory_counts       0
+  inventory_count_items  0
+  commission_rules       23
+  duration_rules         6
+  commission_snapshots   0
+  deduction_records      0
+  performance_grades     0
+  reception_logs         0
+  overwork_approvals     0
+  xp_events              0
+  xp_levels              0
+  xp_rules               23
+  reviews                0
+  rule_config_versions   0
+  refund_bills           0
+  refund_bill_items      0
+  refund_rules           7
+  refund_requests        0
+  member_plans           11
+  memberships            0
+  rebate_accounts        0
+  rebate_logs            0
+  rebate_settlements     0
+  service_certificates   0
+  service_reports        0
+  copy_overrides         4311
+  slot_contents          10
+  support_tickets        0
+  invoice_requests       0
+  service_rules          30
+  membership_events      0
+  pay_orders             0
+  agreements             0
+  pay_rules              2
+  member_perk_grants     0
+  coupons                0
+  coupon_grants          0
+  favorites              0
+  product_reviews        0
+✅ 夹具：店长账号就绪（merchant_manager · 临时库随库自删）
+✅ server 就绪（SERVE_STATIC=1 · Host 分发＝现网同链） —— :7495
+✅ 商家构建包文件名 ≠ 现网对照 index-CQ1-atZf.js —— js=index-Bn2Lutso.js len=1683073 sha256=8472ae31d0e6…4561cfa2
+✅ 实读包内含 PD-89 就绪闸＋日结开闸 testid（dayclose-form-loading／dayclose-submit／dayclose-confirm-layer）
+✅ 浏览器实载 js＝钉包一致（m.localhost 同源链） —— http://m.localhost:7495/assets/index-Bn2Lutso.js
+✅ 浏览器 dev-login（店长·敏慧走测人设） —— HTTP 200
+✅ ①未就绪不得假开闸：账面请求被拦阻 → 骨架在场＋dayclose-submit 不挂 → 点击无处落 → dialogCount=0 零副作用 —— gate={"loadingSkeleton":true,"formMounted":false,"submitBtnCount":0} probe={"dialog":false,"dialogCount":0,"rootDialogCount":0,"nativeOpenCount":0}
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-01-loading-gate-no-submit.png
+✅ 表单首绘即就绪：实点默认同步账面（¥0→字面 "0"）＋提交钮 enabled（actualInput=null 未手输） —— actualValue="0" book=¥0 disabled=false
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-02-ready-first-paint.png
+✅ ②无 FILL 故意短等直点 dayclose-submit → 真 dialog（dialog[open]＋[role=dialog] 成对 · dialogCount≥1 双域） —— {"dialog":true,"layerTag":"DIALOG","layerIsNativeDialog":true,"nativeOpenCount":1,"layerMatchesOpen":true,"roleDialog":true,"dialogCount":1,"rootDialogCount":1,"overlay":true,"inlineInRoot":true,"notPortalToBody":true,"cancelBtn":true,"okBtn":true,"actual":"¥0"}
+✅ 拦：开闸未确认 dayClose 调用=0
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-03-dialog-open-nofill.png
+✅ 撤·cancel：acted＋原生 close×1＋closed＋可编辑表单（零提交＋零假 toast＋closes 不变） —— acted=true closed=true nativeClose=1 form={"formMounted":true,"submitDisabled":false,"actualValue":"0","readyShallowAnchor":false} calls=0 closes=0(基线0) toast=0
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-04-abort-cancel.png
+✅ 撤后同页立即重开（cancel 后）：dialogCount≥1 无 reopen-fail —— dialogCount=1 nativeOpen=1
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-04-reopen-after-cancel.png
+✅ 撤·esc-trusted：acted＋原生 close×1＋closed＋可编辑表单（零提交＋零假 toast＋closes 不变） —— acted=true closed=true nativeClose=1 form={"formMounted":true,"submitDisabled":false,"actualValue":"0","readyShallowAnchor":false} calls=0 closes=0(基线0) toast=0
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-05-abort-esc-trusted.png
+✅ 撤后同页立即重开（esc-trusted 后）：dialogCount≥1 无 reopen-fail —— dialogCount=1 nativeOpen=1
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-05-reopen-after-esc-trusted.png
+✅ 撤·esc-synthetic：acted＋原生 close×1＋closed＋可编辑表单（零提交＋零假 toast＋closes 不变） —— acted=true closed=true nativeClose=1 form={"formMounted":true,"submitDisabled":false,"actualValue":"0","readyShallowAnchor":false} calls=0 closes=0(基线0) toast=0
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-06-abort-esc-synthetic.png
+✅ 撤后同页立即重开（esc-synthetic 后）：dialogCount≥1 无 reopen-fail —— dialogCount=1 nativeOpen=1
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-06-reopen-after-esc-synthetic.png
+✅ 撤·overlay：acted＋原生 close×1＋closed＋可编辑表单（零提交＋零假 toast＋closes 不变） —— acted=true closed=true nativeClose=1 form={"formMounted":true,"submitDisabled":false,"actualValue":"0","readyShallowAnchor":false} calls=0 closes=0(基线0) toast=0
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-07-abort-overlay.png
+✅ 撤后同页立即重开（overlay 后）：dialogCount≥1 无 reopen-fail —— dialogCount=1 nativeOpen=1
+  📸 E:\KIMI code\pd111-merchant-daily-close-revert\evidence\pd111-merchant-daily-close-revert\candidate-hit-shots\eq-07-reopen-after-overlay.png
+✅ ③④四路撤＋撤后即开全通（Esc 双路保持；无 REOPEN_FAIL_before_esc） —— cancel=true escTrusted=true escSynthetic=true overlay=true
+✅ 零真日结：全程 dayClose 调用=0＋closes 计数不变（realDayCloseSubmit=false；涉钱 mock） —— calls=0 closes=0(基线0)
+
+[pd111] 全绿 · E:/KIMI code/pd111-merchant-daily-close-revert/evidence/pd111-merchant-daily-close-revert/candidate-hit-green.json
