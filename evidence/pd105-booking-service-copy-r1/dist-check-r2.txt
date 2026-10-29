@@ -1,0 +1,16 @@
+{
+  "file": "index-B8VZWDwO.js",
+  "bytes": 1424565,
+  "sha256": "38038beddd90538733a8d0065aed5ff89e9245e5dd7b0d524e700a73d23efca7",
+  "checks": {
+    "candidateNeLive": true,
+    "candidateNePrevious": true,
+    "hasHintKey": true,
+    "hasWashCopyKey": true,
+    "hasStyleCopyKey": true,
+    "hasDetailNote": true,
+    "hasMachineHint": false,
+    "hasMutationResidue": false
+  }
+}
+EXIT_CODE=0

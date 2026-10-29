@@ -23,14 +23,14 @@ import { Bath, Scissors } from 'lucide-react';
 import { Skeleton } from '@philia/shared';
 import { bkc } from '@/copy/booking';
 import type { ServiceItem } from '../types';
-import { fenToYuan, groomingServiceLabel } from '../format';
+import { fenToYuan, groomingServiceCategory, groomingServiceLabel } from '../format';
 
 const COLLAPSED_COUNT = 4;
 
-/** 档定义：洗澡 / 美容 */
+/** 档定义：稳定 wash / style key；中文显示名走 copy */
 const CATEGORIES = [
-  { key: 'wash', name: '洗澡', icon: Bath, testId: 'gs-cat-wash', match: (s: ServiceItem) => groomingServiceLabel(s.name) === '洗澡' },
-  { key: 'style', name: '美容', icon: Scissors, testId: 'gs-cat-style', match: (s: ServiceItem) => groomingServiceLabel(s.name) === '美容' },
+  { key: 'wash', labelKey: 'booking.groomingCatWash', icon: Bath, testId: 'gs-cat-wash', match: (s: ServiceItem) => groomingServiceCategory(s.name) === 'wash' },
+  { key: 'style', labelKey: 'booking.groomingCatStyle', icon: Scissors, testId: 'gs-cat-style', match: (s: ServiceItem) => groomingServiceCategory(s.name) === 'style' },
 ] as const;
 
 export default function ServiceChipsBlock({
@@ -103,7 +103,7 @@ export default function ServiceChipsBlock({
                   strokeWidth={1.6}
                   aria-hidden="true"
                 />
-                <span className="block text-v2-section">{c.name}</span>
+                <span className="block text-v2-section">{bkc(c.labelKey)}</span>
                 <span
                   className={`mt-1 block font-number text-v2-trace ${
                     active ? 'text-[#C9BBA0]' : 'text-ink-secondary'

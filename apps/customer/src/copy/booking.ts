@@ -121,6 +121,9 @@ const BOOKING_COPY_TABLE = {
   'booking.boardingStoreTitle': '门店',
 
   /* ---- 产品-1010 片 2：洗护单屏画布化入册（区块截面题四枚 + 时间摘要两行 + 宠物卡上次洗护行抽键） ---- */
+  'booking.groomingHint': '想换门店、毛孩子或服务？点一下就好',
+  'booking.groomingCatWash': '洗澡',
+  'booking.groomingCatStyle': '美容',
   'booking.groomingServiceTitle': '选择服务',
   'booking.groomingServiceDetailNote': '细节到店看宠再定',
   'booking.groomingStoreTitle': '门店',

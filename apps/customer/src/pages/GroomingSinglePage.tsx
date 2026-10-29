@@ -218,7 +218,7 @@ export default function GroomingSinglePage() {
           <h1 className="text-v2-screen"><CK k="booking.groomingTitle">预约</CK></h1>
           <Link to="/appointments" className="shrink-0 text-caption text-ink">我的预约</Link>
         </div>
-        <p className="mt-1 text-caption text-ink-secondary">想换门店、毛孩子或服务？点一下就好</p>
+        <p className="mt-1 text-caption text-ink-secondary"><CK k="booking.groomingHint">{bkc('booking.groomingHint')}</CK></p>
       </header>
     ),
 
@@ -231,8 +231,8 @@ export default function GroomingSinglePage() {
           <button type="button" data-testid="u2-chip-pet" onClick={() => setActiveSheet('pet')} className={chipClass} title={pet?.name ?? '选择宠物'}>
             <span className="max-w-24 truncate">{pet?.name ?? '选择宠物'}</span><span aria-hidden="true">▾</span>
           </button>
-          <button type="button" data-testid="u2-chip-service" onClick={() => setActiveSheet('service')} className={chipClass} title={service ? groomingServiceLabel(service.name) : '选择服务'}>
-            <span className="max-w-36 truncate">{service ? groomingServiceLabel(service.name) : '选择服务'}</span><span aria-hidden="true">▾</span>
+          <button type="button" data-testid="u2-chip-service" onClick={() => setActiveSheet('service')} className={chipClass} title={service ? groomingServiceLabel(service.name) : bkc('booking.groomingServiceTitle')}>
+            <span className="max-w-36 truncate">{service ? groomingServiceLabel(service.name) : bkc('booking.groomingServiceTitle')}</span><span aria-hidden="true">▾</span>
           </button>
           <button type="button" data-testid="u2-chip-staff" onClick={() => setActiveSheet('staff')} className={chipClass}>
             <span className="max-w-24 truncate">{staffName ?? '系统分配'}</span><span aria-hidden="true">▾</span>
