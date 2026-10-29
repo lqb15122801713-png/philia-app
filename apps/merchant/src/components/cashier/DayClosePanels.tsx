@@ -492,8 +492,7 @@ export function DayCloseConfirmDialog({
   const abort = useCallback(() => {
     const el = layerRef.current
     if (el?.open) el.close()
-    else onClose()
-  }, [onClose])
+  }, [])
 
   /* PD-86：原生 <dialog> showModal() 顶层模态——input 就绪且层已挂载时开；
      PD-111：三撤统一走原生 close，close 事件再归空 input，避免绕过平台关闭态直接卸载。 */

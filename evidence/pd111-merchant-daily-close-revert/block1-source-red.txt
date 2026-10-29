@@ -1,0 +1,6 @@
+{
+  "abortOnlyNativeClose": false,
+  "nativeCloseCalls": 1,
+  "parallelOnClose": true,
+  "body": "const el = layerRef.current\r\n    if (el?.open) el.close()\r\n    else onClose()"
+}

@@ -282,14 +282,27 @@ async function main() {
 
   /* PD-111：三撤必须先触发原生 close，再由 onClose 复位 pendingDayClose。 */
   const abortCycle = async (label, doAbort, shotTag) => {
-    await cdp.eval(`window.__pd111CloseEvents = 0;
-      document.querySelector('[data-testid="dayclose-confirm-layer"]')?.addEventListener('close', () => {
-        window.__pd111CloseEvents += 1;
-      }, { once: true }); true`);
+    await cdp.eval(`(() => {
+      window.__pd111CloseEvents = 0;
+      window.__pd111CancelEvents = 0;
+      window.__pd111CloseCalls = 0;
+      const layer = document.querySelector('[data-testid="dayclose-confirm-layer"]');
+      layer?.addEventListener('cancel', () => { window.__pd111CancelEvents += 1; }, { once: true });
+      layer?.addEventListener('close', () => { window.__pd111CloseEvents += 1; }, { once: true });
+      const proto = HTMLDialogElement.prototype;
+      if (!window.__pd111OriginalClose) window.__pd111OriginalClose = proto.close;
+      proto.close = function (...args) {
+        window.__pd111CloseCalls += 1;
+        return window.__pd111OriginalClose.apply(this, args);
+      };
+      return true;
+    })()`);
     const acted = (await doAbort()) === true;
     await sleep(450);
     const closedView = await cdp.eval(MODAL_VIEW_JS);
     const nativeCloseEvents = await cdp.eval(`window.__pd111CloseEvents`);
+    const cancelEvents = await cdp.eval(`window.__pd111CancelEvents`);
+    const nativeCloseCalls = await cdp.eval(`window.__pd111CloseCalls`);
     const calls = await cdp.eval(`window.__pd89Calls`);
     const closes = await cdp.eval(LIST_CLOSES_JS);
     const toasts = await cdp.eval(SUCCESS_TOAST_JS);
@@ -308,9 +321,9 @@ async function main() {
     const actedClosed = !closedView.dialog && closedView.dialogCount === 0 && closedView.nativeOpenCount === 0;
     const formEditable = afterForm.formMounted && afterForm.submitDisabled === false
       && afterForm.actualValue !== null && afterForm.actualValue !== '' && !afterForm.readyShallowAnchor;
-    note(acted && actedClosed && nativeCloseEvents === 1 && formEditable && calls === 0 && closes === closesBefore && toasts === 0,
-      `撤·${label}：acted＋原生 close×1＋closed＋可编辑表单（零提交＋零假 toast＋closes 不变）`,
-      `acted=${acted} closed=${actedClosed} nativeClose=${nativeCloseEvents} form=${JSON.stringify(afterForm)} calls=${calls} closes=${closes}(基线${closesBefore}) toast=${toasts}`);
+    note(acted && actedClosed && nativeCloseEvents === 1 && nativeCloseCalls === 1 && formEditable && calls === 0 && closes === closesBefore && toasts === 0,
+      `撤·${label}：acted＋close()×1＋close事件×1＋closed＋可编辑表单（零提交）`,
+      `acted=${acted} closed=${actedClosed} closeCalls=${nativeCloseCalls} closeEvents=${nativeCloseEvents} cancelEvents=${cancelEvents} form=${JSON.stringify(afterForm)} calls=${calls} closes=${closes}(基线${closesBefore}) toast=${toasts}`);
     await cdp.shot(join(SHOTS_DIR, `eq-${shotTag}-abort-${label}.png`));
     /* 同页立即再点（无 FILL 无等待——产品态保证重开） */
     await cdp.eval(CLICK_SUBMIT_JS);
@@ -322,11 +335,12 @@ async function main() {
       `dialogCount=${reopen.dialogCount} nativeOpen=${reopen.nativeOpenCount}`);
     await cdp.shot(join(SHOTS_DIR, `eq-${shotTag}-reopen-after-${label}.png`));
     abortEvidence.push({
-      path: label, acted, closed: actedClosed, nativeCloseEvents, pendingDayCloseNull: actedClosed,
-      realDayCloseSubmit: calls > 0, formEditable, afterForm, reopened,
+      path: label, acted, closed: actedClosed, nativeCloseEvents, nativeCloseCalls, cancelEvents,
+      singleClose: nativeCloseEvents === 1 && nativeCloseCalls === 1,
+      pendingDayCloseNull: actedClosed, realDayCloseSubmit: calls > 0, formEditable, afterForm, reopened,
       reopenDialogCount: reopen.dialogCount, reopenNativeOpenCount: reopen.nativeOpenCount,
     });
-    return acted && actedClosed && nativeCloseEvents === 1 && formEditable && reopened;
+    return acted && actedClosed && nativeCloseEvents === 1 && nativeCloseCalls === 1 && formEditable && reopened;
   };
 
   const r1 = await abortCycle('cancel', () => cdp.eval(`(() => {
