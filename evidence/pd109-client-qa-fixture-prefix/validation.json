@@ -91,8 +91,16 @@
     "status": "PENDING_MERGE_DEPLOY",
     "mergeShaEqualsDeployedSha": "NOT_APPLICABLE_BEFORE_MERGE"
   },
-  "deliveryState": "LOCAL_CANDIDATE_PENDING_PR",
+  "deliveryState": "PR_OPEN_NOT_MERGED",
   "deliveryHit": "PENDING_PRODUCT_REVIEW",
   "externalReview": "PENDING_AFTER_DELIVERY_HIT_IN_SEPARATE_WINDOW",
-  "pullRequest": null
+  "pullRequest": {
+    "number": 206,
+    "url": "https://github.com/lqb15122801713-png/philia-app/pull/206",
+    "state": "OPEN",
+    "isDraft": false,
+    "mergedAt": null,
+    "mergeCommit": null,
+    "headRefOidAtOpen": "6588a46108a5d9e7ae418026ce819e28d9cdb6f2"
+  }
 }

@@ -3,9 +3,10 @@
 - 窗：`PD-109-client-qa-fixture-prefix`
 - WT：`E:\KIMI code\pd109-client-qa-fixture-prefix`
 - 分支：`feat/pd109-client-qa-fixture-prefix`
+- PR：#206 https://github.com/lqb15122801713-png/philia-app/pull/206（OPEN，只开不合）
 - 基线：`67c867fc522d8b29fc4e08a3e4e340b4e5f25910`／DEPLOY `20261029110235`
 - mig：**0148 故意空留**；零 schema；未占 0117／0119／0122–0147；未抢 PD-106／108／110
-- 状态：本地候选证据齐，候 PR／交付 HIT；现网 `PENDING_MERGE_DEPLOY`，不作正式销项或现网结论。
+- 状态：本地候选证据齐，PR #206 OPEN 候交付 HIT；现网 `PENDING_MERGE_DEPLOY`，不作正式销项或现网结论。
 
 ## 1. 根因与产品 diff
 
@@ -76,4 +77,4 @@
 - 未扩员／商／审美／PD-108／PD-110／INJECT-；页面中其他历史夹具文案不借本刀扩张。
 - 内建浏览器指针点击 pill 未打开半屏，已用真实键盘 Enter 走通；不冒充触控 PASS。预约详情和全局半屏的截图调用曾返回 `PAGE_NOT_READY`，只引用成功取得的 DOM，不虚构截图。
 
-当前只交付本地候选，候 PR 与交付 HIT。合部另闸为 Merge SHA＝Deployed SHA＝TIP-DEPLOY tip 全，DEPLOY／HEALTH×4 同轮新鲜；本卷不领取该结论。
+当前 PR #206 OPEN、只开不合，候交付 HIT。合部另闸为 Merge SHA＝Deployed SHA＝TIP-DEPLOY tip 全，DEPLOY／HEALTH×4 同轮新鲜；本卷不领取该结论。

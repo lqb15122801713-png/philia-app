@@ -99,7 +99,7 @@
     }
   },
   "network": {
-    "log": "preview.log",
+    "log": "preview.txt",
     "readQueries": "pet.list, appointment.listMine, appointment.get, push.listNotifications and canvas/store queries returned 200",
     "blockedAutomaticMutations": ["POST /trpc/membership.myCardToken = 405 before upstream", "POST /trpc/push.subscribe = 405 before upstream"],
     "bookingCreateOrPaymentCalled": false
