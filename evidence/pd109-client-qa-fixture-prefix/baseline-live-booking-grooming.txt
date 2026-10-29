@@ -1,0 +1,17 @@
+URL=http://120.53.102.45:7201/booking/grooming
+device=responsive 390x844, deviceScaleFactor=2, mobile touch
+textSnapshotId=text-9ee88950-820c-4011-8882-dba03c1dfc2e
+visualSnapshotId=visual-492fe4f7-e4cf-447c-b857-51951ab6caeb
+capturedAtEpochMs=1793252017919
+scanTruncated=false
+
+heading: 预约
+paragraph: 我的预约
+paragraph: 想换门店、毛孩子或服务？点一下就好
+paragraph: 菲丽亚宠物·示例店 ▾ QA夹具豆豆 ▾ 洗澡 ▾ 系统分配 ▾
+heading: 选择日期
+heading: 选择时段
+
+DEFECT=PET_PILL_QA_FIXTURE_PREFIX
+observed=QA夹具豆豆
+actions=read-only page load, text snapshot, visual snapshot; no booking/payment mutation; forbidden fixture 01M5EQVF untouched

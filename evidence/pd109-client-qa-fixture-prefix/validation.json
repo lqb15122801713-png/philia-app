@@ -1,0 +1,98 @@
+{
+  "schema": "pd109-client-qa-fixture-prefix-validation-v1",
+  "observedAt": "2026-10-29T14:24:52+08:00",
+  "worktree": "E:/KIMI code/pd109-client-qa-fixture-prefix",
+  "branch": "feat/pd109-client-qa-fixture-prefix",
+  "baseline": {
+    "tip": "67c867fc522d8b29fc4e08a3e4e340b4e5f25910",
+    "deploy": "20261029110235",
+    "liveBundle": "index-BI3bcUo1.js",
+    "liveBundleSha256": "4fe57f6249ba4e2ae5d7f0554a376bd2d281bf7848f5508aac8508127d018401",
+    "localBuildBundle": "index-B8VZWDwO.js",
+    "localBuildBundleSha256": "38038beddd90538733a8d0065aed5ff89e9245e5dd7b0d524e700a73d23efca7",
+    "health": [200, 200, 200, 200],
+    "livePetPill": "QA夹具豆豆"
+  },
+  "candidate": {
+    "base": "http://127.0.0.1:7109",
+    "tipPackage": false,
+    "bundleName": "index-DJcalQcW.js",
+    "bundleBytes": 1424505,
+    "bundleSha256": "bd1612f451b40ad220fe531fd881b99cdb7a12b92a12af58dd990f84ba6ed00c",
+    "httpBundleMatchesLocalBytes": true,
+    "differentFromRequiredBaselineNameAndBytes": true,
+    "differentFromLocalBaselineName": true,
+    "petPill": "豆豆",
+    "qaFixturePrefixCount": 0
+  },
+  "productDiff": {
+    "productFiles": 19,
+    "regressionFiles": 3,
+    "pathsScope": "apps/customer/src only; display call sites plus one shared presentation util",
+    "schemaChanges": 0,
+    "serverChanges": 0,
+    "lockfileChanges": 0,
+    "newDependencies": 0
+  },
+  "defects": {
+    "linXiaoR47FailL": "PET_PILL_QA_FIXTURE_PREFIX reproduced on the live baseline; candidate pill and pet sheet show 豆豆 with no QA fixture prefix",
+    "blindCustomerR46StillOpen": "same anchor covered by fresh candidate evidence only; not a formal close or live retest verdict"
+  },
+  "regression": {
+    "initialRed": { "file": "initial-red-pet-presentation.txt", "tests": 13, "passed": 9, "failed": 4 },
+    "sharedSurfaceRed": { "file": "initial-red-shared-pet-surfaces.txt", "tests": 7, "passed": 0, "failed": 7 },
+    "fullServiceRed": { "file": "red-full-service-process.txt", "tests": 8, "passed": 7, "failed": 1 },
+    "mutationRed": { "file": "mutation-red-unfiltered.txt", "tests": 21, "passed": 6, "failed": 15, "mutation": "customerPetName returned the trimmed input without removing fixture prefixes; immediately reverted" },
+    "finalUnit": { "file": "final-after-mutation-unit-all.txt", "tests": 26, "passed": 26, "failed": 0 },
+    "targetedLint": { "file": "final-after-mutation-targeted-lint.txt", "files": 21, "exitCode": 0 },
+    "appointmentLiveLint": { "file": "targeted-lint-appointment-live-preexisting.txt", "status": "BASELINE_EXISTING_RED", "errors": 1, "newDependencyWarnings": 0 },
+    "fullCustomerLint": { "baselineFile": "baseline-lint-customer.txt", "finalFile": "final-full-lint-customer.txt", "status": "BASELINE_EXISTING_RED", "errors": 65, "warnings": 4, "sameAsBaseline": true },
+    "buildCustomer": { "file": "final-after-mutation-build-customer.txt", "exitCode": 0 },
+    "buildAll": { "file": "final-build-all.txt", "customerMerchantStaff": true, "exitCode": 0 },
+    "diffCheck": { "exitCode": 0 }
+  },
+  "singleSource": {
+    "file": "single-source-grep.txt",
+    "utility": "apps/customer/src/lib/customerPresentation.ts",
+    "oldScatteredProductionMatchesOutsideUtility": 0,
+    "nestedCleaningCalls": 0,
+    "pd107LogicUsesSameMarkerAndFile": true
+  },
+  "migration": {
+    "reserved": "0148",
+    "status": "0148 故意空留",
+    "schemaFiles": 0,
+    "forbiddenUntouched": ["0117", "0119", "0122-0147"],
+    "pd106Pd108Pd110NotUsed": true
+  },
+  "boundaries": {
+    "forbiddenFixture01M5EQVFTouched": false,
+    "secondStoreCreated": false,
+    "directProductionDatabaseWrites": false,
+    "payment": "none; no create/cancel booking, agreement, payment or refund mutation",
+    "staffOrMerchantChanged": false,
+    "pd108OrPd110Expanded": false,
+    "injectStoreExpanded": false,
+    "aestheticSurfaceExpanded": false,
+    "reuseUsedAsCleared": false,
+    "fakeClearedUsed": false,
+    "localhostUsedAsLiveHIT": false,
+    "usageInspected": false,
+    "actionInstalled": false,
+    "secondWindowOpened": false
+  },
+  "environment": {
+    "dependencyInstall": "Windows root npm ci nested postinstall recursion failed; root npm ci --ignore-scripts installed 688 packages and server npm ci --ignore-scripts installed 110 packages; lockfiles and product scripts unchanged",
+    "browserPointer": "pointer click did not open the pet sheet; keyboard Enter verified the real button and sheet; no touch PASS claimed",
+    "visualCapture": "appointment detail and global pet sheet screenshot attempts returned PAGE_NOT_READY; only successful DOM snapshots are cited for those surfaces"
+  },
+  "live": {
+    "bundleName": "index-BI3bcUo1.js",
+    "status": "PENDING_MERGE_DEPLOY",
+    "mergeShaEqualsDeployedSha": "NOT_APPLICABLE_BEFORE_MERGE"
+  },
+  "deliveryState": "LOCAL_CANDIDATE_PENDING_PR",
+  "deliveryHit": "PENDING_PRODUCT_REVIEW",
+  "externalReview": "PENDING_AFTER_DELIVERY_HIT_IN_SEPARATE_WINDOW",
+  "pullRequest": null
+}

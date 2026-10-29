@@ -1,0 +1,21 @@
+PD-109 单点收口 grep（2026-10-29 本窗新跑）
+
+[1] pattern=QA_FIXTURE_MARKER|QA_FIXTURE_PREFIX|QA_FIXTURE_NOTIFICATION；scope=apps/customer/src/**/*.{ts,tsx}
+apps/customer/src/lib/customerPresentation.ts:1 const QA_FIXTURE_MARKER = 'qa[\\s_-]*夹具[\\s:_-]*'
+apps/customer/src/lib/customerPresentation.ts:2 const QA_FIXTURE_PREFIX = new RegExp(`^${QA_FIXTURE_MARKER}`, 'i')
+apps/customer/src/lib/customerPresentation.ts:3 const QA_FIXTURE_NOTIFICATION_NAME = new RegExp(`【\\s*${QA_FIXTURE_MARKER}\\s*([^】]+?)\\s*】`, 'gi')
+apps/customer/src/lib/customerPresentation.ts:4 const QA_FIXTURE_NOTIFICATION_PREFIX = new RegExp(QA_FIXTURE_MARKER, 'gi')
+apps/customer/src/lib/customerPresentation.ts:7 return typeof name === 'string' && QA_FIXTURE_PREFIX.test(name.trim())
+apps/customer/src/lib/customerPresentation.ts:17 return text.replace(QA_FIXTURE_NOTIFICATION_NAME, '$1').replace(QA_FIXTURE_NOTIFICATION_PREFIX, '')
+
+[2] pattern=QA夹具；scope=apps/customer/src；glob=!*.test.*（生产码）
+result=No non-sensitive matches found.
+OLD_SCATTERED_QA_MATCH_OUTSIDE_CUSTOMER_PRESENTATION=0
+
+[3] pattern=customerPetName\(；scope=apps/customer/src/**/*.{ts,tsx}
+Found 49 total occurrences across 23 files.
+其中 customerPresentation.ts 内定义 1 处、测试 6 处；其余为各客读展示出口调用。
+PD-107 的 customerNotificationText 仍在同一 customerPresentation.ts 内，共享 QA_FIXTURE_MARKER；customerPetName 复用该文本清理链，未新建第二套正则或 util。
+
+[4] pattern=customerPetName\(customerPetName|customerNotificationText\(customerNotificationText
+result=No non-sensitive matches found.

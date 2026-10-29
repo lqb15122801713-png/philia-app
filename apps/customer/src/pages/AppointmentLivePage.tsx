@@ -46,6 +46,7 @@ import {
   type EventEnvelope,
   type PhotoWallPhoto,
 } from '@philia/shared'
+import { customerPetName } from '@/lib/customerPresentation'
 import LiveStepper, { type LiveStepperStep } from '../components/live/LiveStepper'
 import GroomingServiceProcess from '../components/live/GroomingServiceProcess'
 import {
@@ -367,6 +368,7 @@ export default function AppointmentLivePage() {
   const detailData = exampleD ?? detailQuery.data
   const appt = detailData?.appointment
   const pet = detailData?.pet
+  const displayPetName = customerPetName(pet?.name, apc('appointments.livePetFallback'))
   const service = detailData?.service
   const store = detailData?.store
 
@@ -560,13 +562,13 @@ export default function AppointmentLivePage() {
           break
         case EventType.BoardingDailyUpdate: {
           const logDate = typeof data.logDate === 'string' ? data.logDate : ''
-          showToast(apc('appointments.liveToastCheckin', { date: logDate ? `${logDate} ` : '', pet: pet?.name ?? apc('appointments.livePetFallback') }))
+          showToast(apc('appointments.liveToastCheckin', { date: logDate ? `${logDate} ` : '', pet: displayPetName }))
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
           break
         }
         case EventType.IncidentReported:
-          showToast(apc('appointments.incidentToastReported', { pet: pet?.name ?? apc('appointments.livePetFallback') }))
+          showToast(apc('appointments.incidentToastReported', { pet: displayPetName }))
           void queryClient.invalidateQueries({ queryKey: ['incident', 'list', aid] })
           break
         case EventType.IncidentHandled:
@@ -575,7 +577,7 @@ export default function AppointmentLivePage() {
           break
         case EventType.BoardingUnsealed: {
           const itemName = typeof data.itemName === 'string' ? data.itemName : ''
-          showToast(apc('appointments.unsealToast', { pet: pet?.name ?? apc('appointments.livePetFallback'), item: itemName }))
+          showToast(apc('appointments.unsealToast', { pet: displayPetName, item: itemName }))
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
           break
@@ -601,7 +603,7 @@ export default function AppointmentLivePage() {
           break
       }
     },
-    [aid, markSeen, queryClient, pet?.name, showToast, alignAll],
+    [aid, markSeen, queryClient, displayPetName, showToast, alignAll],
   )
 
   const { connected } = useEventSource({ url: sseUrl, onEvent, onReconnect: alignAll })
@@ -640,7 +642,7 @@ export default function AppointmentLivePage() {
   const share = useCallback(async () => {
     const url = window.location.href
     const text = apc('appointments.liveShareText', {
-      pet: pet?.name ?? apc('appointments.livePetFallback'),
+      pet: displayPetName,
       store: store?.name ?? apc('appointments.liveShareStoreFallback'),
       service: service?.name ?? apc('appointments.fallbackService'),
     })
@@ -658,7 +660,7 @@ export default function AppointmentLivePage() {
     } catch {
       showToast(apc('appointments.shareCopyFail'))
     }
-  }, [pet?.name, store?.name, service?.name, showToast])
+  }, [displayPetName, store?.name, service?.name, showToast])
 
   /* ---------------- 派生展示数据 ---------------- */
 
@@ -810,7 +812,7 @@ export default function AppointmentLivePage() {
 
   const header = (
     <LiveHeader
-      petName={pet?.name ?? apc('appointments.livePetFallback')}
+      petName={displayPetName}
       petAvatarUrl={pet?.avatarUrl}
       serviceName={service?.name ?? apc(isBoarding ? 'appointments.liveServiceBoarding' : 'appointments.liveServiceGrooming')}
       meta={headerMeta}
@@ -851,7 +853,7 @@ export default function AppointmentLivePage() {
           <GroomingServiceProcess
             layout={layout}
             appointment={appt}
-          petName={pet?.name ?? apc('appointments.livePetFallback')}
+          petName={displayPetName}
           serviceName={service?.name ?? apc('appointments.liveServiceGrooming')}
           storeName={store?.name ?? apc('appointments.liveShareStoreFallback')}
           steps={processSteps ?? []}

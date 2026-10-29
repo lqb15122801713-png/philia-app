@@ -1,0 +1,12 @@
+LOCAL_CANDIDATE
+bytes=1424505
+bd1612f451b40ad220fe531fd881b99cdb7a12b92a12af58dd990f84ba6ed00c *apps/customer/dist/assets/index-DJcalQcW.js
+SERVED_CANDIDATE
+bd1612f451b40ad220fe531fd881b99cdb7a12b92a12af58dd990f84ba6ed00c *-
+LIVE_BASELINE
+4fe57f6249ba4e2ae5d7f0554a376bd2d281bf7848f5508aac8508127d018401 *-
+NAMES
+baseline=index-BI3bcUo1.js
+localBaseline=index-B8VZWDwO.js
+candidate=index-DJcalQcW.js
+tipPackage=false

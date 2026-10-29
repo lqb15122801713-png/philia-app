@@ -25,6 +25,7 @@ import { EmptyState, ErrorState, LoadingBlock } from '../components/home/common'
 import { readLastBooking } from '@/lib/bookingPrefill'
 import { mc } from '../components/member/copy'
 import { sl } from '@/copy/serviceloop'
+import { customerPetName } from '@/lib/customerPresentation'
 
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const CERT_LIST_DEFAULT_ORDER = ['certList.header', 'certList.list', 'certList.empty', 'certList.error'] as const
@@ -94,13 +95,13 @@ export default function CertListPage() {
                 >
                   <img
                     src={cert.payload.afterUrl}
-                    alt={sl('album.photoAlt', { pet: cert.payload.petName })}
+                    alt={sl('album.photoAlt', { pet: customerPetName(cert.payload.petName) })}
                     loading="lazy"
                     className="h-16 w-16 shrink-0 rounded-control object-cover"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body-sm font-semibold">
-                      {cert.payload.petName} · {cert.payload.serviceName}
+                      {customerPetName(cert.payload.petName)} · {cert.payload.serviceName}
                     </span>
                     <span className="mt-0.5 block truncate text-caption text-ink-secondary">
                       {cert.payload.storeName}

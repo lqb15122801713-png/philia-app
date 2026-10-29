@@ -9,7 +9,7 @@ export function isQaFixturePetName(name: string | null | undefined): boolean {
 
 export function customerPetName(name: string | null | undefined, fallback = '爱宠'): string {
   if (!name) return fallback
-  const cleaned = name.trim().replace(QA_FIXTURE_PREFIX, '').trim()
+  const cleaned = customerNotificationText(name.trim()).trim()
   return cleaned || fallback
 }
 

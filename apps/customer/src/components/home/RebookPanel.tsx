@@ -5,6 +5,7 @@
 
 import { Link } from 'react-router-dom';
 import { dayLabel, fmtHM } from '@/components/booking/format';
+import { customerPetName } from '@/lib/customerPresentation';
 
 export interface RebookPanelProps {
   storeId: string;
@@ -60,7 +61,7 @@ export default function RebookPanel({
         <div className={ROW}>
           <dt className="shrink-0 text-caption text-ink-secondary">宠物</dt>
           <dd className="truncate text-body font-semibold" data-testid="home-rebook-pet">
-            {petName}
+            {customerPetName(petName)}
           </dd>
         </div>
         <div className={`${ROW} ${HAIRLINE}`}>

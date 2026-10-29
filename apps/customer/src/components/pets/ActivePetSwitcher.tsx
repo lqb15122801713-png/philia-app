@@ -17,15 +17,16 @@ import { useMe, usePhiliaClient, useToast } from '@philia/shared'
 import BottomSheet from '@/components/booking/single/BottomSheet'
 import { pc } from '@/copy/pets'
 import type { PetItem } from '@/components/booking/types'
+import { customerPetName } from '@/lib/customerPresentation'
 
 /** 24px 迷你头像：有图出图，无图出字圈（浅木底+衬线首字，同 PetsPage 无头像口径） */
 function MiniAvatar({ pet }: { pet: PetItem }) {
   if (pet.avatarUrl) {
-    return <img src={pet.avatarUrl} alt={pet.name} className="h-6 w-6 rounded-full object-cover" />
+    return <img src={pet.avatarUrl} alt={customerPetName(pet.name)} className="h-6 w-6 rounded-full object-cover" />
   }
   return (
     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-oak-light">
-      <span className="u1-serif text-caption-xs font-semibold text-ink">{pet.name.slice(0, 1)}</span>
+      <span className="u1-serif text-caption-xs font-semibold text-ink">{customerPetName(pet.name).slice(0, 1)}</span>
     </span>
   )
 }
@@ -74,7 +75,7 @@ export default function ActivePetSwitcher() {
       <div className="mt-3 flex items-center gap-2" data-testid="active-pet-switcher">
         <span className="flex items-center gap-2 rounded-full bg-card px-3 py-1.5 ring-1 ring-line-ring">
           <MiniAvatar pet={pets[0]} />
-          <span className="text-caption font-semibold">{pets[0].name}</span>
+          <span className="text-caption font-semibold">{customerPetName(pets[0].name)}</span>
         </span>
         <span className="text-caption-xs text-ink-placeholder">{pc('pets.switcherSingleNote')}</span>
         {toastEl}
@@ -97,7 +98,7 @@ export default function ActivePetSwitcher() {
             <PawPrint className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} />
           </span>
         )}
-        <span className="text-caption font-semibold">{current ? current.name : pc('pets.switcherAll')}</span>
+        <span className="text-caption font-semibold">{current ? customerPetName(current.name) : pc('pets.switcherAll')}</span>
         <ChevronDown className="h-3.5 w-3.5 text-ink-secondary" strokeWidth={1.5} />
       </button>
 
@@ -132,13 +133,13 @@ export default function ActivePetSwitcher() {
                   className="flex min-h-[44px] w-full items-center gap-3 rounded-control border border-line p-3 text-left transition active:scale-[0.99] disabled:opacity-60"
                 >
                   {pet.avatarUrl ? (
-                    <img src={pet.avatarUrl} alt={pet.name} className="h-9 w-9 rounded-full object-cover" />
+                    <img src={pet.avatarUrl} alt={customerPetName(pet.name)} className="h-9 w-9 rounded-full object-cover" />
                   ) : (
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-oak-light">
-                      <span className="u1-serif text-body-sm font-semibold text-ink">{pet.name.slice(0, 1)}</span>
+                      <span className="u1-serif text-body-sm font-semibold text-ink">{customerPetName(pet.name).slice(0, 1)}</span>
                     </span>
                   )}
-                  <span className="flex-1 text-body-sm font-semibold">{pet.name}</span>
+                  <span className="flex-1 text-body-sm font-semibold">{customerPetName(pet.name)}</span>
                   {activePetId === pet.id ? (
                     <Check className="h-4 w-4 text-brand-primary-pressed" strokeWidth={2} />
                   ) : null}

@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: PD-109：客读宠名去除裸前缀与括号夹具前缀
+ok 1 - PD-109：客读宠名去除裸前缀与括号夹具前缀
+  ---
+  duration_ms: 0.6069
+  ...
+# Subtest: PD-109：普通宠名原样保留
+ok 2 - PD-109：普通宠名原样保留
+  ---
+  duration_ms: 0.1459
+  ...
+# Subtest: PD-109：空宠名使用客读回退
+ok 3 - PD-109：空宠名使用客读回退
+  ---
+  duration_ms: 0.0998
+  ...
+# Subtest: PD-99：QA 夹具相册不成册，普通真实相册仍保留
+ok 4 - PD-99：QA 夹具相册不成册，普通真实相册仍保留
+  ---
+  duration_ms: 8.8735
+  ...
+# Subtest: PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+ok 5 - PD-99：只有 QA 夹具相册时显示诚实空态而非蓝色步骤半壳
+  ---
+  duration_ms: 2.1018
+  ...
+# Subtest: PD-99：首页服务中条同源收敛 QA 夹具名
+ok 6 - PD-99：首页服务中条同源收敛 QA 夹具名
+  ---
+  duration_ms: 4.036
+  ...
+# Subtest: PD-99：预约列表同源收敛 QA 夹具名
+ok 7 - PD-99：预约列表同源收敛 QA 夹具名
+  ---
+  duration_ms: 1.5924
+  ...
+# Subtest: PD-99：预约详情与取消入口同源收敛 QA 夹具名
+ok 8 - PD-99：预约详情与取消入口同源收敛 QA 夹具名
+  ---
+  duration_ms: 4.896
+  ...
+# Subtest: PD-99 BLOCK1：完成态详情 QA 相册显示诚实空态
+ok 9 - PD-99 BLOCK1：完成态详情 QA 相册显示诚实空态
+  ---
+  duration_ms: 2.1987
+  ...
+# Subtest: PD-99 BLOCK1：完成态详情保留普通真实服务照片
+ok 10 - PD-99 BLOCK1：完成态详情保留普通真实服务照片
+  ---
+  duration_ms: 1.9232
+  ...
+# Subtest: PD-109：默认洗护预约 pill 使用统一客读宠名
+ok 11 - PD-109：默认洗护预约 pill 使用统一客读宠名
+  ---
+  duration_ms: 1.8724
+  ...
+# Subtest: PD-109：预约成功回显使用统一客读宠名
+ok 12 - PD-109：预约成功回显使用统一客读宠名
+  ---
+  duration_ms: 0.9414
+  ...
+# Subtest: PD-109：共享宠物切换器使用统一客读宠名
+ok 13 - PD-109：共享宠物切换器使用统一客读宠名
+  ---
+  duration_ms: 0.6607
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 547.3585

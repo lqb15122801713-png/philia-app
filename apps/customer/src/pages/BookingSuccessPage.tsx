@@ -7,6 +7,7 @@ import { ErrorState } from '@/components/home/common';
 import { APPT_TYPE_LABEL, dayLabel, fmtHM, fmtRange } from '@/components/booking/format';
 import { agc, BOARDING_AGREEMENTS } from '@/copy/agreement';
 import { bkc } from '@/copy/booking';
+import { customerPetName } from '@/lib/customerPresentation';
 
 export default function BookingSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -51,7 +52,7 @@ export default function BookingSuccessPage() {
     );
   }
 
-  const petName = detail?.pet?.name ?? '毛孩子';
+  const petName = customerPetName(detail?.pet?.name, '毛孩子');
   const serviceName = detail ? (detail.service?.name ?? APPT_TYPE_LABEL[detail.appointment.type]) : '';
   const staffPreference = detail?.appointment.note?.match(/【希望洗护师：(.+?)】/)?.[1] ?? null;
   const timeLabel = detail

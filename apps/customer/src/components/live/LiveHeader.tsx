@@ -13,6 +13,8 @@
  * 寄养天数并入 meta 行；门店名移出摘要卡（定稿无此段）。
  */
 
+import { customerPetName } from '@/lib/customerPresentation'
+
 export interface LiveHeaderProps {
   petName: string
   petAvatarUrl?: string | null
@@ -33,23 +35,24 @@ export default function LiveHeader({
   state,
   sseConnected,
 }: LiveHeaderProps) {
+  const displayPetName = customerPetName(petName)
   return (
     <header className="u1-card flex items-center gap-3.5 px-4 py-3.5">
       {petAvatarUrl ? (
         <img
           src={petAvatarUrl}
-          alt={petName}
+          alt={displayPetName}
           className="h-14 w-14 shrink-0 rounded-full bg-sunken object-cover ring-[1.5px] ring-brand-primary ring-offset-2"
         />
       ) : (
         /* 字圈工艺：浅木底 + 衬线首字（淡黄细环保留，S-01 摘要卡口径） */
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oak-light ring-[1.5px] ring-brand-primary ring-offset-2">
-          <span className="u1-serif text-title-lg font-semibold text-ink">{petName.slice(0, 1)}</span>
+          <span className="u1-serif text-title-lg font-semibold text-ink">{displayPetName.slice(0, 1)}</span>
         </span>
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-title font-extrabold">
-          {petName} · {serviceName}
+          {displayPetName} · {serviceName}
         </p>
         {meta ? <p className="mt-1 truncate font-number text-v2-trace text-ink-secondary">{meta}</p> : null}
       </div>
