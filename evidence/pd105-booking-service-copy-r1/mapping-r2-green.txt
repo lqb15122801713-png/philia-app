@@ -1,0 +1,7 @@
+COMMAND=tsx import groomingServiceCategory／groomingServiceLabel and assert seed-name behavior
+基础洗护（小型犬） -> wash -> 洗澡
+基础洗护（中型犬） -> wash -> 洗澡
+猫咪精致洗护 -> wash -> 洗澡
+造型修剪 -> style -> 美容
+修毛美容 -> style -> 美容
+MAPPING_R2_GREEN=5/5

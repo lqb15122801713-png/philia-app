@@ -9,7 +9,7 @@ import ConfirmBar from '@/components/booking/single/ConfirmBar';
 import BottomSheet from '@/components/booking/single/BottomSheet';
 import StaffHalfSheet from '@/components/booking/single/StaffHalfSheet';
 import { availableSetOf, buildWeekGrid, isSameDay, isSlotSelectable, retainSelectedSlot } from '@/components/booking/single/slotGrid';
-import { fenToYuan, fmtHM } from '@/components/booking/format';
+import { fenToYuan, fmtHM, groomingServiceLabel } from '@/components/booking/format';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 import { createAppointmentExp2 } from '@/lib/exp2Api';
 import { mc } from '@/components/member/copy';
@@ -218,7 +218,7 @@ export default function GroomingSinglePage() {
           <h1 className="text-v2-screen"><CK k="booking.groomingTitle">预约</CK></h1>
           <Link to="/appointments" className="shrink-0 text-caption text-ink">我的预约</Link>
         </div>
-        <p className="mt-1 text-caption text-ink-secondary">默认已填门店 / 毛孩子 / 服务 / 美容师</p>
+        <p className="mt-1 text-caption text-ink-secondary"><CK k="booking.groomingHint">{bkc('booking.groomingHint')}</CK></p>
       </header>
     ),
 
@@ -231,8 +231,8 @@ export default function GroomingSinglePage() {
           <button type="button" data-testid="u2-chip-pet" onClick={() => setActiveSheet('pet')} className={chipClass} title={pet?.name ?? '选择宠物'}>
             <span className="max-w-24 truncate">{pet?.name ?? '选择宠物'}</span><span aria-hidden="true">▾</span>
           </button>
-          <button type="button" data-testid="u2-chip-service" onClick={() => setActiveSheet('service')} className={chipClass} title={service?.name ?? '选择服务'}>
-            <span className="max-w-36 truncate">{service?.name ?? '选择服务'}</span><span aria-hidden="true">▾</span>
+          <button type="button" data-testid="u2-chip-service" onClick={() => setActiveSheet('service')} className={chipClass} title={service ? groomingServiceLabel(service.name) : bkc('booking.groomingServiceTitle')}>
+            <span className="max-w-36 truncate">{service ? groomingServiceLabel(service.name) : bkc('booking.groomingServiceTitle')}</span><span aria-hidden="true">▾</span>
           </button>
           <button type="button" data-testid="u2-chip-staff" onClick={() => setActiveSheet('staff')} className={chipClass}>
             <span className="max-w-24 truncate">{staffName ?? '系统分配'}</span><span aria-hidden="true">▾</span>
@@ -365,10 +365,10 @@ export default function GroomingSinglePage() {
                   className={`min-h-14 w-full rounded-[16px] border p-4 text-left ${item.id === serviceId ? 'border-brand-cta' : 'border-line'}`}
                 >
                   <span className="flex items-center justify-between gap-3">
-                    <span className="text-body font-semibold">{item.name}</span>
+                    <span className="text-body font-semibold">{groomingServiceLabel(item.name)}</span>
                     <span className="shrink-0 font-number text-body">{fenToYuan(item.priceFen)}</span>
                   </span>
-                  <span className="mt-1 block text-caption text-ink-secondary">约 {durationById?.[item.id] ?? item.durationMin ?? 60} 分钟</span>
+                  <span className="mt-1 block text-caption text-ink-secondary">约 {durationById?.[item.id] ?? item.durationMin ?? 60} 分钟 · {bkc('booking.groomingServiceDetailNote')}</span>
                 </button>
               ))}
             </div>

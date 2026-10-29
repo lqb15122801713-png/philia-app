@@ -1,0 +1,33 @@
+COMMAND=node --experimental-websocket evidence/pd105-booking-service-copy-r1/visible-preview.mjs
+{
+  "pngPath": "D:\\Philia-wt\\pd105-booking-service-copy-r1\\evidence\\pd105-booking-service-copy-r1\\visible-grooming-r2.png",
+  "bundleName": "index-B8VZWDwO.js",
+  "bundleSha256": "38038beddd90538733a8d0065aed5ff89e9245e5dd7b0d524e700a73d23efca7",
+  "checks": {
+    "hint": "想换门店、毛孩子或服务？点一下就好",
+    "hasHint": true,
+    "noMachineHint": true,
+    "hasWash": true,
+    "hasStyle": true,
+    "hasDetailNote": true,
+    "noSeedDetailNames": true,
+    "sheetText": "选择服务\n关闭\n洗澡\n¥88\n约 60 分钟 · 细节到店看宠再定\n洗澡\n¥128\n约 90 分钟 · 细节到店看宠再定\n洗澡\n¥168\n约 90 分钟 · 细节到店看宠再定\n美容\n¥198\n约 120 分钟 · 细节到店看宠再定",
+    "noMutations": true,
+    "noUnknownProcedures": true
+  },
+  "unknown": [],
+  "mutations": [],
+  "seen": [
+    "config.activeCopyTexts",
+    "slotPort.liveMap",
+    "auth.me",
+    "store.listNearby",
+    "pet.list",
+    "appointment.listMine",
+    "canvas.liveLayout",
+    "store.getWithServices",
+    "store.listStaffPublic",
+    "store.getWithServices"
+  ]
+}
+EXIT_CODE=0

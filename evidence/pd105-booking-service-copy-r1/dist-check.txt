@@ -1,0 +1,9 @@
+apps/customer/dist/assets/index-BFzpZXL6.js  bytes=1424221  sha256=d4be645f984e2fce674ebc95c95aa7000aee7ce4a035644658c420f3c89e5d9e
+apps/merchant/dist/assets/index-_dA59x8G.js  bytes=1682989  sha256=83dcb273559a3820f51b018b3d918f9553aece1a78b316ae5e54b70ff1110c06
+apps/staff/dist/assets/index-B584Q7Xj.js  bytes=740740  sha256=c4fd8c1870962b587d3b34b7670af5e2da034ce2d393ffb2ff0694fe240e549e
+{
+  "candidateNeBaseline": true,
+  "hasDetailNote": true,
+  "hasNaturalHeader": true,
+  "hasMachineHeader": false
+}

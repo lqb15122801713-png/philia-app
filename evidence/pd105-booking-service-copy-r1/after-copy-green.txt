@@ -1,0 +1,8 @@
+PASS 页头无默认已填
+PASS 大类收为美容
+PASS 共用副文已入文案表
+PASS 服务卡副文可见
+PASS 网约选项副文可见
+PASS 展示映射已定义
+PASS 主路径不直接渲染服务细项名
+COPY_GREEN=7/7

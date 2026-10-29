@@ -1,16 +1,16 @@
 /**
  * B4-1 单屏 · 服务 chips 区块：
  * 横排 chips，默认选中=上次/推荐（由页面预填）；超过 4 个时显示前 4 个 +
- * 「更多服务 ▸」渐进披露（展开为 wrap 全量，可再收起）。chip 含名称/时长/价格。
+ * 「更多服务 ▸」渐进披露（展开为 wrap 全量，可再收起）。chip 含大类名/时长/价格。
  *
- * U1-D 换肤（v9.1）：chips 之上加「服务二选一照片大卡」——洗澡 / 造型美容两档
- * （grooming 目录真实分组：服务名含「造型」为美容档，其余为洗澡档；某档目录为空
+ * U1-D 换肤（v9.1）：chips 之上加「服务二选一照片大卡」——洗澡 / 美容两档
+ * （grooming 目录真实分组：按展示映射归美容档或洗澡档；某档目录为空
  * 则该卡不渲染，不造假入口）。点大卡=选中该档首个服务（复用 onSelect 真实选择逻辑，
  * 零新交互）。
  *
  * 换皮批片 2（定稿 B-01 / §4.4 工艺卡）：
  * - 二选一大卡 → selcard：一卡两列竖线分隔（圆角 20），列=icon 26 + 题 16/800 +
- *   mono 副题（项数 · 价格起）；选中列=brand 深面 #5C5040 反白 #F6EFDD（副题 #C9BBA0）
+ *   mono 副题（到店说明 · 价格起）；选中列=brand 深面 #5C5040 反白 #F6EFDD（副题 #C9BBA0）
  *   （片1 VI，READY §2.1）。
  *   VI 位图插槽退役：选中列深底上位图无法反白，定稿锚 selcard 即线图标 26。
  * - 服务项 chips → 胶囊 99：边 --line，选中=brand 深面 #5C5040 反白字（片1 VI；
@@ -23,14 +23,14 @@ import { Bath, Scissors } from 'lucide-react';
 import { Skeleton } from '@philia/shared';
 import { bkc } from '@/copy/booking';
 import type { ServiceItem } from '../types';
-import { fenToYuan } from '../format';
+import { fenToYuan, groomingServiceCategory, groomingServiceLabel } from '../format';
 
 const COLLAPSED_COUNT = 4;
 
-/** 档定义：洗澡（非造型）/ 造型美容（名含「造型」） */
+/** 档定义：稳定 wash / style key；中文显示名走 copy */
 const CATEGORIES = [
-  { key: 'wash', name: '洗澡', icon: Bath, testId: 'gs-cat-wash', match: (s: ServiceItem) => !s.name.includes('造型') },
-  { key: 'style', name: '造型美容', icon: Scissors, testId: 'gs-cat-style', match: (s: ServiceItem) => s.name.includes('造型') },
+  { key: 'wash', labelKey: 'booking.groomingCatWash', icon: Bath, testId: 'gs-cat-wash', match: (s: ServiceItem) => groomingServiceCategory(s.name) === 'wash' },
+  { key: 'style', labelKey: 'booking.groomingCatStyle', icon: Scissors, testId: 'gs-cat-style', match: (s: ServiceItem) => groomingServiceCategory(s.name) === 'style' },
 ] as const;
 
 export default function ServiceChipsBlock({
@@ -103,13 +103,13 @@ export default function ServiceChipsBlock({
                   strokeWidth={1.6}
                   aria-hidden="true"
                 />
-                <span className="block text-v2-section">{c.name}</span>
+                <span className="block text-v2-section">{bkc(c.labelKey)}</span>
                 <span
                   className={`mt-1 block font-number text-v2-trace ${
                     active ? 'text-[#C9BBA0]' : 'text-ink-secondary'
                   }`}
                 >
-                  {c.items.length} 项可选 · {fenToYuan(Math.min(...c.items.map((s) => s.priceFen)))} 起
+                  {bkc('booking.groomingServiceDetailNote')} · {fenToYuan(Math.min(...c.items.map((s) => s.priceFen)))} 起
                 </span>
               </button>
             );
@@ -132,13 +132,13 @@ export default function ServiceChipsBlock({
                 active ? 'border-transparent bg-[#5C5040] text-[#F6EFDD]' : 'border-line bg-card text-ink'
               }`}
             >
-              <span className="block text-[12.5px] font-semibold leading-4">{s.name}</span>
+              <span className="block text-[12.5px] font-semibold leading-4">{groomingServiceLabel(s.name)}</span>
               <span
                 className={`mt-0.5 block font-number text-v2-trace ${
                   active ? 'text-[#C9BBA0]' : 'text-ink-secondary'
                 }`}
               >
-                约 {durationById?.[s.id] ?? s.durationMin ?? 60} 分钟 · {fenToYuan(s.priceFen)}
+                约 {durationById?.[s.id] ?? s.durationMin ?? 60} 分钟 · {fenToYuan(s.priceFen)} · {bkc('booking.groomingServiceDetailNote')}
               </span>
             </button>
           );

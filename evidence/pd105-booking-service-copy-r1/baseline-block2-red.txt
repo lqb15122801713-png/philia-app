@@ -1,0 +1,22 @@
+COMMAND=node evidence/pd105-booking-service-copy-r1/copy-check.mjs
+FAIL header copy key 有真实默认文案
+FAIL header 经 CK＋bkc 渲染
+FAIL header JSX 无裸中文 hint
+PASS 页头无默认已填
+FAIL 大类 wash copy key
+FAIL 大类 style copy key
+FAIL style 使用具名正则常量
+FAIL category helper 返回稳定 union key
+FAIL category helper 使用具名正则
+FAIL label helper 从 copy 取 style
+FAIL label helper 从 copy 取 wash
+FAIL label helper 不直接返回中文大类
+FAIL CATEGORIES wash 按 key 匹配
+FAIL CATEGORIES style 按 key 匹配
+FAIL CATEGORIES 显示名走 copy labelKey
+FAIL CATEGORIES 不拿中文显示串当 key
+FAIL 服务 pill 空标题走 copy
+PASS 共用副文已入文案表
+PASS 服务卡与网约选项副文可见
+PASS 主路径不直接渲染服务细项名
+COPY_CHECK_RED=16/20

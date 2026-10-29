@@ -2,6 +2,8 @@
  * 预约域展示辅助（T2.2）：金额 / 时间 / 状态胶囊 / 收款方式 文案与样式。
  */
 
+import { bkc } from '@/copy/booking';
+
 /** 分 → 元 展示（整数元不带小数） */
 export function fenToYuan(fen: number): string {
   const yuan = fen / 100;
@@ -77,6 +79,14 @@ export const PAYMENT_MODE_META: Record<string, { label: string; hint: string }> 
 
 export const paymentModeLabel = (m: string | null) =>
   (m && PAYMENT_MODE_META[m]?.label) || '到店付';
+
+export const GROOMING_STYLE_NAME_RE = /美容|造型|修毛|剪/;
+
+export const groomingServiceCategory = (name: string): 'wash' | 'style' =>
+  GROOMING_STYLE_NAME_RE.test(name) ? 'style' : 'wash';
+
+export const groomingServiceLabel = (name: string) =>
+  bkc(groomingServiceCategory(name) === 'style' ? 'booking.groomingCatStyle' : 'booking.groomingCatWash');
 
 export const APPT_TYPE_LABEL: Record<string, string> = {
   grooming: '洗护美容',
