@@ -1,0 +1,2 @@
+{"url":"http://127.0.0.1:7143","tipPackage":false,"deployed":false,"auxiliaryOnly":true}
+{"method":"POST","path":"/api/auth/dev-login","status":200,"upstream":"staging"}

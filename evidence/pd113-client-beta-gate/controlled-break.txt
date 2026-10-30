@@ -1,0 +1,298 @@
+TAP version 13
+# Subtest: PD-101／PD-113：/login 产品登录脸提供手机号与内测 code 输入
+ok 1 - PD-101／PD-113：/login 产品登录脸提供手机号与内测 code 输入
+  ---
+  duration_ms: 13.2879
+  ...
+# Subtest: PD-101 BLOCK1：正式登录脸使用独立 login copy 且无硬编码主文案或 devlogin 键
+ok 2 - PD-101 BLOCK1：正式登录脸使用独立 login copy 且无硬编码主文案或 devlogin 键
+  ---
+  duration_ms: 1.04
+  ...
+# Subtest: PD-101 BLOCK2：产品登录与内测登录共用 LoginBrandShell
+ok 3 - PD-101 BLOCK2：产品登录与内测登录共用 LoginBrandShell
+  ---
+  duration_ms: 0.2222
+  ...
+# Subtest: PD-113：产品脸手机号登录把可选内测 code 接入既有 API 契约
+not ok 4 - PD-113：产品脸手机号登录把可选内测 code 接入既有 API 契约
+  ---
+  duration_ms: 2.6572
+  location: 'E:\\KIMI code\\pd113-client-beta-gate\\apps\\customer\\src\\pages\\loginQuality.test.ts:1:1081'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /devLoginByPhone\(getApiBase\(\), phone\.trim\(\), code\.trim\(\) \|\| undefined\)/. Input:
+    
+    "import { devLoginByPhone, getApiBase, useMe, usePhiliaClient } from '@philia/shared'\r\n" +
+      "import { useState, type FormEvent } from 'react'\r\n" +
+      "import { Navigate, useLocation, useNavigate } from 'react-router-dom'\r\n" +
+      "import { Button } from '@/components/ui/button'\r\n" +
+      "import { Input } from '@/components/ui/input'\r\n" +
+      "import LoginBrandShell from '@/components/login/LoginBrandShell'\r\n" +
+      "import { lc } from '@/copy/login'\r\n" +
+      '\r\n' +
+      'export default function LoginPage() {\r\n' +
+      '  const navigate = useNavigate()\r\n' +
+      '  const location = useLocation()\r\n' +
+      '  const { queryClient } = usePhiliaClient()\r\n' +
+      '  const { user, loading } = useMe()\r\n' +
+      "  const [phone, setPhone] = useState('')\r\n" +
+      "  const [code, setCode] = useState('')\r\n" +
+      '  const [pending, setPending] = useState(false)\r\n' +
+      '  const [error, setError] = useState<string | null>(null)\r\n' +
+      '  const from = (location.state as { from?: string } | null)?.from\r\n' +
+      "  const destination = from && from !== '/login' && from !== '/dev-login' ? from : '/home'\r\n" +
+      '\r\n' +
+      '  const submit = async (event: FormEvent<HTMLFormElement>) => {\r\n' +
+      '    event.preventDefault()\r\n' +
+      '    if (pending) return\r\n' +
+      '    setPending(true)\r\n' +
+      '    setError(null)\r\n' +
+      '    try {\r\n' +
+      '      await devLoginByPhone(getApiBase(), phone.trim())\r\n' +
+      '      await queryClient.invalidateQueries()\r\n' +
+      '      navigate(destination, { replace: true })\r\n' +
+      '    } catch (err) {\r\n' +
+      "      setError(err instanceof Error ? err.message : lc('login.failed'))\r\n" +
+      '    } finally {\r\n' +
+      '      setPending(false)\r\n' +
+      '    }\r\n' +
+      '  }\r\n' +
+      '\r\n' +
+      '  if (loading) {\r\n' +
+      '    return (\r\n' +
+      '      <div className="flex min-h-[60vh] items-center justify-center">\r\n' +
+      `        <p className="text-caption text-ink-secondary">{lc('login.loading')}</p>\r\n` +
+      '      </div>\r\n' +
+      '    )\r\n' +
+      '  }\r\n' +
+      '\r\n' +
+      '  if (user) return <Navigate to={destination} replace />\r\n' +
+      '\r\n' +
+      '  return (\r\n' +
+      '    <LoginBrandShell>\r\n' +
+      '      <main className="mt-10 flex-1 px-8">\r\n' +
+      '        <form\r\n' +
+      '          data-testid="product-login-form"\r\n' +
+      '          method="post"\r\n' +
+      '          action={`${getApiBase()}/api/auth/dev-login`}\r\n' +
+      '          onSubmit={(event) => void submit(event)}\r\n' +
+      '        >\r\n' +
+      `          <h2 className="text-title">{lc('login.phoneTitle')}</h2>\r\n` +
+      '          <p id="product-login-phone-help" className="mt-2 text-caption leading-[1.8] text-ink-secondary">\r\n' +
+      "            {lc('login.phoneBody')}\r\n" +
+      '          </p>\r\n' +
+      '          <label htmlFor="product-login-phone" className="mt-6 block text-body-sm font-semibold text-ink">\r\n' +
+      "            {lc('login.phoneLabel')}\r\n" +
+      '          </label>\r\n' +
+      '          <Input\r\n' +
+      '            id="product-login-phone"\r\n' +
+      '            name="phone"\r\n' +
+      '            type="tel"\r\n' +
+      '            inputMode="numeric"\r\n' +
+      '            autoComplete="tel"\r\n' +
+      '            enterKeyHint="done"\r\n' +
+      '            autoCorrect="off"\r\n' +
+      '            autoCapitalize="off"\r\n' +
+      '            spellCheck={false}\r\n' +
+      '            required\r\n' +
+      '            pattern="1[0-9]{10}"\r\n' +
+      '            maxLength={11}\r\n' +
+      '            value={phone}\r\n' +
+      '            onChange={(event) => {\r\n' +
+      "              setPhone(event.target.value.replace(/\\D/g, '').slice(0, 11))\r\n" +
+      '              setError(null)\r\n' +
+      '            }}\r\n' +
+      "            placeholder={lc('login.phonePlaceholder')}\r\n" +
+      '            aria-describedby="product-login-phone-help"\r\n' +
+      '            className="mt-2 min-h-12 rounded-control bg-card text-body"\r\n' +
+      '            data-testid="product-login-phone"\r\n' +
+      '          />\r\n' +
+      '          <label htmlFor="product-login-code" className="mt-4 block text-body-sm font-semibold text-ink">\r\n' +
+      "            {lc('login.gateLabel')}\r\n" +
+      '          </label>\r\n' +
+      '          <Input\r\n' +
+      '            id="product-login-code"\r\n' +
+      '            name="code"\r\n' +
+      '            type="password"\r\n' +
+      '            autoComplete="current-password"\r\n' +
+      '            enterKeyHint="done"\r\n' +
+      '            autoCorrect="off"\r\n' +
+      '            autoCapitalize="off"\r\n' +
+      '            spellCheck={false}\r\n' +
+      '            value={code}\r\n' +
+      '            onChange={(event) => {\r\n' +
+      '              setCode(event.target.value)\r\n' +
+      '              setError(null)\r\n' +
+      '            }}\r\n' +
+      "            placeholder={lc('login.gatePlaceholder')}\r\n" +
+      '            className="mt-2 min-h-12 rounded-control bg-card text-body"\r\n' +
+      '            data-testid="product-login-code"\r\n' +
+      '          />\r\n' +
+      '          {error ? (\r\n' +
+      '            <p role="alert" className="mt-3 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">\r\n' +
+      '              {error}\r\n' +
+      '            </p>\r\n' +
+      '          ) : null}\r\n' +
+      '          <Button\r\n' +
+      '            type="submit"\r\n' +
+      '            disabled={pending}\r\n' +
+      '            className="mt-4 min-h-12 w-full rounded-control bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] hover:bg-[#2E2318]/90"\r\n' +
+      '            data-testid="product-login-submit"\r\n' +
+      '          >\r\n' +
+      "            {pending ? lc('login.pending') : lc('login.submit')}\r\n" +
+      '          </Button>\r\n' +
+      '        </form>\r\n' +
+      '      </main>\r\n' +
+      '    </LoginBrandShell>\r\n' +
+      '  )\r\n' +
+      '}\r\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { devLoginByPhone, getApiBase, useMe, usePhiliaClient } from '@philia/shared'
+    import { useState, type FormEvent } from 'react'
+    import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+    import { Button } from '@/components/ui/button'
+    import { Input } from '@/components/ui/input'
+    import LoginBrandShell from '@/components/login/LoginBrandShell'
+    import { lc } from '@/copy/login'
+    
+    export default function LoginPage() {
+      const navigate = useNavigate()
+      const location = useLocation()
+      const { queryClient } = usePhiliaClient()
+      const { user, loading } = useMe()
+      const [phone, setPhone] = useState('')
+      const [code, setCode] = useState('')
+      const [pending, setPending] = useState(false)
+      const [error, setError] = useState<string | null>(null)
+      const from = (location.state as { from?: string } | null)?.from
+      const destination = from && from !== '/login' && from !== '/dev-login' ? from : '/home'
+    
+      const submit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        if (pending) return
+        setPending(true)
+        setError(null)
+        try {
+          await devLoginByPhone(getApiBase(), phone.trim())
+          await queryClient.invalidateQueries()
+          navigate(destination, { replace: true })
+        } catch (err) {
+          setError(err instanceof Error ? err.message : lc('login.failed'))
+        } finally {
+          setPending(false)
+        }
+      }
+    
+      if (loading) {
+        return (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <p className="text-caption text-ink-secondary">{lc('login.loading')}</p>
+          </div>
+        )
+      }
+    
+      if (user) return <Navigate to={destination} replace />
+    
+      return (
+        <LoginBrandShell>
+          <main className="mt-10 flex-1 px-8">
+            <form
+              data-testid="product-login-form"
+              method="post"
+              action={`${getApiBase()}/api/auth/dev-login`}
+              onSubmit={(event) => void submit(event)}
+            >
+              <h2 className="text-title">{lc('login.phoneTitle')}</h2>
+              <p id="product-login-phone-help" className="mt-2 text-caption leading-[1.8] text-ink-secondary">
+                {lc('login.phoneBody')}
+              </p>
+              <label htmlFor="product-login-phone" className="mt-6 block text-body-sm font-semibold text-ink">
+                {lc('login.phoneLabel')}
+              </label>
+              <Input
+                id="product-login-phone"
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                enterKeyHint="done"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                required
+                pattern="1[0-9]{10}"
+                maxLength={11}
+                value={phone}
+                onChange={(event) => {
+                  setPhone(event.target.value.replace(/\D/g, '').slice(0, 11))
+                  setError(null)
+                }}
+                placeholder={lc('login.phonePlaceholder')}
+                aria-describedby="product-login-phone-help"
+                className="mt-2 min-h-12 rounded-control bg-card text-body"
+                data-testid="product-login-phone"
+              />
+              <label htmlFor="product-login-code" className="mt-4 block text-body-sm font-semibold text-ink">
+                {lc('login.gateLabel')}
+              </label>
+              <Input
+                id="product-login-code"
+                name="code"
+                type="password"
+                autoComplete="current-password"
+                enterKeyHint="done"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                value={code}
+                onChange={(event) => {
+                  setCode(event.target.value)
+                  setError(null)
+                }}
+                placeholder={lc('login.gatePlaceholder')}
+                className="mt-2 min-h-12 rounded-control bg-card text-body"
+                data-testid="product-login-code"
+              />
+              {error ? (
+                <p role="alert" className="mt-3 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">
+                  {error}
+                </p>
+              ) : null}
+              <Button
+                type="submit"
+                disabled={pending}
+                className="mt-4 min-h-12 w-full rounded-control bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] hover:bg-[#2E2318]/90"
+                data-testid="product-login-submit"
+              >
+                {pending ? lc('login.pending') : lc('login.submit')}
+              </Button>
+            </form>
+          </main>
+        </LoginBrandShell>
+      )
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (E:\KIMI code\pd113-client-beta-gate\apps\customer\src\pages\loginQuality.test.ts:24:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1045.0358

@@ -11,6 +11,8 @@ const LOGIN_COPY_TABLE = {
   'login.phoneBody': '输入手机号即登录；首次使用将自动注册（新客建档）。',
   'login.phoneLabel': '手机号',
   'login.phonePlaceholder': '11 位手机号',
+  'login.gateLabel': '内测口令（code）',
+  'login.gatePlaceholder': '内测环境必填',
   'login.submit': '手机号登录',
   'login.pending': '登录中…',
   'login.failed': '登录失败，请稍后重试',
