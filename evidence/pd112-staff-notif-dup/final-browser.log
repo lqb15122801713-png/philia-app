@@ -1,0 +1,10 @@
+PASS 真实通知列表与原未读数完成加载
+PASS 同分钟去重后 50 行收敛为 25 行 — 25
+PASS 潘婧分组键 dupPairGroups=0
+PASS 不同分钟提醒各自保留，不做密度合并 — {"careTitleHits":25,"careDistinctKeys":25}
+PASS 未读角标保持原接口真实总数，未清未读或虚增 — 未读 61 条
+PASS 每个含未读 ID 的组均保留未读代表 — {"actual":25,"expected":25}
+PASS 全部已读可见但未点击，业务 mutation 为零 — {"allReadVisible":true,"mutations":[]}
+PASS tRPC mock 过程全部已知 — []
+报告：E:\KIMI code\pd112-staff-notif-dup\evidence\pd112-staff-notif-dup\browser-final.json
+帧：E:\KIMI code\pd112-staff-notif-dup\evidence\pd112-staff-notif-dup\shots\final\notifications.png

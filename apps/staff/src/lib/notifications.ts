@@ -22,7 +22,7 @@ export function groupDuplicateNotifications<T extends NotificationRow>(rows: rea
       row.type,
       row.title,
       row.body,
-      Math.floor(row.createdAt.getTime() / 1000),
+      Math.floor(row.createdAt.getTime() / 60_000),
     ])
     const existing = byContent.get(key)
     if (!existing) {

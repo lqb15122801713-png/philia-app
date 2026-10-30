@@ -1,0 +1,14 @@
+{
+  "baselineTip": "524b4bc7e203890e42dd90c01bfd7a4c6f84613b",
+  "baselineDeploy": "20261029214338",
+  "baselineName": "index-STmHfnb4.js",
+  "baselineSha256": "6a69f2022ace565a385188e3f03ef0b5b99ab54efb284a22b4a27b6427160ef0",
+  "baselineBytes": 735747,
+  "candidateName": "index-Cp859QUp.js",
+  "candidateSha256": "f4fd436127c85693512670aa18835629d02d017a52233df704979692b5fded0d",
+  "candidateBytes": 740740,
+  "candidateIsTipPackage": false,
+  "candidateDeployed": false,
+  "nameDiffersFromBaseline": true,
+  "contentDiffersFromBaseline": true
+}
