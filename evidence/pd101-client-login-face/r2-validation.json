@@ -1,0 +1,58 @@
+{
+  "ticket": "PD-101-R2",
+  "recordedAt": "2026-10-30T17:23:05+08:00",
+  "baseHead": "e423b3429052a2c1d07ee2cfa7dfef10addb21d7",
+  "baseTip": "86b614fd6ccacda5c1a83b639bde7dab422bcb2b",
+  "blockers": {
+    "copy": {
+      "initialRed": "LoginPage did not import @/copy/login.",
+      "green": "LoginPage imports only login.* copy; devlogin.* and Chinese hardcoded copy are absent.",
+      "files": ["apps/customer/src/copy/login.ts", "apps/customer/src/pages/LoginPage.tsx"]
+    },
+    "brandShell": {
+      "initialRed": "LoginPage and DevLoginPage did not share LoginBrandShell and contained duplicate header/footer markup.",
+      "green": "One components/login/LoginBrandShell.tsx is used by both pages; duplicate page-owned header/footer markup is removed.",
+      "files": ["apps/customer/src/components/login/LoginBrandShell.tsx", "apps/customer/src/pages/LoginPage.tsx", "apps/customer/src/pages/DevLoginPage.tsx"]
+    }
+  },
+  "tests": {
+    "allCustomerUnit": { "exit": 0, "pass": 29, "fail": 0 },
+    "targetedLint": { "exit": 0, "errors": 0, "warnings": 1, "warningClassification": "pre-existing DevLoginPage unused eslint-disable" },
+    "fullCustomerLint": { "exit": 1, "errors": 65, "warnings": 4, "classification": "INC-PREEXISTING-LINT" },
+    "rootBuild": { "exit": 0 },
+    "diffCheck": { "exit": 0 },
+    "controlledBreak": "Temporarily aliased formal copy to devlogin; BLOCK1 test failed as expected. Restored immediately and reran all checks."
+  },
+  "candidate": {
+    "tipPackage": false,
+    "deployed": false,
+    "customerJs": "index-Co6KPtYM.js",
+    "bytes": 1428390,
+    "sha256": "dd756309c37978020b10e20c0808b75a8db0b0d15fa3451ab8258243cdf6a836",
+    "notDYordG4O": true,
+    "notDmV9kubu": true,
+    "rootFinalUrl": "http://127.0.0.1:7142/login",
+    "rootSnapshot": "text-9a0acd76-53af-4da1-88ce-63c93cf031ed",
+    "loginFinalUrl": "http://127.0.0.1:7142/login",
+    "loginSnapshot": "text-e8a4933a-dc3d-41e8-9531-dd5224724063",
+    "devLoginSnapshot": "text-a08bca5f-415f-4449-84fd-4ad0050b6df3",
+    "forbiddenFormalMainFaceTextCount": 0,
+    "r1R2RootPixelBytesEqual": true,
+    "r1R2LoginPixelBytesEqual": true,
+    "screenshots": ["shots/r2-root.png", "shots/r2-login.png", "shots/r2-dev-login.png"]
+  },
+  "migration": {
+    "reserved": "0142",
+    "status": "intentionally blank",
+    "schemaChanges": 0,
+    "fileOccupied": false
+  },
+  "cleanup": {
+    "previewStopped": true,
+    "browserTabsClosed": true,
+    "temporaryProfilesRemoved": true,
+    "upstreamTraffic": false,
+    "businessWrites": 0,
+    "realPayments": 0
+  }
+}

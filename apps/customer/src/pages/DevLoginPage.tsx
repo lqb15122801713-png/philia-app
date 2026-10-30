@@ -30,9 +30,10 @@
 
 import { devLogin, devLoginByPhone, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate, Link } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import LoginBrandShell from '@/components/login/LoginBrandShell'
 import { mc } from '@/components/member/copy'
 import { dc } from '@/copy/devlogin'
 
@@ -209,42 +210,7 @@ export default function DevLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col pb-8">
-      {/* U4-D2 hero：试样 01 左对齐工艺——细线爪印圆标 + 衬线宣言 + 宽距小字 + 淡黄短分隔线 */}
-      <header className="px-8 pt-14">
-        <span
-          className="u1-ring flex h-[54px] w-[54px] items-center justify-center rounded-full bg-card"
-          aria-hidden="true"
-        >
-          {/* 实心爪印（VI 同 dock 中央钮，试样 01 同枚 SVG） */}
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="#3B2E24">
-            <circle cx="10.4" cy="11" r="3.1" />
-            <circle cx="21.6" cy="11" r="3.1" />
-            <circle cx="6.9" cy="17.2" r="2.7" />
-            <circle cx="25.1" cy="17.2" r="2.7" />
-            <path d="M16 15.5c-3.9 0-7 2.9-7 6 0 2 1.5 3.4 3.3 3.4 1.3 0 2.4-.7 3.7-.7s2.4.7 3.7.7c1.8 0 3.3-1.4 3.3-3.4 0-3.1-3.1-6-7-6z" />
-          </svg>
-        </span>
-        {/* 衬线宣言（v2.0 §2.1 宣言档 34/900 lh1.5 + §4.11 淡黄刷底强调件，
-            登录页专用不泛滥；文案入 copy 键（l1.* 在 MEMBER_COPY，其余在 copy/devlogin.ts）。
-            旧注「试样 30px 越字阶取 20」作废——片 1 字阶梯已落 34px 宣言档，本页即 L-01 唯一用位） */}
-        <h1 className="u1-serif mt-[30px] text-v2-manifesto tracking-[.04em]">
-          {mc('l1.manifestoA')}
-          <br />
-          {mc('l1.manifestoB')}
-          <em
-            className="not-italic"
-            style={{ background: 'linear-gradient(transparent 62%, #F2DFA6 62%)' }}
-          >
-            {mc('l1.manifestoEm')}
-          </em>
-          {mc('l1.manifestoC')}
-        </h1>
-        <p className="mt-[14px] text-caption-xs font-medium tracking-[.14em] text-ink-secondary">
-          {dc('devlogin.tagline')}
-        </p>
-        <span className="mt-[22px] block h-[1.5px] w-11 bg-brand-primary" aria-hidden="true" />
-      </header>
+    <LoginBrandShell footerNote={dc('devlogin.footerB')}>
 
       {/* 主行动区：L-01 微信一键登录=置灰槽位（WECHAT env 未配，留口在案；
           PD-15 三规：置灰不上假件 + data-testid=slot-wechat；客户端体验大批 片 1
@@ -459,21 +425,6 @@ export default function DevLoginPage() {
           {dc('devlogin.seedNote')}
         </p>
       </main>
-
-      {/* 底部协议小字（试样工艺：10px → 字阶取 11 caption-xs）；
-          PD-82 登录协议可点（R17 回归）：协议名=真链 → /agreements 公开页（登录前可读真文） */}
-      <footer className="mt-10 px-10 text-center text-caption-xs leading-[1.8] text-ink-placeholder">
-        {dc('devlogin.footerAgree')}
-        <Link to="/agreements?doc=user" data-testid="login-agreement-user" className="underline underline-offset-2">
-          {dc('devlogin.footerUser')}
-        </Link>
-        {dc('devlogin.footerAnd')}
-        <Link to="/agreements?doc=privacy" data-testid="login-agreement-privacy" className="underline underline-offset-2">
-          {dc('devlogin.footerPrivacy')}
-        </Link>
-        <br />
-        {dc('devlogin.footerB')}
-      </footer>
-    </div>
+    </LoginBrandShell>
   )
 }
