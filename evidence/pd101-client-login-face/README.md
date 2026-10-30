@@ -38,4 +38,15 @@
 
 预览服务已停止、浏览器页已关闭、临时浏览器配置已删除；现网测试只执行产品登出，未保存新会话。
 
+## 补刀 R2｜码质 BLOCK×2
+
+- BLOCK①：新增 `copy/login.ts`，正式脸所有主文案走独立 `login.*`；`LoginPage.tsx` 已无 `devlogin.*`、无中文硬编码主文案。
+- BLOCK②：新增单份 `components/login/LoginBrandShell.tsx`，`LoginPage` 与 `DevLoginPage` 均通过 children 组合共用品牌头与协议脚；两页重复 header／footer 已移除。
+- 新增 `loginQuality.test.ts` 分别取得两条初始 RED，抽壳／抽 copy 后 2/2 转绿；补刀受控误挂 `devlogin` 时 BLOCK① 再次按预期变红，已还原。
+- 最终客户端单测 **29/29，fail=0**；定向 lint **0 error／1 条既有 warning**；全量 lint 仍既有 **65 errors／4 warnings**；三端根构建 exit 0。
+- NEW 候选客包 **`index-Co6KPtYM.js`**，双≠`index-DYordG4O.js`／`index-DmV9kubu.js`；bytes=1428390，SHA-256=`dd756309c37978020b10e20c0808b75a8db0b0d15fa3451ab8258243cdf6a836`。
+- 客根与 `/login` 仍到产品脸；DOM 快照分别为 `text-9a0acd76-53af-4da1-88ce-63c93cf031ed`／`text-e8a4933a-dc3d-41e8-9531-dd5224724063`。`/dev-login` 共壳后仍保留内测内容，快照 `text-a08bca5f-415f-4449-84fd-4ad0050b6df3`。
+- `shots/r2-root.png`／`r2-login.png` 与首轮正式脸帧逐字节一致，`pixelBytesEqual=true`，未做视觉偏移；`r2-dev-login.png` 另证内测页内容保留。
+- 机械明细见 `r2-validation.json`；首轮 `validation.json` 与功能证据原样保留，未以 REUSE 冒充 NEW dist。
+
 — 不写验收通过

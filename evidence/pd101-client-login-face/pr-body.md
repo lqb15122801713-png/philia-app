@@ -34,4 +34,16 @@
 
 未做审美换皮，未并 UNREAD，未扩员整端、商 `/dev-login`、相册、底栏、商城、售卡、关单等；未抢 PD-106，未动 PD-108／110，未碰 `01M5EQVF`。
 
+## 补刀 R2｜码质 BLOCK×2
+
+- 新增 `copy/login.ts`：正式脸主文案全部走 `login.*`，不再误挂 `devlogin.*`，无硬编码主文案。
+- 新增单份 `LoginBrandShell`：`LoginPage`／`DevLoginPage` 通过 children 组合共用品牌头与协议脚，重复 JSX 已移除；dev 专属文案仍走 `devlogin.*`。
+- 新增两条源码回归测试，初始 RED→抽离后 GREEN；补刀受控误挂再次变红并已还原。
+- 最终单测 **29/29，fail=0**；定向 lint **0 error／1 条既有 warning**；全量 lint 仍既有 65／4；三端构建 exit 0。
+- NEW 候选客包 **`index-Co6KPtYM.js`**（双≠`DYordG4O`／`DmV9kubu`），SHA-256 `dd756309c37978020b10e20c0808b75a8db0b0d15fa3451ab8258243cdf6a836`。
+- 客根与 `/login` 仍不落 `/dev-login`，主脸仍非口令／演示卡；`/dev-login` 共壳后原有内测内容保留。
+- R1／R2 正式脸关键帧逐字节一致，未发生视觉偏移。证据追加于 `r2-validation.json` 与 `shots/r2-*.png`，旧功能证据保留。
+
+候选仍非 tip 包、未部署；PR 只开不合，候码质复审与 PR Verifier 异窗续审。
+
 — 不写验收通过
