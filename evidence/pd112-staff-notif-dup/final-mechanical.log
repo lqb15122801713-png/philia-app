@@ -1,0 +1,26 @@
+PASS 冻结基线 tip／DEPLOY／员 dist
+PASS 现网基线包 hash 已钉
+PASS R64 跨秒根因：同秒 24 组、同分钟 25 组
+PASS 20:51 双行分别为 11／12 秒
+PASS 产品态使用同分钟键
+PASS PD-112 回归在产品测试内
+PASS 最终相关单测 12／12
+PASS 三端构建均完成且员包为候选
+PASS 触及文件 lint 零输出
+PASS 全量 lint 红项如实保留
+PASS 受控破坏准确见红
+PASS 受控破坏后已复跑最终绿
+PASS 候选 js 名≠冻结员包
+PASS 候选 js 内容≠冻结员包
+PASS 候选未冒充 tip 包或部署
+PASS 候选包 hash 与磁盘一致
+PASS 最终浏览器探针零失败
+PASS 潘婧分组 dupPairGroups=0
+PASS 50 行收敛 25 组且不同分钟不合并
+PASS 未读总数保持真实 61
+PASS 25 个含未读 ID 组均有未读代表
+PASS 未点全部已读／零业务 mutation
+PASS localhost 仅辅助非 HIT PASS
+PASS 截图存在且 hash 自洽
+PASS mig0148 故意空留且未占文件
+25/25 checks passed; fail=0

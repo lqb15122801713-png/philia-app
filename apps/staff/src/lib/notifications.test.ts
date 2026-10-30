@@ -98,3 +98,21 @@ test('PD-98：同组优先展示未读行且一次已读覆盖重复 ID', async 
   assert.equal(groups[0]?.notification.id, 'care-unread')
   assert.deepEqual(groups[0]?.ids, ['care-read', 'care-unread'])
 })
+
+test('PD-112：同文同分钟跨秒双插只留一组，不同分钟与全部未读 ID 不丢', async () => {
+  const { groupDuplicateNotifications } = await loadGrouping()
+  assert.ok(groupDuplicateNotifications, '先提供真实的通知分组实现')
+  const rows = [
+    row('care-2051-a', '2026-10-29T20:51:11+08:00'),
+    row('care-2051-b', '2026-10-29T20:51:12+08:00'),
+    row('care-2052', '2026-10-29T20:52:00+08:00'),
+  ]
+  const groups = groupDuplicateNotifications(rows)
+
+  assert.equal(groups.length, 2)
+  assert.deepEqual(groups.map((group) => group.ids), [['care-2051-a', 'care-2051-b'], ['care-2052']])
+  const groupedIds = new Set(groups.flatMap((group) => group.ids))
+  const unreadIds = rows.filter((item) => item.readAt === null).map((item) => item.id)
+  assert.equal(unreadIds.length, 3)
+  assert.ok(unreadIds.every((id) => groupedIds.has(id)))
+})

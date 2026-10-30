@@ -1,0 +1,142 @@
+{
+  "at": "2026-10-30T02:45:38.542Z",
+  "defect": "NOTIF-DUP-ROWS-OBS",
+  "mig0148": "故意空留；零 schema；禁占文件",
+  "candidate": "index-Cp859QUp.js",
+  "candidateIsTipPackage": false,
+  "localhostPreviewAcceptedAsHit": false,
+  "fullStaffLint": {
+    "errors": 25,
+    "warnings": 1,
+    "status": "RED_BASELINE_UNTOUCHED_FILES"
+  },
+  "checks": [
+    {
+      "name": "冻结基线 tip／DEPLOY／员 dist",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "现网基线包 hash 已钉",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "R64 跨秒根因：同秒 24 组、同分钟 25 组",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "20:51 双行分别为 11／12 秒",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "产品态使用同分钟键",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "PD-112 回归在产品测试内",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "最终相关单测 12／12",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "三端构建均完成且员包为候选",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "触及文件 lint 零输出",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "全量 lint 红项如实保留",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "受控破坏准确见红",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "受控破坏后已复跑最终绿",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "候选 js 名≠冻结员包",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "候选 js 内容≠冻结员包",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "候选未冒充 tip 包或部署",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "候选包 hash 与磁盘一致",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "最终浏览器探针零失败",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "潘婧分组 dupPairGroups=0",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "50 行收敛 25 组且不同分钟不合并",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "未读总数保持真实 61",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "25 个含未读 ID 组均有未读代表",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "未点全部已读／零业务 mutation",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "localhost 仅辅助非 HIT PASS",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "截图存在且 hash 自洽",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "mig0148 故意空留且未占文件",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "pass": 25,
+  "fail": 0
+}
