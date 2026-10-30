@@ -112,7 +112,7 @@ export default function SettingsPage() {
     try {
       await logout(getApiBase())
       queryClient.clear()
-      navigate('/dev-login', { replace: true })
+      navigate('/login', { replace: true })
     } catch (err) {
       setLogoutPending(false)
       setConfirmOpen(false)

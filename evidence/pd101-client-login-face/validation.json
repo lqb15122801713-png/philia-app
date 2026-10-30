@@ -1,0 +1,90 @@
+{
+  "ticket": "PD-101",
+  "defectCode": "LOGIN-FACE-DEV-SHELL",
+  "recordedAt": "2026-10-30T16:35:03+08:00",
+  "baseline": {
+    "tip": "86b614fd6ccacda5c1a83b639bde7dab422bcb2b",
+    "deploy": "20261030143547",
+    "customerJs": "index-DmV9kubu.js",
+    "unit": { "pass": 26, "fail": 0 },
+    "buildCustomerExit": 0,
+    "liveAnonymousRootFinalUrl": "http://120.53.102.45:7201/dev-login",
+    "liveAnonymousLoginFinalUrl": "http://120.53.102.45:7201/dev-login",
+    "liveMainFaceContained": ["需要访问口令", "选择演示账号登录", "账号 ID 登录"]
+  },
+  "tdd": {
+    "initialRed": "Real App at /login rendered an empty main; product-login-form assertion failed.",
+    "greenAfterImplementation": { "pass": 1, "fail": 0 },
+    "controlledBreak": "Temporarily pointed /login to /dev-login; the same assertion failed again. Route restored immediately.",
+    "finalAfterRestore": { "pass": 27, "fail": 0 }
+  },
+  "commands": {
+    "unitAll": {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/customer/tsconfig.app.json --import ./evidence/pd101-client-login-face/test-setup.mjs --test <loginRoute plus 7 existing customer test files>",
+      "exit": 0,
+      "pass": 27,
+      "fail": 0
+    },
+    "targetedLint": {
+      "command": "npx eslint src/App.tsx src/components/RequireAuth.tsx src/pages/SettingsPage.tsx src/pages/LoginPage.tsx src/loginRoute.test.tsx (apps/customer)",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    "fullCustomerLint": {
+      "command": "npm run lint -w @philia/customer",
+      "exit": 1,
+      "errors": 65,
+      "warnings": 4,
+      "classification": "INC-PREEXISTING-LINT",
+      "evidence": "Same 65/4 count as the checked-in PD-109 baseline; no touched file appears in the full-lint failures."
+    },
+    "rootBuild": { "command": "npm run build", "exit": 0 },
+    "diffCheck": { "command": "git diff --check", "exit": 0 }
+  },
+  "candidate": {
+    "tipPackage": false,
+    "deployed": false,
+    "customerJs": "index-DYordG4O.js",
+    "bytes": 1429569,
+    "sha256": "2b29b3051f22b4d226da400245d9446877bdf460c32e288c41542631d45d58c3",
+    "differentFromLiveBaseline": true,
+    "rootFinalUrl": "http://127.0.0.1:7142/login",
+    "rootTextSnapshot": "text-41229027-40ee-4e07-b284-4d2f7202cf85",
+    "loginFinalUrl": "http://127.0.0.1:7142/login",
+    "loginTextSnapshot": "text-ae59fec3-f91f-4423-bb0b-1bf2c669223c",
+    "forbiddenMainFaceTextCount": 0,
+    "formMock": {
+      "syntheticPhone": "19900000000",
+      "postStatus": 405,
+      "upstreamTraffic": false,
+      "visibleError": "PD-101 preview blocks API writes and upstream traffic"
+    },
+    "screenshots": [
+      {
+        "file": "shots/root.png",
+        "sha256": "70a3ca351247fa17fa46d98edf19127e746b8650c1a251de6860639291111afa",
+        "note": "Root redirected to /login; separate capture from login.png with identical final UI."
+      },
+      {
+        "file": "shots/login.png",
+        "sha256": "70a3ca351247fa17fa46d98edf19127e746b8650c1a251de6860639291111afa",
+        "note": "Direct /login capture; not a copied root frame."
+      }
+    ]
+  },
+  "migration": {
+    "reserved": "0142",
+    "status": "intentionally blank",
+    "schemaChanges": 0,
+    "fileOccupied": false
+  },
+  "cleanup": {
+    "previewStopped": true,
+    "browserTabsClosed": true,
+    "temporaryProfilesRemoved": true,
+    "liveBusinessWrites": 0,
+    "realPayments": 0,
+    "fixture01M5EQVFTouched": false
+  }
+}

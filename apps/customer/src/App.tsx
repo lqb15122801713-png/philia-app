@@ -17,6 +17,7 @@ import CertListPage from './pages/CertListPage'
 import CheckoutPage from './pages/CheckoutPage'
 import CouponsPage from './pages/CouponsPage'
 import DevLoginPage from './pages/DevLoginPage'
+import LoginPage from './pages/LoginPage'
 import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
 import InvoiceApplyPage from './pages/InvoiceApplyPage'
@@ -184,7 +185,7 @@ function ProtectedRoutes() {
 
 export default function App() {
   const { pathname } = useLocation()
-  const isDevLogin = pathname === '/dev-login'
+  const isLoginPath = pathname === '/login' || pathname === '/dev-login'
   // U1-A：全局 dock 统一为 <AppDock>，主级页面 + 洗护／寄养单屏与预约成功页渲染；
   // 其他详情级页面仍走统一返回条，不扩 dock 范围。
   const isGroomingPath = pathname === '/booking/grooming' || pathname === '/booking/grooming/'
@@ -209,7 +210,8 @@ export default function App() {
     <div className={hasBookingDock ? 'booking-with-dock min-h-screen bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}>
       <main className={isMemberCardPath ? 'mx-auto max-w-lg' : 'mx-auto max-w-lg pb-24'}>
         <Routes>
-          {/* 开发登录页：守卫之外，且不显示 dock（T2.0 新增路由，已向主代理汇报） */}
+          {/* 产品登录与内测登录均在守卫之外，且不显示 dock。 */}
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/dev-login" element={<DevLoginPage />} />
           {/* PD-82 登录协议可点（R17 回归）：协议中心公开别名——登录页页脚协议链登录前可读；
               页内仅 publicProcedure 查询（canvas.blocks/store.listNearby），原 /settings/agreements 不动 */}
@@ -227,10 +229,10 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && isMainPath && <AppDock />}
+      {!isLoginPath && isMainPath && <AppDock />}
       {/* 体验批片 4：PWA 安装引导条（beforeinstallprompt 拦存+自定义条；
           登录守卫内全页可出；Obs4 寄养下单关键路径与 N6／N7 商城／首页关键内容区除外，避免争用热区） */}
-      {!isDevLogin && !suppressInstallBanner && <InstallBanner />}
+      {!isLoginPath && !suppressInstallBanner && <InstallBanner />}
     </div>
   )
 }
