@@ -1,0 +1,41 @@
+{
+  "checks": {
+    "candidateServed": true,
+    "candidateHashDiffers": true,
+    "topEqualsListRows": true,
+    "topEqualsDock": true,
+    "meRowEqualsDock": true,
+    "rawGroupCountMatches": true,
+    "rawUnreadGroupCountMatches": true,
+    "dupPairGroupsAbsent": true,
+    "allRowsUnreadAsBaseline": true,
+    "noLegacyUnreadCountCall": true,
+    "noReadMutation": true,
+    "allReadNotClicked": true
+  },
+  "failures": [],
+  "notifications": {
+    "url": "http://120.53.102.45:7203/notifications",
+    "unreadTop": 25,
+    "rowCount": 25,
+    "unreadRows": 25,
+    "dupPairGroups": 0,
+    "markAllVisible": true
+  },
+  "me": {
+    "url": "http://120.53.102.45:7203/me",
+    "notificationRowUnread": 25,
+    "dockMeBadge": 25
+  },
+  "expected": {
+    "rawRows": 50,
+    "groupedRows": 25,
+    "unreadGroups": 25,
+    "unreadIds": 50
+  },
+  "candidate": {
+    "name": "index-_G5iuJtk.js",
+    "sha256": "7f44fed4cb36248b9d924f274dc8e4dfae0956aca85b060acfb7c0c636cfb12a"
+  },
+  "reportPath": "E:\\KIMI code\\pd114-staff-unread-count\\evidence\\pd114-staff-unread-count\\live-candidate-report.json"
+}

@@ -1,0 +1,94 @@
+{
+  "capturedAt": "2026-10-31T12:15:20+08:00",
+  "baseline": {
+    "tip": "c3d17f3343b7af21b76b872cf143b7e20f2b534c",
+    "deploy": "20261031112230",
+    "staffDist": "index-DDB3TYul.js",
+    "live": {
+      "unreadTop": 69,
+      "dedupedListRows": 25,
+      "dockMeBadge": 69,
+      "dupPairGroups": 0,
+      "verdict": "FAIL",
+      "reasonCode": "UNREAD-TOP-VS-LISTROWS"
+    }
+  },
+  "candidate": {
+    "staffDist": "index-_G5iuJtk.js",
+    "sha256": "7f44fed4cb36248b9d924f274dc8e4dfae0956aca85b060acfb7c0c636cfb12a",
+    "isTipPackage": false,
+    "realApiProbe": {
+      "rawRows": 50,
+      "rawUnreadIds": 50,
+      "expectedGroups": 25,
+      "expectedUnreadGroups": 25,
+      "unreadTop": 25,
+      "dedupedListRows": 25,
+      "meNotificationRowUnread": 25,
+      "dockMeBadge": 25,
+      "dupPairGroups": 0,
+      "legacyUnreadCountCalls": 0,
+      "readMutations": 0,
+      "clickedAllRead": false,
+      "clickedNotificationRow": false,
+      "failures": []
+    }
+  },
+  "commands": [
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json apps/staff/src/__tests__/pd114UnreadCount.tsx",
+      "exitCode": 0,
+      "log": "final-test-pd114.log"
+    },
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json apps/staff/src/__tests__/pd72Notifications.tsx",
+      "exitCode": 0,
+      "log": "final-test-pd72.log"
+    },
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json apps/staff/src/__tests__/pd76Badge.tsx",
+      "exitCode": 0,
+      "log": "final-test-pd76.log"
+    },
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json apps/staff/src/__tests__/pd92StaffAe04DayPill.tsx",
+      "exitCode": 0,
+      "log": "final-test-pd92.log"
+    },
+    {
+      "command": "node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json --test apps/staff/src/lib/notifications.test.ts apps/staff/src/lib/localeInput.test.ts apps/staff/src/components/boarding/boardingExposure.test.tsx",
+      "exitCode": 0,
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "log": "final-test-staff.log"
+    },
+    {
+      "command": "npx eslint src/lib/unreadBadge.ts src/pages/staff2/NotificationsPage.tsx src/pages/TodayPage.tsx src/pages/MePage.tsx src/components/StaffDock.tsx src/__tests__/pd72Notifications.tsx src/__tests__/pd76Badge.tsx src/__tests__/pd92StaffAe04DayPill.tsx src/__tests__/pd114UnreadCount.tsx",
+      "cwd": "apps/staff",
+      "exitCode": 0,
+      "log": "final-lint-targeted.log"
+    },
+    {
+      "command": "npm run build:staff",
+      "exitCode": 0,
+      "log": "final-build-staff.log"
+    },
+    {
+      "command": "node evidence/pd114-staff-unread-count/live-candidate-probe.mjs",
+      "exitCode": 0,
+      "log": "final-live-candidate.log"
+    },
+    {
+      "command": "npm run lint -w @philia/staff",
+      "exitCode": 1,
+      "status": "INC_BASELINE_RED",
+      "errors": 25,
+      "warnings": 1,
+      "changedFileErrors": 0,
+      "log": "final-lint-full-baseline-red.log"
+    }
+  ],
+  "migration": "故意空留；零 schema；未占文件",
+  "deliveryHit": "PENDING：候选证据齐，但非合部 tip 部署包；全量 lint 基线红单列"
+}

@@ -1,0 +1,16 @@
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-STAFF-04：50 个未读 ID 按 25 个去重行显示，全部已读可用

@@ -270,7 +270,7 @@ export default function MePage() {
         ) : null}
       </SkRows>
 
-      {/* 片 3：协作入口卡区（通知/公告/心声/自检/问题上报；通知行红点=push.unreadCount） */}
+      {/* 片 3：协作入口卡区（通知/公告/心声/自检/问题上报；通知行红点=列表去重未读组数） */}
       <p className="px-1 pb-1.5 pt-3 text-caption text-ink-placeholder">{mc('me.groupCollab')}</p>
       <SkRows testId="me-list-collab">
         <SkRow

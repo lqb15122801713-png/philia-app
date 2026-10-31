@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-10-31T11:42:28+08:00",
+  "tip": "c3d17f3343b7af21b76b872cf143b7e20f2b534c",
+  "deploy": "20261031112230",
+  "staffDist": "index-DDB3TYul.js",
+  "staffUrl": "http://120.53.102.45:7203",
+  "account": "01M25M44KWJ10KVSTRWCD18M66",
+  "notifications": {
+    "url": "/notifications",
+    "unreadTop": 69,
+    "dedupedListRows": 25,
+    "dupPairGroups": 0,
+    "groupKey": "title|time|bodyHead"
+  },
+  "me": {
+    "url": "/me",
+    "notificationRowUnread": 69,
+    "dockMeBadge": 69
+  },
+  "verdict": "FAIL",
+  "reasonCode": "UNREAD-TOP-VS-LISTROWS",
+  "clickedMarkAllRead": false,
+  "clickedNotificationRow": false,
+  "touchedBannedAid": false
+}

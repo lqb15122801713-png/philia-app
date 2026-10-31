@@ -52,6 +52,7 @@ import { skc } from '@/copy/skeleton';
 import { TODAY_COPY } from '@/copy/today';
 import { ttc } from '@/copy/taskToday';
 import { collabOf, minToHm, toDate } from '@/lib/collabPort';
+import { UNREAD_COUNT_KEY, useUnreadTotal } from '@/lib/unreadBadge';
 
 // 契约1：QrScanner（T3.2 components/scan/QrScanner.tsx）懒加载接入（复用不动）
 const QrScanner = lazy(() => import('@/components/scan/QrScanner'));
@@ -62,7 +63,6 @@ const STAFF_PUBLIC_KEY = ['store', 'listStaffPublic'] as const;
 const BUS_QUERY_KEY = ['staffTask', 'listMy'] as const;
 /* 片 3：循环任务今日落实例 + 未读通知徽（dock「我的」槽） */
 const TASK_TODAY_KEY = ['taskExec', 'listToday'] as const;
-const UNREAD_QUERY_KEY = ['push', 'unreadCount'] as const;
 
 /* 六步短标（Ready §3 Stepdots6 短标口径；Workcard 六列窄格用，全称见 SchedulePage 全展） */
 const STEP_SHORT: Record<string, string> = {
@@ -135,12 +135,7 @@ export default function TodayPage() {
     enabled: staffId !== null,
   });
   // 片 3：未读通知数（dock「我的」槽徽标；SSE 事件/重连即 invalidate，60s 轮询兜底）
-  const unreadQ = useQuery({
-    queryKey: UNREAD_QUERY_KEY,
-    queryFn: () => trpc.push.unreadCount.query(),
-    refetchInterval: 60_000,
-    enabled: staffId !== null,
-  });
+  const unreadTotal = useUnreadTotal(staffId !== null);
   const storeId = meRawQ.data?.store?.id ?? null;
   const staffPublicQ = useQuery({
     queryKey: [...STAFF_PUBLIC_KEY, storeId],
@@ -166,7 +161,7 @@ export default function TodayPage() {
     void queryClient.invalidateQueries({ queryKey: BUS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list'] });
     void queryClient.invalidateQueries({ queryKey: TASK_TODAY_KEY });
-    void queryClient.invalidateQueries({ queryKey: UNREAD_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_KEY });
   }, [queryClient]);
 
   /* 片 3：任务卡「完成」打点（幂等；成功后 invalidate 灰态回显） */
@@ -247,7 +242,6 @@ export default function TodayPage() {
   const boardingTasks = useMemo(() => busTasks.filter((t) => t.kind === 'boarding'), [busTasks]);
   // 片 3：今日循环任务落实例 + 未读通知数
   const taskRuns = useMemo(() => taskTodayQ.data?.runs ?? [], [taskTodayQ.data]);
-  const unreadTotal = unreadQ.data?.total ?? 0;
 
   const staffNameById = useMemo(() => {
     const m = new Map<string, string>();

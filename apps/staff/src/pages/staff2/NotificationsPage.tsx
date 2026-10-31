@@ -17,8 +17,7 @@ import { fmtMdHm } from '@/lib/collabPort';
 import { groupDuplicateNotifications } from '@/lib/notifications';
 import { UNREAD_BADGE_CAP, UNREAD_COUNT_KEY, useUnreadCountQuery } from '@/lib/unreadBadge';
 
-const LIST_KEY = ['push', 'listNotifications', 'staff-center'] as const;
-const UNREAD_KEY = UNREAD_COUNT_KEY;
+const LIST_KEY = UNREAD_COUNT_KEY;
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -34,13 +33,12 @@ export default function NotificationsPage() {
   // 同源计数保留 query 状态：未返回／失败不得冒充真 0；后台刷新保留旧值，失败则不沿用它
   const unreadQ = useUnreadCountQuery();
   const unreadKnown = unreadQ.isSuccess;
-  const unreadCount = unreadKnown ? unreadQ.data?.total ?? 0 : 0;
+  const unreadCount = unreadKnown ? unreadQ.data ?? 0 : 0;
 
   const items = useMemo(() => groupDuplicateNotifications(listQ.data?.items ?? []), [listQ.data]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: LIST_KEY });
-    void queryClient.invalidateQueries({ queryKey: UNREAD_KEY });
   };
 
   /** 点条：未读先 markRead（同组幂等），再按 link 跳转（站内深链） */
