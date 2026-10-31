@@ -19,3 +19,7 @@ test('PD-101 BLOCK2：产品登录与内测登录共用 LoginBrandShell', () => 
   assert.doesNotMatch(formalSource, /<footer className="mt-10 px-10/)
   assert.doesNotMatch(devSource, /<footer className="mt-10 px-10/)
 })
+
+test('PD-113：产品脸手机号登录把可选内测 code 接入既有 API 契约', () => {
+  assert.match(formalSource, /devLoginByPhone\(getApiBase\(\), phone\.trim\(\), code\.trim\(\) \|\| undefined\)/)
+})

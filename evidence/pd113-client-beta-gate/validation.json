@@ -1,0 +1,117 @@
+{
+  "ticket": "PD-113",
+  "defectCode": "BETA_GATE_REQUIRED",
+  "recordedAt": "2026-10-30T23:14:35+08:00",
+  "worktree": "E:/KIMI code/pd113-client-beta-gate",
+  "branch": "feat/pd113-client-beta-gate",
+  "model": "K3.1 Pro (kimi-code/k3.1-pro)",
+  "baseline": {
+    "tip": "426f422e4d95b9fa9f3ccf67d1f4ff65f45dfa8f",
+    "deploy": "20261030174617",
+    "customerJs": "index-iJmx2uv4.js",
+    "livePhoneOnlyStatus": 401,
+    "liveError": "BETA_GATE_REQUIRED",
+    "liveCodeInputCount": 0,
+    "liveFinalUrl": "http://120.53.102.45:7201/login"
+  },
+  "solution": {
+    "choice": "visible_product_face_code_field",
+    "serverGateExempted": false,
+    "productFiles": [
+      "apps/customer/src/pages/LoginPage.tsx",
+      "apps/customer/src/copy/login.ts"
+    ],
+    "testFiles": [
+      "apps/customer/src/loginRoute.test.tsx",
+      "apps/customer/src/pages/loginQuality.test.ts"
+    ]
+  },
+  "commands": {
+    "npmCi": {
+      "exit": 1,
+      "classification": "WINDOWS_NESTED_POSTINSTALL_NODE_NOT_FOUND"
+    },
+    "documentedInstallFallback": {
+      "command": "npm ci --ignore-scripts && npm --prefix server ci --ignore-scripts",
+      "exit": 0,
+      "rootPackages": 688,
+      "serverPackages": 110
+    },
+    "initialTargetedTests": { "exit": 1, "pass": 2, "fail": 2 },
+    "initialAllWithRegression": { "exit": 1, "pass": 28, "fail": 2 },
+    "finalAllCustomerUnit": { "exit": 0, "pass": 30, "fail": 0, "log": "unit-final.txt" },
+    "targetedLint": { "exit": 0, "log": "lint-targeted.txt" },
+    "fullCustomerLint": {
+      "exit": 1,
+      "errors": 65,
+      "warnings": 4,
+      "classification": "INC-PREEXISTING-LINT",
+      "touchedFilesPresentInFailures": false,
+      "log": "lint-full.txt"
+    },
+    "rootBuild": { "command": "npm run build", "exit": 0, "log": "build-final.txt" },
+    "diffCheck": { "exit": 0 },
+    "evidenceScriptSyntax": { "exit": 0 },
+    "controlledBreak": {
+      "mutation": "Removed the third code argument from devLoginByPhone",
+      "exit": 1,
+      "pass": 3,
+      "fail": 1,
+      "expectedAssertion": "PD-113 code API wiring",
+      "restored": true,
+      "finalBuildMatchesExercisedCandidate": true,
+      "log": "controlled-break.txt"
+    }
+  },
+  "candidate": {
+    "tipPackage": false,
+    "deployed": false,
+    "localhostAuxiliaryOnly": true,
+    "localhostUsedAsDeliveryHitPass": false,
+    "customerJs": "index-CC3b67HP.js",
+    "bytes": 1429098,
+    "sha256": "eb203328a52adb3954436ce19c284e46104a820fbb1d37a99496fed32d977370",
+    "differentFromLiveBaseline": true,
+    "directLoginFinalUrl": "http://127.0.0.1:7143/login",
+    "directLoginTextSnapshot": "text-ad5367df-abb8-42c5-b03b-ab2908600e7a",
+    "directLoginElementsSnapshot": "elements-7aab55d2-b8a5-4d37-bb68-cb61f645fd7a",
+    "anonymousRootFinalUrl": "http://127.0.0.1:7143/login",
+    "anonymousRootTextSnapshot": "text-cdc2723e-d77c-4626-a46a-90c4917c152c",
+    "anonymousRootLandedDevLogin": false,
+    "productFaceCodeInputVisible": true,
+    "demoOrAccountIdCards": false,
+    "loginPostStatus": 200,
+    "loginUpstream": "staging",
+    "homeFinalUrl": "http://127.0.0.1:7143/home",
+    "homeTextSnapshot": "text-52dc6aec-2041-4614-8d27-0e16e86b3a1e",
+    "previewLog": "preview-log.txt"
+  },
+  "migration": {
+    "status": "mig 故意空留",
+    "schemaChanges": 0,
+    "fileOccupied": false,
+    "forbiddenRangesUntouched": "0117/0119/0122-0148"
+  },
+  "scope": {
+    "pd101Reopened": false,
+    "designUnreadCardCloseMerged": false,
+    "staffMerchantMallExpanded": false,
+    "pd106Claimed": false,
+    "pd108Or110Touched": false,
+    "closedTicketsRefrozen": false
+  },
+  "cleanup": {
+    "candidateLoggedOutThroughProductUi": true,
+    "browserTabsOpen": 0,
+    "previewStopped": true,
+    "realPayments": 0,
+    "fixture01M5EQVFTouched": false,
+    "secondStoreCreated": false
+  },
+  "deliveryHit": {
+    "status": "PENDING_EXTERNAL_REVIEW",
+    "prVerifierAndCodeQualitySameWindow": false,
+    "merged": false,
+    "deployed": false
+  }
+}

@@ -12,6 +12,7 @@ export default function LoginPage() {
   const { queryClient } = usePhiliaClient()
   const { user, loading } = useMe()
   const [phone, setPhone] = useState('')
+  const [code, setCode] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const from = (location.state as { from?: string } | null)?.from
@@ -23,7 +24,7 @@ export default function LoginPage() {
     setPending(true)
     setError(null)
     try {
-      await devLoginByPhone(getApiBase(), phone.trim())
+      await devLoginByPhone(getApiBase(), phone.trim(), code.trim() || undefined)
       await queryClient.invalidateQueries()
       navigate(destination, { replace: true })
     } catch (err) {
@@ -81,6 +82,27 @@ export default function LoginPage() {
             aria-describedby="product-login-phone-help"
             className="mt-2 min-h-12 rounded-control bg-card text-body"
             data-testid="product-login-phone"
+          />
+          <label htmlFor="product-login-code" className="mt-4 block text-body-sm font-semibold text-ink">
+            {lc('login.gateLabel')}
+          </label>
+          <Input
+            id="product-login-code"
+            name="code"
+            type="password"
+            autoComplete="current-password"
+            enterKeyHint="done"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={code}
+            onChange={(event) => {
+              setCode(event.target.value)
+              setError(null)
+            }}
+            placeholder={lc('login.gatePlaceholder')}
+            className="mt-2 min-h-12 rounded-control bg-card text-body"
+            data-testid="product-login-code"
           />
           {error ? (
             <p role="alert" className="mt-3 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">

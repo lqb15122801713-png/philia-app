@@ -25,7 +25,7 @@ const testWindow = {
 Object.defineProperty(globalThis, 'window', { value: testWindow, configurable: true, writable: true })
 Object.defineProperty(globalThis, 'React', { value: React, configurable: true, writable: true })
 
-test('PD-101：/login 直接呈现手机号产品登录脸而非内测壳', () => {
+test('PD-101／PD-113：/login 产品登录脸提供手机号与内测 code 输入', () => {
   const client = createPhiliaClient('http://127.0.0.1:9')
   client.queryClient.setQueryData(['auth', 'me'], null)
 
@@ -39,6 +39,8 @@ test('PD-101：/login 直接呈现手机号产品登录脸而非内测壳', () =
 
   assert.match(html, /data-testid="product-login-form"/)
   assert.match(html, /data-testid="product-login-phone"/)
+  assert.match(html, /data-testid="product-login-code"/)
+  assert.match(html, /name="code"/)
   assert.match(html, /手机号登录/)
   assert.doesNotMatch(html, /需要访问口令|选择演示账号登录|账号 ID 登录/)
 })
