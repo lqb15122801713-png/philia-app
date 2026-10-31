@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-10-31T04:15:20.968Z",
+  "scope": "候选生产 JS 在真实员工端 origin 的本地请求替换探针；真实登录与真实只读 API；非 localhost preview；非 tip 部署包",
+  "isTipPackage": false,
+  "baseline": {
+    "liveDist": "index-DDB3TYul.js",
+    "tip": "c3d17f3343b7af21b76b872cf143b7e20f2b534c",
+    "deploy": "20261031112230"
+  },
+  "candidate": {
+    "name": "index-_G5iuJtk.js",
+    "sha256": "7f44fed4cb36248b9d924f274dc8e4dfae0956aca85b060acfb7c0c636cfb12a"
+  },
+  "notifications": {
+    "url": "http://120.53.102.45:7203/notifications",
+    "unreadTop": 25,
+    "rowCount": 25,
+    "unreadRows": 25,
+    "dupPairGroups": 0,
+    "markAllVisible": true
+  },
+  "me": {
+    "url": "http://120.53.102.45:7203/me",
+    "notificationRowUnread": 25,
+    "dockMeBadge": 25
+  },
+  "expected": {
+    "rawRows": 50,
+    "groupedRows": 25,
+    "unreadGroups": 25,
+    "unreadIds": 50
+  },
+  "checks": {
+    "candidateServed": true,
+    "candidateHashDiffers": true,
+    "topEqualsListRows": true,
+    "topEqualsDock": true,
+    "meRowEqualsDock": true,
+    "rawGroupCountMatches": true,
+    "rawUnreadGroupCountMatches": true,
+    "dupPairGroupsAbsent": true,
+    "allRowsUnreadAsBaseline": true,
+    "noLegacyUnreadCountCall": true,
+    "noReadMutation": true,
+    "allReadNotClicked": true
+  },
+  "failures": [],
+  "legacyUnreadCalls": [],
+  "pushWrites": [],
+  "clickedAllRead": false,
+  "clickedNotificationRow": false,
+  "screenshots": [
+    {
+      "file": "E:\\KIMI code\\pd114-staff-unread-count\\evidence\\pd114-staff-unread-count\\candidate-notifications.png",
+      "sha256": "b9b400022dee7e6aed09c60e365f582dcb6da0d61baa6c70886b494532450c00"
+    },
+    {
+      "file": "E:\\KIMI code\\pd114-staff-unread-count\\evidence\\pd114-staff-unread-count\\candidate-me.png",
+      "sha256": "98ad633e84e821b0da27606298249eda496f2ce596fc87c31e40362336a09dc6"
+    }
+  ]
+}

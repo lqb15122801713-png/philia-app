@@ -1,0 +1,121 @@
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：未读数未返回时不得伪装成真 0
+✓ AE-04：未读数未返回时有同步态说明
+✓ AE-04：未读状态变化有读屏状态语义
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：取数失败时不得伪装成真 0
+✓ AE-04：取数失败有手动重新对齐出口
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：缓存 0 重取失败不得继续冒充当前真 0
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：缓存正数重取失败不得继续冒充当前值
+✓ AE-04：重取失败时全部已读不可点
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：重取失败时不沿用过期封顶说明
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：真 0 仍如实显示
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at SkBackBar (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\components\skeleton\index.tsx:24:29)
+    at div
+    at NotificationsPage (E:\KIMI code\pd114-staff-unread-count\apps\staff\src\pages\staff2\NotificationsPage.tsx:23:20)
+    at Router (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:421:13)
+    at MemoryRouter (E:\KIMI code\pd114-staff-unread-count\node_modules\react-router\lib\components.tsx:225:3)
+    at QueryClientProvider (E:\KIMI code\pd114-staff-unread-count\node_modules\@tanstack\react-query\src\QueryClientProvider.tsx:30:3)
+✓ AE-04：同源真值 15 仍如实显示
+✓ 日 pill：选中的今天有可辨识勾标
+✓ 日 pill：未选中的明天不冒勾
+✓ 日 pill：勾标仅为装饰，不重复朗读状态
+✓ 周 pill 等其他 chips 不被本窗改动
+✓ PD-92 AE-04＋日 pill 回归钉全绿

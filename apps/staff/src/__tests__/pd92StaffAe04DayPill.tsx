@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 import { renderToString } from 'react-dom/server';
+
+Object.assign(globalThis, { React });
 import { MemoryRouter } from 'react-router-dom';
 import { PhiliaClientContext, type PhiliaClient } from '@philia/shared';
 import { SkChips } from '../components/skeleton';
@@ -14,14 +17,22 @@ function check(name: string, ok: boolean, detail = '') {
 
 async function renderNotifications(total?: number, withError = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retryOnMount: !withError } } });
-  const items: unknown[] = [];
-  queryClient.setQueryData(['push', 'listNotifications', 'staff-center'], { items, nextCursor: null });
+  const items = Array.from({ length: total ?? 0 }, (_, index) => ({
+    id: `unread-${index + 1}`,
+    type: 'schedule.published',
+    category: 'service',
+    title: '班表已更新',
+    body: '请查看最新班表',
+    link: '/my-schedule',
+    readAt: null,
+    createdAt: new Date(Date.UTC(2026, 9, 22, 8, index)),
+  }));
   if (total !== undefined) {
-    queryClient.setQueryData(['push', 'unreadCount'], { total, byCategory: { service: total } });
+    queryClient.setQueryData(['push', 'listNotifications', 'staff-center'], { items, nextCursor: null });
   }
   if (withError) {
     await queryClient.prefetchQuery({
-      queryKey: ['push', 'unreadCount'],
+      queryKey: ['push', 'listNotifications', 'staff-center'],
       queryFn: async () => { throw new Error('mock offline'); },
       retry: false,
     });
@@ -29,7 +40,6 @@ async function renderNotifications(total?: number, withError = false) {
   const trpc = {
     push: {
       listNotifications: { query: async () => ({ items, nextCursor: null }) },
-      unreadCount: { query: async () => ({ total: total ?? 15, byCategory: { service: total ?? 15 } }) },
       markAllRead: { mutate: async () => ({ marked: total ?? 15 }) },
     },
   } as unknown as PhiliaClient['trpc'];

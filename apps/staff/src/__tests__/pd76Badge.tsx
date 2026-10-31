@@ -4,7 +4,7 @@
  * 跑法：node server/node_modules/tsx/dist/cli.mjs --tsconfig apps/staff/tsconfig.app.json apps/staff/src/__tests__/pd76Badge.tsx
  *
  * 口径 A（已裁）：底栏徽标 99+ 封顶显示 / aria-label 恒真值 / me 行·通知头真值 /
- * 通知头 >99 附一致说明；三处同源唯一 selector（lib/unreadBadge → push.unreadCount.total）。
+ * 通知头 >99 附一致说明；三处同源唯一 selector（lib/unreadBadge → 列表去重未读组数）。
  */
 import assert from 'node:assert/strict';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -43,13 +43,20 @@ console.log('✓ 纯函数：badgeCapText 99 封顶 / badgeAriaText 恒真值');
 /* ---- 通知头渲染钉：真值 + >99 一致说明；≤99 无说明 ---- */
 const renderNotifications = (total: number) => {
   const queryClient = new QueryClient();
-  const items: unknown[] = [];
+  const items = Array.from({ length: total }, (_, index) => ({
+    id: `unread-${index + 1}`,
+    type: 'schedule.published',
+    category: 'service',
+    title: '班表已更新',
+    body: '请查看最新班表',
+    link: '/my-schedule',
+    readAt: null,
+    createdAt: new Date(Date.UTC(2026, 9, 22, 8, index)),
+  }));
   queryClient.setQueryData(['push', 'listNotifications', 'staff-center'], { items, nextCursor: null });
-  queryClient.setQueryData(['push', 'unreadCount'], { total, byCategory: { service: total } });
   const trpc = {
     push: {
       listNotifications: { query: async () => ({ items, nextCursor: null }) },
-      unreadCount: { query: async () => ({ total, byCategory: { service: total } }) },
       markAllRead: { mutate: async () => ({ marked: total }) },
     },
   } as unknown as PhiliaClient['trpc'];

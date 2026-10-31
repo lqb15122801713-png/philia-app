@@ -50,7 +50,7 @@
   content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 22px; height: 3px; border-radius: 0 0 3px 3px; background: var(--gold-pale);
 }
-/* 未读徽数（片 3：dock 槽红点计数，如「我的」槽 push.unreadCount） */
+/* 未读徽数（片 3：dock 槽红点计数，如「我的」槽列表去重未读组数） */
 .sk-dock .bdg {
   position: absolute; top: 3px; right: calc(50% - 24px); min-width: 18px; height: 18px;
   padding: 0 4px; border-radius: 999px; background: var(--danger); color: var(--card);
